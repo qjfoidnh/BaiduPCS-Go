@@ -950,5 +950,5 @@ cli交互模式下, 运行命令 `config set -max_parallel 2` 将下载最大并
 
 # 交流反馈
 
-提交Issue: [Issues](https://github.com/qjfoidnh/BaiduPCS-Go-Transfer/issues)
+提交Issue: [Issues](https://github.com/qjfoidnh/BaiduPCS-Go/issues)
 
