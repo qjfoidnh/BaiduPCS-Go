@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package transfer;
+
+// RangeGenMode 线程分配方式
+enum RangeGenMode {
+    // RangeGenMode_Default 根据parallel平均生成
+	Default = 0;
+	// RangeGenMode_BlockSize 根据blockSize生成
+	BlockSize = 1;
+}
+
+//Range 请求范围
+message Range {
+    int64 begin = 1;
+    int64 end = 2;
+}
+
+// DownloadInstanceInfoExport 断点续传
+message DownloadInstanceInfoExport {
+    RangeGenMode range_gen_mode = 1;
+    int64 total_size = 2;  // 总大小
+    int64 gen_begin = 3;
+    int64 block_size = 4;
+    repeated Range ranges = 5;
+}

@@ -1,0 +1,43 @@
+{
+    "FixedFileInfo": {
+        "FileVersion": {
+            "Major": 3,
+            "Minor": 6,
+            "Patch": 2,
+            "Build": 0
+        },
+        "ProductVersion": {
+            "Major": 3,
+            "Minor": 6,
+            "Patch": 2,
+            "Build": 0
+        },
+        "FileFlagsMask": "3f",
+        "FileFlags ": "00",
+        "FileOS": "040004",
+        "FileType": "01",
+        "FileSubType": "00"
+    },
+    "StringFileInfo": {
+        "Comments": "",
+        "CompanyName": "iikira",
+        "FileDescription": "百度网盘客户端",
+        "FileVersion": "v3.6.2",
+        "InternalName": "",
+        "LegalCopyright": "© 2016-2020 iikira.",
+        "LegalTrademarks": "",
+        "OriginalFilename": "",
+        "PrivateBuild": "",
+        "ProductName": "BaiduPCS-Go",
+        "ProductVersion": "v3.6.2",
+        "SpecialBuild": ""
+    },
+    "VarFileInfo": {
+        "Translation": {
+            "LangID": "0409",
+            "CharsetID": "04B0"
+        }
+    },
+    "IconPath": "assets/BaiduPCS-Go.ico",
+    "ManifestPath": "BaiduPCS-Go.exe.manifest"
+}

@@ -1,0 +1,1 @@
+dpkg-scanpackages . | gzip > Packages.gz

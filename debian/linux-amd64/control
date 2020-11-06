@@ -1,0 +1,9 @@
+Package: BaiduPCS-Go
+Version: 3.6
+Homepage: https://github.com/iikira/BaiduPCS-Go
+Section: utils
+Priority: optional
+Architecture: amd64
+Installed-Size: 4096
+Maintainer: iikira <i@mail.iikira.com>
+Description: BaiduPCS-Go 使用Go语言编写的百度网盘命令行客户端, 为操作百度网盘, 提供实用功能.
