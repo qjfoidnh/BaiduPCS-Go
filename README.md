@@ -1,4 +1,4 @@
-# BaiduPCS-Go-Transfer 百度网盘客户端
+# BaiduPCS-Go 百度网盘客户端(加强版)
 
 
 仿 Linux shell 文件处理命令的百度网盘命令行客户端.
