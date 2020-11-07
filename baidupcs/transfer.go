@@ -31,11 +31,55 @@ func (pcs *BaiduPCS) GenerateShareQueryURL(subPath string, params map[string]str
 	return shareURL
 }
 
-func (pcs *BaiduPCS) PostShareQuery(url string, data map[string]string) (res map[string]string) {
+func (pcs *BaiduPCS) ExtractShareInfo(metajsonstr string) (res map[string]string) {
+	res = make(map[string]string)
+	if !strings.Contains(metajsonstr, "server_filename") {
+		res["ErrMsg"] = "获取分享文件详情失败"
+		return
+	}
+	errno := gjson.Get(metajsonstr, `file_list.errno`).Int()
+	if errno != 0 {
+		res["ErrMsg"] = "提取码错误"
+		return
+	}
+	res["filename"] = gjson.Get(metajsonstr, `file_list.list.0.server_filename`).String()
+	fsid_list := gjson.Get(metajsonstr, `file_list.list.#.fs_id`).Array()
+	var fids_str string = "["
+	if len(fsid_list) > 1 {
+		res["filename"] += " 等多个文件"
+	}
+	for _, sid := range fsid_list {
+		fids_str += sid.String() + ","
+	}
+
+	res["shareid"] = gjson.Get(metajsonstr, `shareid`).String()
+	res["from"] = gjson.Get(metajsonstr, `uk`).String()
+	res["bdstoken"] = gjson.Get(metajsonstr, `bdstoken`).String()
+	shareUrl := &url.URL{
+		Scheme: GetHTTPScheme(true),
+		Host:   PanBaiduCom,
+		Path:   "/share/transfer",
+	}
+	uv := shareUrl.Query()
+	uv.Set("app_id", PanAppID)
+	uv.Set("channel", "chunlei")
+	uv.Set("clienttype", "0")
+	uv.Set("web", "1")
+	for key, value := range res {
+		uv.Set(key, value)
+	}
+	res["ErrMsg"] = "0"
+	res["fs_id"] = fids_str[:len(fids_str)-1] + "]"
+	shareUrl.RawQuery = uv.Encode()
+	res["shareUrl"] = shareUrl.String()
+	return
+}
+
+func (pcs *BaiduPCS) PostShareQuery(url string, surl string, data map[string]string) (res map[string]string) {
 	dataReadCloser, panError := pcs.sendReqReturnReadCloser(reqTypePan, OperationShareFileSavetoLocal, http.MethodPost, url, data, map[string]string{
 		"User-Agent":   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.100 Safari/537.36",
 		"Content-Type": "application/x-www-form-urlencoded",
-		"Referer":      "https://pan.baidu.com/disk/home",
+		"Referer":      fmt.Sprintf("https://pan.baidu.com/share/init?surl=%s", surl),
 	})
 	res = make(map[string]string)
 	if panError != nil {
@@ -53,12 +97,16 @@ func (pcs *BaiduPCS) PostShareQuery(url string, data map[string]string) (res map
 	return
 }
 
-func (pcs *BaiduPCS) AccessSharePage(sharelink string, first bool) (tokens map[string]string) {
+func (pcs *BaiduPCS) AccessSharePage(featurestr string, first bool) (tokens map[string]string) {
 	tokens = make(map[string]string)
 	tokens["ErrMsg"] = "0"
 	headers := make(map[string]string)
 	headers["User-Agent"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.100 Safari/537.36"
 	headers["Referer"] = "https://pan.baidu.com/disk/home"
+	if !first {
+		headers["Referer"] = fmt.Sprintf("https://pan.baidu.com/share/init?surl=%s", featurestr[1:])
+	}
+	sharelink := fmt.Sprintf("https://pan.baidu.com/s/%s", featurestr)
 
 	dataReadCloser, panError := pcs.sendReqReturnReadCloser(reqTypePan, OperationShareFileSavetoLocal, http.MethodGet, sharelink, nil, headers)
 
@@ -78,55 +126,45 @@ func (pcs *BaiduPCS) AccessSharePage(sharelink string, first bool) (tokens map[s
 		tokens["ErrMsg"] = "分享链接已失效"
 		return
 	} else {
-		re, _ := regexp.Compile(`"bdstoken":"([A-Za-z0-9]+)",`)
+		re, _ := regexp.Compile(`yunData\.setData\((\{"loginstate.+?\})\);`)
 		sub := re.FindSubmatch(body)
 		if len(sub) < 2 {
 			tokens["ErrMsg"] = "分享页面解析失败"
 			return
 		}
-		tokens["bdstoken"] = string(sub[1])
-		if first {
-			return
-		}
-		re, _ = regexp.Compile(`"shareid":([0-9]+),`)
-		sub = re.FindSubmatch(body)
-		if len(sub) < 2 && !first {
-			tokens["ErrMsg"] = "缺少提取码"
-			return
-		}
-		tokens["shareid"] = string(sub[1])
-		re, _ = regexp.Compile(`uk=([0-9]+)`)
-		sub = re.FindSubmatch(body)
-		tokens["uk"] = string(sub[1])
+		tokens["metajson"] = string(sub[1])
 		return
-
 	}
 
 }
 
-func (pcs *BaiduPCS) GenerateRequestQuery(mode, link string, params map[string]string) (res map[string]string) {
+func (pcs *BaiduPCS) GenerateRequestQuery(mode string, params map[string]string) (res map[string]string) {
 	res = make(map[string]string)
 	headers := map[string]string{
 		"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.100 Safari/537.36",
-		"Referer":    "https://pan.baidu.com/disk/home",
+		"Referer":    params["referer"],
 	}
 	if mode == "POST" {
 		headers["Content-Type"] = "application/x-www-form-urlencoded"
 	}
-	dataReadCloser, panError := pcs.sendReqReturnReadCloser(reqTypePan, OperationShareFileSavetoLocal, mode, link, params, headers)
+	postdata := make(map[string]string)
+	postdata["fsidlist"] = params["fs_id"]
+	postdata["path"] = params["path"]
+	dataReadCloser, panError := pcs.sendReqReturnReadCloser(reqTypePan, OperationShareFileSavetoLocal, mode, params["shareUrl"], postdata, headers)
 	if panError != nil {
-		res["ErrMsg"] = "未知错误"
+		res["ErrMsg"] = "网络错误"
 		return
 	}
+	fmt.Println("!!!!!!!!!!2")
 	defer dataReadCloser.Close()
 	body, err := ioutil.ReadAll(dataReadCloser)
-
+	res["ErrMsg"] = "0"
 	if err != nil {
 		res["ErrMsg"] = "未知错误"
 		return
 	}
 	if !gjson.Valid(string(body)) {
-		res["ErrMsg"] = "返回值json解析错误"
+		res["ErrMsg"] = "返回json解析错误"
 		return
 	}
 	errno := gjson.Get(string(body), `errno`).Int()
@@ -136,22 +174,14 @@ func (pcs *BaiduPCS) GenerateRequestQuery(mode, link string, params map[string]s
 			path := gjson.Get(string(body), `info.0.path`).String()
 			_, file := filepath.Split(path)
 			res["ErrMsg"] = fmt.Sprintf("当前目录下已有%s同名文件/文件夹", file)
+		} else {
+			res["ErrMsg"] = fmt.Sprintf("未知错误, 错误代码%d", errno)
 		}
 		return
 	}
-	if mode != "POST" {
-		res["title"] = gjson.Get(string(body), `title`).String()
-		res["filename"] = gjson.Get(string(body), `list.0.server_filename`).String()
-		var fids_str string = "["
-		fsids := gjson.Get(string(body), `list.#.fs_id`).Array()
-		if len(fsids) > 1 {
-			res["filename"] += "等多个文件"
-		}
-		for _, sid := range fsids {
-			fids_str += sid.String() + ","
-		}
-		res["fs_id"] = fids_str[:len(fids_str)-1] + "]"
+	_, res["filename"] = filepath.Split(gjson.Get(string(body), `info.0.path`).String())
+	if len(gjson.Get(string(body), `info.#.fsid`).Array()) > 1 {
+		res["filename"] += "等多个文件"
 	}
-	res["ErrMsg"] = fmt.Sprintf("%d", errno)
 	return
 }

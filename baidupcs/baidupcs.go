@@ -76,10 +76,10 @@ const (
 	OperationShareList = "列出分享列表"
 	// OperationShareSURLInfo 获取分享详细信息
 	OperationShareSURLInfo = "获取分享详细信息"
-	// OperationShareFileSavetoLocal 用分享链接转存到网盘
-	OperationShareFileSavetoLocal = "用分享链接转存到网盘"
-	// OperationRapidLinkSavetoLocal 用秒传链接转存到网盘
-	OperationRapidLinkSavetoLocal = "用秒传链接转存到网盘"
+	// OperationShareFileSavetoLocal 分享链接转存到网盘
+	OperationShareFileSavetoLocal = "分享链接转存到网盘"
+	// OperationRapidLinkSavetoLocal 秒传链接转存到网盘
+	OperationRapidLinkSavetoLocal = "秒传链接转存到网盘"
 	// OperationRecycleList 列出回收站文件列表
 	OperationRecycleList = "列出回收站文件列表"
 	// OperationRecycleRestore 还原回收站文件或目录
@@ -119,7 +119,7 @@ var (
 
 	baiduComURL = &url.URL{
 		Scheme: "http",
-		Host:   "baidu.com",
+		Host:   "pan.baidu.com",
 	}
 
 	baiduPcsComURL = &url.URL{
@@ -149,6 +149,51 @@ type (
 		} `json:"records"`
 	}
 )
+
+//UpdatePCSCookies 去除重名Cookies, 同名cookeis只保留最新的
+func (pcs *BaiduPCS) UpdatePCSCookies(reverse bool) {
+	cookies := pcs.GetClient().Jar.Cookies(baiduComURL)
+	new_cookies := make([]*http.Cookie, 0)
+	usedKeys := make(map[string]string)
+	if reverse {
+		for i := len(cookies) - 1; i >= 0; i-- {
+			cookie := cookies[i]
+			_, exists := usedKeys[cookie.Name]
+			if !exists {
+				new_cookies = append(new_cookies, &http.Cookie{
+					Name:   cookie.Name,
+					Value:  cookie.Value,
+					Domain: DotBaiduCom,
+				})
+				usedKeys[cookie.Name] = ""
+			}
+		}
+		for i, j := 0, len(new_cookies)-1; i < j; i, j = i+1, j-1 {
+			new_cookies[i], new_cookies[j] = new_cookies[j], new_cookies[i] //逆序
+		}
+	} else {
+		for i := 0; i < len(cookies); i++ {
+			cookie := cookies[i]
+			_, exists := usedKeys[cookie.Name]
+			if !exists {
+				new_cookies = append(new_cookies, &http.Cookie{
+					Name:   cookie.Name,
+					Value:  cookie.Value,
+					Domain: DotBaiduCom,
+				})
+				usedKeys[cookie.Name] = ""
+			}
+		}
+	}
+	client := pcs.GetClient()
+	client.ResetCookiejar()
+	// fmt.Println(len(new_cookies))
+	// for _, c := range new_cookies {
+	// 	fmt.Println(c.Value)
+	// }
+	client.Jar.SetCookies(baiduComURL, new_cookies)
+
+}
 
 // NewPCS 提供app_id, 百度BDUSS, 返回 BaiduPCS 对象
 func NewPCS(appID int, bduss string) *BaiduPCS {
@@ -222,6 +267,20 @@ func (pcs *BaiduPCS) GetBDUSS() (bduss string) {
 	cookies := pcs.client.Jar.Cookies(baiduComURL)
 	for _, cookie := range cookies {
 		if cookie.Name == "BDUSS" {
+			return cookie.Value
+		}
+	}
+	return ""
+}
+
+// GetBAIDUID 获取BAIDUID
+func (pcs *BaiduPCS) GetBAIDUID() (baiduid string) {
+	if pcs.client == nil || pcs.client.Jar == nil {
+		return ""
+	}
+	cookies := pcs.client.Jar.Cookies(baiduComURL)
+	for _, cookie := range cookies {
+		if cookie.Name == "BAIDUID" {
 			return cookie.Value
 		}
 	}

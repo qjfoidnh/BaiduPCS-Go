@@ -26,7 +26,7 @@ func RunShareTransfer(params []string) {
 		link = params[0]
 		extracode = params[1]
 	}
-	if link[len(link)-1:len(link)] == "/" {
+	if link[len(link)-1:] == "/" {
 		link = link[0 : len(link)-1]
 	}
 	featurestrs := strings.Split(link, "/")
@@ -38,14 +38,13 @@ func RunShareTransfer(params []string) {
 		fmt.Printf("%s失败: %s\n", baidupcs.OperationShareFileSavetoLocal, "链接地址或提取码非法")
 		return
 	}
-	// link = "pan.baidu.com/share/init?surl=" + featurestr[1:]
-	link = "pan.baidu.com/s/" + featurestr
 	pcs := GetBaiduPCS()
-	tokens := pcs.AccessSharePage("https://"+link, true)
+	tokens := pcs.AccessSharePage(featurestr, true)
 	if tokens["ErrMsg"] != "0" {
 		fmt.Printf("%s失败: %s\n", baidupcs.OperationShareFileSavetoLocal, tokens["ErrMsg"])
 		return
 	}
+	// pcs.UpdatePCSCookies(true)
 	var vefiryurl string
 	featuremap := make(map[string]string)
 	featuremap["surl"] = featurestr[1:]
@@ -53,49 +52,39 @@ func RunShareTransfer(params []string) {
 	if extracode != "none" {
 
 		vefiryurl = pcs.GenerateShareQueryURL("verify", featuremap).String()
-		res := pcs.PostShareQuery(vefiryurl, map[string]string{
-			"pwd": extracode,
+		res := pcs.PostShareQuery(vefiryurl, featurestr[1:], map[string]string{
+			"pwd":       extracode,
+			"vcode":     "",
+			"vcode_str": "",
 		})
 		if res["ErrMsg"] != "0" {
 			fmt.Printf("%s失败: %s\n", baidupcs.OperationShareFileSavetoLocal, res["ErrMsg"])
 			return
 		}
 	}
+	pcs.UpdatePCSCookies(true)
 
-	tokens = pcs.AccessSharePage("https://pan.baidu.com/s/"+featurestr, false)
+	tokens = pcs.AccessSharePage(featurestr, false)
 	if tokens["ErrMsg"] != "0" {
 		fmt.Printf("%s失败: %s\n", baidupcs.OperationShareFileSavetoLocal, tokens["ErrMsg"])
 		return
 	}
-	bdstoken := tokens["bdstoken"]
-	delete(tokens, "bdstoken")
-	tokens["desc"] = "1"
-	tokens["num"] = "100"
-	tokens["order"] = "time"
-	tokens["page"] = "1"
-	tokens["root"] = "1"
-	tokens["showempty"] = "0"
-	listurl := pcs.GenerateShareQueryURL("list", tokens).String()
-	emptymap := make(map[string]string)
-	metas := pcs.GenerateRequestQuery("GET", listurl, nil)
-	if metas["ErrMsg"] != "0" {
-		fmt.Printf("%s失败: %s\n", baidupcs.OperationShareFileSavetoLocal, metas["ErrMsg"])
+	metajsonstr := tokens["metajson"]
+	trans_metas := pcs.ExtractShareInfo(metajsonstr)
+
+	if trans_metas["ErrMsg"] != "0" {
+		fmt.Printf("%s失败: %s\n", baidupcs.OperationShareFileSavetoLocal, trans_metas["ErrMsg"])
 		return
 	}
-	emptymap["bdstoken"] = bdstoken
-	emptymap["from"] = tokens["uk"]
-	emptymap["shareid"] = tokens["shareid"]
-	transferurl := pcs.GenerateShareQueryURL("transfer", emptymap).String()
-	postdata := make(map[string]string)
-	postdata["fsidlist"] = metas["fs_id"]
-	postdata["path"] = GetActiveUser().Workdir
-	resp := pcs.GenerateRequestQuery("POST", transferurl, postdata)
+	trans_metas["path"] = GetActiveUser().Workdir
+	trans_metas["referer"] = "https://pan.baidu.com/s/" + featurestr
+	pcs.UpdatePCSCookies(true)
+	resp := pcs.GenerateRequestQuery("POST", trans_metas)
 	if resp["ErrMsg"] != "0" {
 		fmt.Printf("%s失败: %s\n", baidupcs.OperationShareFileSavetoLocal, resp["ErrMsg"])
 		return
 	}
-
-	fmt.Printf("%s成功, 保存了%s到当前目录\n", baidupcs.OperationShareFileSavetoLocal, metas["filename"])
+	fmt.Printf("%s成功, 保存了%s到当前目录\n", baidupcs.OperationShareFileSavetoLocal, resp["filename"])
 }
 
 // RunRapidTransfer 执行秒传链接解析及保存
