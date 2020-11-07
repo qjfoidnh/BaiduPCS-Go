@@ -155,7 +155,6 @@ func (pcs *BaiduPCS) GenerateRequestQuery(mode string, params map[string]string)
 		res["ErrMsg"] = "网络错误"
 		return
 	}
-	fmt.Println("!!!!!!!!!!2")
 	defer dataReadCloser.Close()
 	body, err := ioutil.ReadAll(dataReadCloser)
 	res["ErrMsg"] = "0"
