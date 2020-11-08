@@ -7,12 +7,13 @@ This project was largely inspired by [GangZhuo/BaiduPCS](https://github.com/Gang
 
 ## 注意
 
-此版本基于iikira原版BaiduPCS-Go最新版本(v3.6.2)修改, 添加了转存功能和部分配置建议, 替换了文档中一些失效的链接和页面并更新少量说明.
+此版本基于iikira原版BaiduPCS-Go最新版本(v3.6.2)修改, 添加了转存功能, 替换了文档中一些失效的链接和页面并更新少量使用说明.
 
 <!-- toc -->
 ## 目录
 
 - [特色](#特色)
+- [版本更新](#版本更新)
 - [编译/交叉编译 说明](#编译交叉编译-说明)
 - [下载/运行 说明](#下载运行-说明)
   * [Windows](#windows)
@@ -91,6 +92,12 @@ This project was largely inspired by [GangZhuo/BaiduPCS](https://github.com/Gang
 [转存](#转存文件目录)其他用户分享的文件, 支持公开、带密码的分享链接, 支持常见的几种秒传链接;
 
 [离线下载](#离线下载), 支持http/https/ftp/电驴/磁力链协议.
+
+# 版本更新
+
+**2020.11.08**
+v3.6.3: 修复转存失败, 修复分享文件失败
+
 
 # 编译/交叉编译 说明
 设置好 GOOS 和 GOARCH 环境变量,
