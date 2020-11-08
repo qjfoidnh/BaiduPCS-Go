@@ -16,6 +16,7 @@ type (
 	// Shared 分享信息
 	Shared struct {
 		Link    string `json:"link"`
+		Pwd     string `json:"pwd"`
 		ShareID int64  `json:"shareid"`
 	}
 
@@ -64,10 +65,11 @@ var (
 // ShareSet 分享文件
 func (pcs *BaiduPCS) ShareSet(paths []string, option *ShareOption) (s *Shared, pcsError pcserror.Error) {
 	if option == nil {
-		option = &ShareOption{}
+		option = &ShareOption{CreatePasswd(), 0}
 	}
+	passwd := option.Password
 
-	dataReadCloser, pcsError := pcs.PrepareSharePSet(paths, option.Period)
+	dataReadCloser, pcsError := pcs.PrepareSharePSet(paths, passwd, option.Period)
 	if pcsError != nil {
 		return
 	}
@@ -90,6 +92,7 @@ func (pcs *BaiduPCS) ShareSet(paths []string, option *ShareOption) (s *Shared, p
 		errInfo.Err = ErrShareLinkNotFound
 		return nil, errInfo
 	}
+	jsonData.Pwd = passwd
 
 	return jsonData.Shared, nil
 }

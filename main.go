@@ -1400,7 +1400,7 @@ func main() {
 					Aliases:     []string{"s"},
 					Usage:       "设置分享文件/目录",
 					UsageText:   app.Name + " share set <文件/目录1> <文件/目录2> ...",
-					Description: `目前只支持创建私密链接.`,
+					Description: `目前只支持创建永久私密链接, 随机生成提取码.`,
 					Action: func(c *cli.Context) error {
 						if c.NArg() < 1 {
 							cli.ShowCommandHelp(c, c.Command.Name)

@@ -1,12 +1,16 @@
 package baidupcs
 
 import (
+	"crypto/md5"
 	"errors"
+	"fmt"
 	"github.com/iikira/BaiduPCS-Go/baidupcs/pcserror"
 	"github.com/iikira/BaiduPCS-Go/pcsutil"
 	"github.com/iikira/BaiduPCS-Go/pcsutil/converter"
+	"io"
 	"path"
 	"strings"
+	"time"
 )
 
 // Isdir 检查路径在网盘中是否为目录
@@ -62,6 +66,15 @@ func allRelatedDir(pcspaths []string) (dirs []string) {
 		}
 	}
 	return
+}
+
+func CreatePasswd() string {
+	t := time.Now()
+	h := md5.New()
+	io.WriteString(h, "Asswecan")
+	io.WriteString(h, t.String())
+	passwd := fmt.Sprintf("%x", h.Sum(nil))
+	return passwd[0:4]
 }
 
 // GetHTTPScheme 获取 http 协议, https 或 http

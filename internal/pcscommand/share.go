@@ -23,7 +23,7 @@ func RunShareSet(paths []string, option *baidupcs.ShareOption) {
 		return
 	}
 
-	fmt.Printf("shareID: %d, 链接: %s\n", shared.ShareID, shared.Link)
+	fmt.Printf("shareID: %d, 链接: %s, 密码: %s\n", shared.ShareID, shared.Link, shared.Pwd)
 }
 
 // RunShareCancel 执行取消分享

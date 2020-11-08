@@ -586,7 +586,7 @@ func (pcs *BaiduPCS) PrepareCloudDlClearTask() (dataReadCloser io.ReadCloser, pc
 }
 
 // PrepareSharePSet 私密分享文件, 只返回服务器响应数据和错误信息
-func (pcs *BaiduPCS) PrepareSharePSet(paths []string, period int) (dataReadCloser io.ReadCloser, panError pcserror.Error) {
+func (pcs *BaiduPCS) PrepareSharePSet(paths []string, pwd string, period int) (dataReadCloser io.ReadCloser, panError pcserror.Error) {
 	pcs.lazyInit()
 	panURL := &url.URL{
 		Scheme: "https",
@@ -597,9 +597,11 @@ func (pcs *BaiduPCS) PrepareSharePSet(paths []string, period int) (dataReadClose
 
 	dataReadCloser, panError = pcs.sendReqReturnReadCloser(reqTypePan, OperationShareSet, http.MethodPost, panURL.String(), map[string]string{
 		"path_list":    mergeStringList(paths...),
-		"schannel":     "0",
+		"schannel":     "4",
 		"channel_list": "[]",
 		"period":       strconv.Itoa(period),
+		"pwd": pwd,
+		"share_type": "9",
 	}, map[string]string{
 		"Content-Type": "application/x-www-form-urlencoded",
 	})
