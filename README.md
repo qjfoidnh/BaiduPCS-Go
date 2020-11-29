@@ -91,6 +91,8 @@ This project was largely inspired by [GangZhuo/BaiduPCS](https://github.com/Gang
 
 [转存](#转存文件目录)其他用户分享的文件, 支持公开、带密码的分享链接, 支持常见的几种秒传链接;
 
+[导出](#导出文件目录)网盘内的文件秒传链接, 可选导出BaiduPCS-Go原生格式或通用格式;
+
 [离线下载](#离线下载), 支持http/https/ftp/电驴/磁力链协议.
 
 # 版本更新
@@ -144,7 +146,7 @@ cli交互模式下, 光标所在行的前缀应为 `BaiduPCS-Go >`, 如果登录
 
 ## Android / iOS
 
-> Android / iOS 移动设备操作比较麻烦, 不建议在移动设备上使用本程序.
+> Android / iOS 移动设备操作比较麻烦, 不建议在移动设备上使用本程序. 移动设备不可直接使用预编译的Linux arm64版本, 使用者需下载源码自行交叉编译.
 
 安卓, 建议使用 [Termux](https://termux.com) 或 [NeoTerm](https://github.com/NeoTerm/NeoTerm) 或 终端模拟器, 以提供终端环境.
 
