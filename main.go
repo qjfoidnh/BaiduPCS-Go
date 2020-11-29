@@ -1341,7 +1341,8 @@ func main() {
 
 					strLength, strMd5, strSliceMd5, strCrc32 := strconv.FormatInt(lp.Length, 10), hex.EncodeToString(lp.MD5), hex.EncodeToString(lp.SliceMD5), strconv.FormatUint(uint64(lp.CRC32), 10)
 					fileName := filepath.Base(filePath)
-
+					regFileName := strings.Replace(fileName, " ", "_", -1 )
+					regFileName = strings.Replace(regFileName, "#", "_", -1)
 					tb := pcstable.NewTable(os.Stdout)
 					tb.SetColumnAlignment([]int{tablewriter.ALIGN_LEFT, tablewriter.ALIGN_LEFT})
 					tb.AppendBulk([][]string{
@@ -1350,6 +1351,7 @@ func main() {
 						[]string{"前256KB切片的md5", strSliceMd5},
 						[]string{"crc32", strCrc32},
 						[]string{"秒传命令", app.Name + " rapidupload -length=" + strLength + " -md5=" + strMd5 + " -slicemd5=" + strSliceMd5 + " -crc32=" + strCrc32 + " " + fileName},
+						[]string{"通用秒传链接", strMd5 + "#" + strSliceMd5 + "#" + strLength + regFileName},
 					})
 					tb.Render()
 					fmt.Printf("\n")
