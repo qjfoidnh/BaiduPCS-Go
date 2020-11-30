@@ -332,7 +332,8 @@ func (dtu *DownloadTaskUnit) pcsOrStreamingDownload(mode DownloadMode, result *t
 func (dtu *DownloadTaskUnit) checkFileValid(result *taskframework.TaskUnitRunResult) (ok bool) {
 	if dtu.Cfg.IsTest || dtu.NoCheck {
 		// 不检测文件有效性
-		return
+		fmt.Printf("[%s] 跳过文件有效性检验\n", dtu.taskInfo.Id())
+		return true
 	}
 
 	if dtu.fileInfo.Size >= 128*converter.MB {

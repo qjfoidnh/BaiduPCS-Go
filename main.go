@@ -1780,6 +1780,9 @@ func main() {
 						if c.IsSet("enable_https") {
 							pcsconfig.Config.SetEnableHTTPS(c.Bool("enable_https"))
 						}
+						if c.IsSet("no_check") {
+							pcsconfig.Config.SetNoCheck(c.Bool("no_check"))
+						}
 						if c.IsSet("user_agent") {
 							pcsconfig.Config.SetUserAgent(c.String("user_agent"))
 						}
@@ -1876,6 +1879,10 @@ func main() {
 						cli.BoolFlag{
 							Name:  "enable_https",
 							Usage: "启用 https",
+						},
+						cli.BoolFlag{
+							Name:  "no_check",
+							Usage: "关闭下载文件md5校验",
 						},
 						cli.StringFlag{
 							Name:  "user_agent",

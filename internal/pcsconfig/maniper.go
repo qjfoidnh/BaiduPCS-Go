@@ -209,6 +209,10 @@ func (c *PCSConfig) SetEnableHTTPS(https bool) {
 	}
 }
 
+func (c *PCSConfig) SetNoCheck(nocheck bool) {
+	c.NoCheck = nocheck
+}
+
 // SetProxy 设置代理
 func (c *PCSConfig) SetProxy(proxy string) {
 	c.Proxy = proxy

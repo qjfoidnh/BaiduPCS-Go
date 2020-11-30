@@ -58,6 +58,10 @@ func RunDownload(paths []string, options *DownloadOptions) {
 		options.MaxRetry = pcsdownload.DefaultDownloadMaxRetry
 	}
 
+	if !options.NoCheck {
+		options.NoCheck = pcsconfig.Config.NoCheck
+	}
+
 	if runtime.GOOS == "windows" {
 		// windows下不加执行权限
 		options.IsExecutedPermission = false
