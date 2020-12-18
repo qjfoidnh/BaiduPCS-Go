@@ -34,7 +34,7 @@ func RunShareTransfer(params []string) {
 	if strings.Contains(featurestr, "init?") {
 		featurestr = "1" + strings.Split(featurestr, "=")[1]
 	}
-	if len(featurestr) != 23 || featurestr[0:1] != "1" || len(extracode) != 4 {
+	if (len(featurestr)!=8 && len(featurestr)!=23) || featurestr[0:1] != "1" || len(extracode) != 4 {
 		fmt.Printf("%s失败: %s\n", baidupcs.OperationShareFileSavetoLocal, "链接地址或提取码非法")
 		return
 	}

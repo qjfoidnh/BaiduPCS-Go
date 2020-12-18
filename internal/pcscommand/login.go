@@ -6,7 +6,7 @@ import (
 	"image/png"
 	"io/ioutil"
 
-	baidulogin "github.com/iikira/Baidu-Login"
+	baidulogin "github.com/qjfoidnh/Baidu-Login"
 	"github.com/iikira/BaiduPCS-Go/internal/pcsfunctions/pcscaptcha"
 	"github.com/iikira/BaiduPCS-Go/pcsliner"
 	"github.com/iikira/BaiduPCS-Go/requester"
@@ -62,7 +62,6 @@ func RunLogin(username, password string) (bduss, ptoken, stoken string, cookies 
 for_1:
 	for i := 0; i < 10; i++ {
 		lj := bc.BaiduLogin(username, password, vcode, vcodestr)
-
 		switch lj.ErrInfo.No {
 		case "0": // 登录成功, 退出循环
 			return lj.Data.BDUSS, lj.Data.PToken, lj.Data.SToken, lj.Data.CookieString, nil
