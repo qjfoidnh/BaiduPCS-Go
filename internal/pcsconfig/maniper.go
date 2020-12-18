@@ -4,8 +4,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/iikira/BaiduPCS-Go/pcsutil/converter"
-	"github.com/iikira/BaiduPCS-Go/requester"
+	"github.com/qjfoidnh/BaiduPCS-Go/pcsutil/converter"
+	"github.com/qjfoidnh/BaiduPCS-Go/requester"
 )
 
 const (
@@ -207,6 +207,10 @@ func (c *PCSConfig) SetEnableHTTPS(https bool) {
 	if c.pcs != nil {
 		c.pcs.SetHTTPS(https)
 	}
+}
+
+func (c *PCSConfig) SetNoCheck(nocheck bool) {
+	c.NoCheck = nocheck
 }
 
 // SetProxy 设置代理

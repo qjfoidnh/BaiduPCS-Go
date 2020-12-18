@@ -7,7 +7,7 @@ import (
 	_ "unsafe" // for go:linkname
 )
 
-//go:linkname helpCommand1 github.com/iikira/BaiduPCS-Go/vendor/github.com/urfave/cli.helpCommand
+//go:linkname helpCommand1 github.com/qjfoidnh/BaiduPCS-Go/vendor/github.com/urfave/cli.helpCommand
 //go:linkname helpCommand2 github.com/urfave/cli.helpCommand
 var (
 	helpCommand1 cli.Command

@@ -2,8 +2,8 @@ package downloader
 
 import (
 	"fmt"
-	"github.com/iikira/BaiduPCS-Go/pcsutil/converter"
-	"github.com/iikira/BaiduPCS-Go/requester/transfer"
+	"github.com/qjfoidnh/BaiduPCS-Go/pcsutil/converter"
+	"github.com/qjfoidnh/BaiduPCS-Go/requester/transfer"
 	"io"
 	"os"
 )

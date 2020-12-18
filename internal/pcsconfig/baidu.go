@@ -8,10 +8,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/iikira/BaiduPCS-Go/baidupcs"
-	"github.com/iikira/BaiduPCS-Go/pcstable"
-	"github.com/iikira/BaiduPCS-Go/pcsutil/converter"
-	"github.com/iikira/baidu-tools/tieba"
+	"github.com/qjfoidnh/BaiduPCS-Go/baidupcs"
+	"github.com/qjfoidnh/BaiduPCS-Go/pcstable"
+	"github.com/qjfoidnh/BaiduPCS-Go/pcsutil/converter"
+	"github.com/qjfoidnh/baidu-tools/tieba"
 	"github.com/olekukonko/tablewriter"
 )
 
@@ -46,11 +46,11 @@ type Baidu struct {
 func (baidu *Baidu) BaiduPCS() *baidupcs.BaiduPCS {
 	pcs := baidupcs.NewPCS(Config.AppID, baidu.BDUSS)
 	pcs.SetStoken(baidu.STOKEN)
-	if strings.Contains(baidu.COOKIES, "BAIDUID=") {
+	if strings.Contains(baidu.COOKIES, "STOKEN=") {
 		// fmt.Println("已加载完整Cookies，可以使用转存功能")
 		pcs = baidupcs.NewPCSWithCookieStr(Config.AppID, baidu.COOKIES)
-	} else if baidu.BDUSS != "" {
-		fmt.Println("注：分享链接转存功能无法使用，可使用-cookies参数重新登录以启用")
+	} else if(len(baidu.COOKIES) != 0) {
+		fmt.Println("Cookies信息不完整，可能无法使用转存功能")
 	}
 	pcs.SetHTTPS(Config.EnableHTTPS)
 	pcs.SetPCSUserAgent(Config.PCSUA)

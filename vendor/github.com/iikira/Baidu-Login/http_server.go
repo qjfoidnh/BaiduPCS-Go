@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/GeertJohan/go.rice"
 	"github.com/astaxie/beego/session"
-	"github.com/iikira/BaiduPCS-Go/pcsutil"
+	"github.com/qjfoidnh/BaiduPCS-Go/pcsutil"
 	"github.com/json-iterator/go"
 	"log"
 	"net"

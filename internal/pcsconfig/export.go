@@ -2,10 +2,10 @@ package pcsconfig
 
 import (
 	"fmt"
-	"github.com/iikira/BaiduPCS-Go/baidupcs"
-	"github.com/iikira/BaiduPCS-Go/pcstable"
-	"github.com/iikira/BaiduPCS-Go/pcsutil/converter"
-	"github.com/iikira/BaiduPCS-Go/requester"
+	"github.com/qjfoidnh/BaiduPCS-Go/baidupcs"
+	"github.com/qjfoidnh/BaiduPCS-Go/pcstable"
+	"github.com/qjfoidnh/BaiduPCS-Go/pcsutil/converter"
+	"github.com/qjfoidnh/BaiduPCS-Go/requester"
 	"github.com/olekukonko/tablewriter"
 	"os"
 	"strconv"
@@ -75,6 +75,7 @@ func (c *PCSConfig) PrintTable() {
 		[]string{"max_upload_rate", showMaxRate(c.MaxUploadRate), "", "限制最大上传速度, 0代表不限制"},
 		[]string{"savedir", c.SaveDir, "", "下载文件的储存目录"},
 		[]string{"enable_https", fmt.Sprint(c.EnableHTTPS), "true", "启用 https"},
+		[]string{"no_check", fmt.Sprint(c.NoCheck), "true", "关闭下载文件md5校验"},
 		[]string{"user_agent", c.UserAgent, requester.DefaultUserAgent, "浏览器标识"},
 		[]string{"pcs_ua", c.PCSUA, "", "PCS 浏览器标识"},
 		[]string{"pan_ua", c.PanUA, baidupcs.NetdiskUA, "Pan 浏览器标识"},

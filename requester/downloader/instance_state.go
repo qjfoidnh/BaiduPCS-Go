@@ -3,9 +3,9 @@ package downloader
 import (
 	"errors"
 	"github.com/golang/protobuf/proto"
-	"github.com/iikira/BaiduPCS-Go/pcsutil/cachepool"
-	"github.com/iikira/BaiduPCS-Go/pcsverbose"
-	"github.com/iikira/BaiduPCS-Go/requester/transfer"
+	"github.com/qjfoidnh/BaiduPCS-Go/pcsutil/cachepool"
+	"github.com/qjfoidnh/BaiduPCS-Go/pcsverbose"
+	"github.com/qjfoidnh/BaiduPCS-Go/requester/transfer"
 	"github.com/json-iterator/go"
 	"os"
 	"sync"

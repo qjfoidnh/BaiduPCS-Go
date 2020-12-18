@@ -3,17 +3,17 @@ package pcsdownload
 import (
 	"errors"
 	"fmt"
-	"github.com/iikira/BaiduPCS-Go/baidupcs"
-	"github.com/iikira/BaiduPCS-Go/baidupcs/pcserror"
-	"github.com/iikira/BaiduPCS-Go/internal/pcsconfig"
-	"github.com/iikira/BaiduPCS-Go/internal/pcsfunctions"
-	"github.com/iikira/BaiduPCS-Go/pcstable"
-	"github.com/iikira/BaiduPCS-Go/pcsutil/converter"
-	"github.com/iikira/BaiduPCS-Go/pcsutil/taskframework"
-	"github.com/iikira/BaiduPCS-Go/pcsverbose"
-	"github.com/iikira/BaiduPCS-Go/requester"
-	"github.com/iikira/BaiduPCS-Go/requester/downloader"
-	"github.com/iikira/BaiduPCS-Go/requester/transfer"
+	"github.com/qjfoidnh/BaiduPCS-Go/baidupcs"
+	"github.com/qjfoidnh/BaiduPCS-Go/baidupcs/pcserror"
+	"github.com/qjfoidnh/BaiduPCS-Go/internal/pcsconfig"
+	"github.com/qjfoidnh/BaiduPCS-Go/internal/pcsfunctions"
+	"github.com/qjfoidnh/BaiduPCS-Go/pcstable"
+	"github.com/qjfoidnh/BaiduPCS-Go/pcsutil/converter"
+	"github.com/qjfoidnh/BaiduPCS-Go/pcsutil/taskframework"
+	"github.com/qjfoidnh/BaiduPCS-Go/pcsverbose"
+	"github.com/qjfoidnh/BaiduPCS-Go/requester"
+	"github.com/qjfoidnh/BaiduPCS-Go/requester/downloader"
+	"github.com/qjfoidnh/BaiduPCS-Go/requester/transfer"
 	"io"
 	"net/http"
 	"os"
@@ -332,7 +332,8 @@ func (dtu *DownloadTaskUnit) pcsOrStreamingDownload(mode DownloadMode, result *t
 func (dtu *DownloadTaskUnit) checkFileValid(result *taskframework.TaskUnitRunResult) (ok bool) {
 	if dtu.Cfg.IsTest || dtu.NoCheck {
 		// 不检测文件有效性
-		return
+		fmt.Printf("[%s] 跳过文件有效性检验\n", dtu.taskInfo.Id())
+		return true
 	}
 
 	if dtu.fileInfo.Size >= 128*converter.MB {

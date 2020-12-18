@@ -6,7 +6,7 @@ import (
 	"crypto/cipher"
 	cryptorand "crypto/rand"
 	"fmt"
-	"github.com/iikira/Baidu-Login/bdcrypto/ecb"
+	"github.com/qjfoidnh/Baidu-Login/bdcrypto/ecb"
 	"io"
 )
 

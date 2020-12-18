@@ -1,7 +1,7 @@
 package pcsutil
 
 import (
-	"github.com/iikira/BaiduPCS-Go/pcsverbose"
+	"github.com/qjfoidnh/BaiduPCS-Go/pcsverbose"
 	"github.com/kardianos/osext"
 	"os"
 	"path"

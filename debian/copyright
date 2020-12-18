@@ -1,9 +1,9 @@
 Format-Specification: http://svn.debian.org/wsvn/dep/web/deps/dep5.mdwn?op=file&rev=135
 Name: BaiduPCS-Go
-Maintainer: iikira <i@mail.iikira.com>
-Source: https://github.com/iikira/BaiduPCS-Go
+Maintainer: qjfoidnh <i@mail.qjfoidnh.com>
+Source: https://github.com/qjfoidnh/BaiduPCS-Go
 
-Copyright: 2016-2019 iikira <i@mail.iikira.com>
+Copyright: 2016-2019 qjfoidnh <i@mail.qjfoidnh.com>
 License: Apache-2.0+
 Apache License
                            Version 2.0, January 2004
@@ -193,7 +193,7 @@ Apache License
       same "printed page" as the copyright notice for easier
       identification within third-party archives.
 
-   Copyright iikira.
+   Copyright qjfoidnh.
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.

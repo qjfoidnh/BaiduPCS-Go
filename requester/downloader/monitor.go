@@ -3,8 +3,8 @@ package downloader
 import (
 	"context"
 	"errors"
-	"github.com/iikira/BaiduPCS-Go/pcsverbose"
-	"github.com/iikira/BaiduPCS-Go/requester/transfer"
+	"github.com/qjfoidnh/BaiduPCS-Go/pcsverbose"
+	"github.com/qjfoidnh/BaiduPCS-Go/requester/transfer"
 	"sort"
 	"time"
 )

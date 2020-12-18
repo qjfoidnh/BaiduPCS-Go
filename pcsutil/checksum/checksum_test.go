@@ -2,7 +2,7 @@ package checksum_test
 
 import (
 	"fmt"
-	"github.com/iikira/BaiduPCS-Go/pcsutil/checksum"
+	"github.com/qjfoidnh/BaiduPCS-Go/pcsutil/checksum"
 	"testing"
 )
 
@@ -32,9 +32,9 @@ func TestChecksum(t *testing.T) {
 		printFileMeta(&lf.LocalFileMeta)
 	}
 
-	fmt.Println("--- /Users/syy/go/src/github.com/iikira/BaiduPCS-Go/BaiduPCS-Go")
+	fmt.Println("--- /Users/syy/go/src/github.com/qjfoidnh/BaiduPCS-Go/BaiduPCS-Go")
 	for _, flag := range flagList {
-		lf := checksum.NewLocalFileChecksumWithBufSize("/Users/syy/go/src/github.com/iikira/BaiduPCS-Go/BaiduPCS-Go", checksum.DefaultBufSize-3, checksum.DefaultBufSize)
+		lf := checksum.NewLocalFileChecksumWithBufSize("/Users/syy/go/src/github.com/qjfoidnh/BaiduPCS-Go/BaiduPCS-Go", checksum.DefaultBufSize-3, checksum.DefaultBufSize)
 		err := lf.OpenPath()
 		if err != nil {
 			t.Fatal(err)

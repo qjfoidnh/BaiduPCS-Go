@@ -3,7 +3,7 @@ package transfer
 import (
 	"errors"
 	"fmt"
-	"github.com/iikira/BaiduPCS-Go/pcsutil/converter"
+	"github.com/qjfoidnh/BaiduPCS-Go/pcsutil/converter"
 	"sync"
 	"sync/atomic"
 )
