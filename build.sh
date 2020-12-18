@@ -57,10 +57,10 @@ IOSBuild() {
   mkdir -p "$output/$1"
   cd "$output/$1"
   export CC=/usr/local/go/misc/ios/clangwrap.sh GOOS=darwin GOARCH=arm GOARM=7 CGO_ENABLED=1
-  $go build -ldflags "-X main.Version=$version -s -w" -o "armv7" github.com/iikira/BaiduPCS-Go
+  $go build -ldflags "-X main.Version=$version -s -w" -o "armv7" github.com/qjfoidnh/BaiduPCS-Go
   jtool --sign --inplace --ent ../../entitlements.xml "armv7"
   export GOARCH=arm64
-  $go build -ldflags "-X main.Version=$version -s -w" -o "arm64" github.com/iikira/BaiduPCS-Go
+  $go build -ldflags "-X main.Version=$version -s -w" -o "arm64" github.com/qjfoidnh/BaiduPCS-Go
   jtool --sign --inplace --ent ../../entitlements.xml "arm64"
   lipo -create "armv7" "arm64" -output $name # merge
   rm "armv7" "arm64"
@@ -85,7 +85,7 @@ Pack() {
 # rice 打包静态资源
 RicePack() {
   return # 已取消web功能
-  rice -i github.com/iikira/BaiduPCS-Go/internal/pcsweb append --exec "$output/$1/$2"
+  rice -i github.com/qjfoidnh/BaiduPCS-Go/internal/pcsweb append --exec "$output/$1/$2"
 }
 
 touch ./vendor/golang.org/x/sys/windows/windows.s

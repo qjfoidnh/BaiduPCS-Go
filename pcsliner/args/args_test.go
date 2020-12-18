@@ -2,7 +2,7 @@ package args_test
 
 import (
 	"fmt"
-	"github.com/iikira/BaiduPCS-Go/pcsliner/args"
+	"github.com/qjfoidnh/BaiduPCS-Go/pcsliner/args"
 	"testing"
 )
 

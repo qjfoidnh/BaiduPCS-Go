@@ -1,7 +1,7 @@
 package pcsdownload
 
 import (
-	"github.com/iikira/BaiduPCS-Go/internal/pcsfunctions"
+	"github.com/qjfoidnh/BaiduPCS-Go/internal/pcsfunctions"
 )
 
 type (

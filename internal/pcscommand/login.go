@@ -7,9 +7,9 @@ import (
 	"io/ioutil"
 
 	baidulogin "github.com/qjfoidnh/Baidu-Login"
-	"github.com/iikira/BaiduPCS-Go/internal/pcsfunctions/pcscaptcha"
-	"github.com/iikira/BaiduPCS-Go/pcsliner"
-	"github.com/iikira/BaiduPCS-Go/requester"
+	"github.com/qjfoidnh/BaiduPCS-Go/internal/pcsfunctions/pcscaptcha"
+	"github.com/qjfoidnh/BaiduPCS-Go/pcsliner"
+	"github.com/qjfoidnh/BaiduPCS-Go/requester"
 )
 
 // handleVerifyImg 处理验证码, 下载到本地

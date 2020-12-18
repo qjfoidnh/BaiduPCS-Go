@@ -1435,8 +1435,8 @@
 
 | 参数名称 | 描述 |
 | :- | :- |
-| error_code | 错误码，详见“[文件API错误码列表](https://github.com/iikira/BaiduPCS-Go/blob/master/docs/file_data_apis_error.md)” |
-| error_msg | 错误信息，详见“[文件API错误码列表](https://github.com/iikira/BaiduPCS-Go/blob/master/docs/file_data_apis_error.md)” |
+| error_code | 错误码，详见“[文件API错误码列表](https://github.com/qjfoidnh/BaiduPCS-Go/blob/master/docs/file_data_apis_error.md)” |
+| error_msg | 错误信息，详见“[文件API错误码列表](https://github.com/qjfoidnh/BaiduPCS-Go/blob/master/docs/file_data_apis_error.md)” |
 | request_id | 请求ID，也就是服务器用于追踪错误的的日志ID |
 
 #### 示例
@@ -1509,8 +1509,8 @@
 
 | 参数名称 | 描述 |
 | :- | :- |
-| error_code | 错误码，详见“[文件API错误码列表](https://github.com/iikira/BaiduPCS-Go/blob/master/docs/file_data_apis_error.md)” |
-| error_msg | 错误信息，详见“[文件API错误码列表](https://github.com/iikira/BaiduPCS-Go/blob/master/docs/file_data_apis_error.md)” |
+| error_code | 错误码，详见“[文件API错误码列表](https://github.com/qjfoidnh/BaiduPCS-Go/blob/master/docs/file_data_apis_error.md)” |
+| error_msg | 错误信息，详见“[文件API错误码列表](https://github.com/qjfoidnh/BaiduPCS-Go/blob/master/docs/file_data_apis_error.md)” |
 | request_id | 请求ID，也就是服务器用于追踪错误的的日志ID |
 
 #### 示例
@@ -1552,8 +1552,8 @@
 
 | 参数名称 | 描述 |
 | :- | :- |
-| error_code | 错误码，详见“[文件API错误码列表](https://github.com/iikira/BaiduPCS-Go/blob/master/docs/file_data_apis_error.md)” |
-| error_msg | 错误信息，详见“[文件API错误码列表](https://github.com/iikira/BaiduPCS-Go/blob/master/docs/file_data_apis_error.md)” |
+| error_code | 错误码，详见“[文件API错误码列表](https://github.com/qjfoidnh/BaiduPCS-Go/blob/master/docs/file_data_apis_error.md)” |
+| error_msg | 错误信息，详见“[文件API错误码列表](https://github.com/qjfoidnh/BaiduPCS-Go/blob/master/docs/file_data_apis_error.md)” |
 | extra | extra由list数组组成，list数组中包含一个元素fs_id，即文件或目录ID |
 | request_id | 请求ID，也就是服务器用于追踪错误的的日志ID |
 
@@ -1612,8 +1612,8 @@
 
 | 参数名称 | 描述 |
 | :- | :- |
-| error_code | 错误码，详见“[文件API错误码列表](https://github.com/iikira/BaiduPCS-Go/blob/master/docs/file_data_apis_error.md)” |
-| error_msg | 错误信息，详见“[文件API错误码列表](https://github.com/iikira/BaiduPCS-Go/blob/master/docs/file_data_apis_error.md)” |
+| error_code | 错误码，详见“[文件API错误码列表](https://github.com/qjfoidnh/BaiduPCS-Go/blob/master/docs/file_data_apis_error.md)” |
+| error_msg | 错误信息，详见“[文件API错误码列表](https://github.com/qjfoidnh/BaiduPCS-Go/blob/master/docs/file_data_apis_error.md)” |
 | request_id | 请求ID，也就是服务器用于追踪错误的的日志ID |
 
 #### 示例

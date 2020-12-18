@@ -1,7 +1,7 @@
 package converter_test
 
 import (
-	"github.com/iikira/BaiduPCS-Go/pcsutil/converter"
+	"github.com/qjfoidnh/BaiduPCS-Go/pcsutil/converter"
 	"strings"
 	"testing"
 )
