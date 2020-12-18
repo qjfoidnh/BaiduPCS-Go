@@ -1,4 +1,6 @@
-module BaiduPCS-Go
+
+module github.com/qjfoidnh/BaiduPCS-Go
+
 
 go 1.13
 
