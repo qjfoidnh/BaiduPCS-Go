@@ -96,7 +96,7 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "BaiduPCS-Go"
 	app.Version = Version
-	app.Author = "qjfoidnh/BaiduPCS-Go: https://github.com/qjfoidnh/BaiduPCS-Go"
+	app.Author = "iikira/BaiduPCS-Go: https://github.com/qjfoidnh/BaiduPCS-Go"
 	app.Copyright = "(c) 2016-2020 qjfoidnh."
 	app.Usage = "百度网盘客户端 for " + runtime.GOOS + "/" + runtime.GOARCH
 	app.Description = `BaiduPCS-Go 使用Go语言编写的百度网盘命令行客户端, 为操作百度网盘, 提供实用功能.
@@ -113,7 +113,7 @@ func main() {
 
 	交流反馈:
 		提交Issue: https://github.com/qjfoidnh/BaiduPCS-Go/issues
-		邮箱: i@mail.qjfoidnh.com`
+		邮箱: qjfoidnh@126.com`
 
 	app.Flags = []cli.Flag{
 		cli.BoolFlag{

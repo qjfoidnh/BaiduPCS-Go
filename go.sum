@@ -156,6 +156,7 @@ github.com/prometheus/procfs v0.0.2/go.mod h1:TjEm7ze935MbeOT/UhFTIMYKhuLP4wbCsT
 github.com/prometheus/procfs v0.1.3/go.mod h1:lV6e/gmhEcM9IjHGsFOCxxuZ+z1YqCvr4OA4YeYWdaU=
 github.com/qjfoidnh/Baidu-Login v1.3.8 h1:XQXeHkUu3GLrKvCxQ1f8eaZXAWExxe0P39NmzAalHkQ=
 github.com/qjfoidnh/Baidu-Login v1.3.8/go.mod h1:wNfM+DJJ7X6OD5vDWfgF5Ye5zshoYYNocw21oSBFg08=
+github.com/qjfoidnh/Baidu-Login v1.3.9 h1:pwccQOAEpAGd1taAJI7XYUOwqBS6QUjJ9DSjJYVyM/w=
 github.com/qjfoidnh/Baidu-Login v1.3.9/go.mod h1:oRFCmVYQka0KYwvbf2zS6UeMupgv0w1CSq4Jovhz6qg=
 github.com/qjfoidnh/BaiduPCS-Go v0.0.0-20201218134534-d55d9918bd1b/go.mod h1:00iH1dQEStMeT3t+oeVrIucWcu3fFEaFYyygNxfOEv4=
 github.com/qjfoidnh/baidu-tools v0.0.0-20201218182636-dfa5778abeed h1:Hv47YId8ZGCvLI7d32USeopK5t5o7Y1PaPwKmVdYi2w=
