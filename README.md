@@ -99,6 +99,7 @@ iikira/BaiduPCS-Go was largely inspired by [GangZhuo/BaiduPCS](https://github.co
 **2020.12.19**
 v3.7.0: 
 * 替换了iikira版本的失效仓库
+* 转存功能支持旧的短链接
 * 默认关闭下载文件校验，配置文件可设置开启
 * 修复了关闭校验时会误报下载失败的问题
 * 转存功能除了cookies方式登录，现已支持用户名密码登录和bduss登录；bduss登录需同时指定stoken
