@@ -2,14 +2,14 @@
     "FixedFileInfo": {
         "FileVersion": {
             "Major": 3,
-            "Minor": 6,
-            "Patch": 2,
+            "Minor": 7,
+            "Patch": 0,
             "Build": 0
         },
         "ProductVersion": {
             "Major": 3,
-            "Minor": 6,
-            "Patch": 2,
+            "Minor": 7,
+            "Patch": 0,
             "Build": 0
         },
         "FileFlagsMask": "3f",
@@ -21,15 +21,15 @@
     "StringFileInfo": {
         "Comments": "",
         "CompanyName": "qjfoidnh",
-        "FileDescription": "百度网盘客户端",
-        "FileVersion": "v3.6.2",
+        "FileDescription": "百度网盘客户端(加强版)",
+        "FileVersion": "v3.7.0",
         "InternalName": "",
-        "LegalCopyright": "© 2016-2020 qjfoidnh.",
+        "LegalCopyright": "© 2016-2020 iikira.",
         "LegalTrademarks": "",
         "OriginalFilename": "",
         "PrivateBuild": "",
         "ProductName": "BaiduPCS-Go",
-        "ProductVersion": "v3.6.2",
+        "ProductVersion": "v3.7.0",
         "SpecialBuild": ""
     },
     "VarFileInfo": {

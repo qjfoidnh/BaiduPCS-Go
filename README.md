@@ -3,7 +3,7 @@
 
 仿 Linux shell 文件处理命令的百度网盘命令行客户端.
 
-This project was largely inspired by [GangZhuo/BaiduPCS](https://github.com/GangZhuo/BaiduPCS) and iikira/BaiduPCS-Go
+iikira/BaiduPCS-Go was largely inspired by [GangZhuo/BaiduPCS](https://github.com/GangZhuo/BaiduPCS) and this project was largely based on iikira/BaiduPCS-Go
 
 ## 注意
 
@@ -96,6 +96,12 @@ This project was largely inspired by [GangZhuo/BaiduPCS](https://github.com/Gang
 [离线下载](#离线下载), 支持http/https/ftp/电驴/磁力链协议.
 
 # 版本更新
+**2020.12.19**
+v3.7.0: 
+* 替换了iikira版本的失效仓库
+* 默认关闭下载文件校验，配置文件可设置开启
+* 修复了关闭校验时会误报下载失败的问题
+* 转存功能除了cookies方式登录，现已支持用户名密码登录和bduss登录；bduss登录需同时指定stoken
 
 **2020.11.08**
 v3.6.3: 修复转存失败, 修复分享文件失败

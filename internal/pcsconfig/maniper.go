@@ -116,7 +116,7 @@ func (c *PCSConfig) CheckBaiduUserExist(baidubase *BaiduBase) bool {
 
 // SetupUserByBDUSS 设置百度 bduss, ptoken, stoken, cookies 并保存
 func (c *PCSConfig) SetupUserByBDUSS(bduss, ptoken, stoken, cookies string) (baidu *Baidu, err error) {
-	if cookies != "" {
+	if bduss == "" && cookies != "" {
 		re, _ := regexp.Compile(`BDUSS=(.+?);`)
 		sub := re.FindSubmatch([]byte(cookies))
 		bduss = string(sub[1])
