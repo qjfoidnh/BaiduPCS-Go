@@ -26,6 +26,7 @@ type (
 	UploadOptions struct {
 		Parallel      int
 		MaxRetry      int
+		Load 		  int
 		NoRapidUpload bool
 		NoSplitFile   bool // 禁用分片上传
 	}
@@ -80,6 +81,10 @@ func RunUpload(localPaths []string, savePath string, opt *UploadOptions) {
 		opt.MaxRetry = DefaultUploadMaxRetry
 	}
 
+	if opt.Load <=0 {
+		opt.Load = pcsconfig.Config.MaxUploadLoad
+	}
+
 	err := matchPathByShellPatternOnce(&savePath)
 	if err != nil {
 		fmt.Printf("警告: 上传文件, 获取网盘路径 %s 错误, %s\n", savePath, err)
@@ -109,8 +114,12 @@ func RunUpload(localPaths []string, savePath string, opt *UploadOptions) {
 		// 统计
 		statistic = &pcsupload.UploadStatistic{}
 	)
+	fmt.Print("\n")
+	fmt.Printf("[0] 提示: 当前上传单个文件最大并发量为: %d, 最大同时上传文件数为: %d\n", opt.Parallel, opt.Load)
 
 	statistic.StartTimer() // 开始计时
+
+	LoadCount := 1
 
 	for k := range localPaths {
 		walkedFiles, err := pcsutil.WalkDir(localPaths[k], "")
@@ -135,7 +144,7 @@ func RunUpload(localPaths []string, savePath string, opt *UploadOptions) {
 			}
 
 			subSavePath = strings.TrimPrefix(walkedFiles[k3], localPathDir)
-
+			LoadCount++
 			info := executor.Append(&pcsupload.UploadTaskUnit{
 				LocalFileChecksum: checksum.NewLocalFileChecksum(walkedFiles[k3], int(baidupcs.SliceMD5Size)),
 				SavePath:          path.Clean(savePath + baidupcs.PathSeparator + subSavePath),
@@ -146,6 +155,9 @@ func RunUpload(localPaths []string, savePath string, opt *UploadOptions) {
 				NoSplitFile:       opt.NoSplitFile,
 				UploadStatistic:   statistic,
 			}, opt.MaxRetry)
+			if LoadCount >= opt.Load {
+				LoadCount = opt.Load
+			}
 			fmt.Printf("[%s] 加入上传队列: %s\n", info.Id(), walkedFiles[k3])
 		}
 	}
@@ -156,6 +168,8 @@ func RunUpload(localPaths []string, savePath string, opt *UploadOptions) {
 		return
 	}
 
+	// 设置上传文件并发数
+	executor.SetParallel(LoadCount)
 	// 执行上传任务
 	executor.Execute()
 

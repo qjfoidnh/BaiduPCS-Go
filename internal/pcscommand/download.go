@@ -41,7 +41,7 @@ func downloadPrintFormat(load int) string {
 	if load <= 1 {
 		return pcsdownload.DefaultPrintFormat
 	}
-	return "[%d] ↓ %s/%s %s/s in %s, left %s ...\n"
+	return "[%s] ↓ %s/%s %s/s in %s, left %s ...\n"
 }
 
 // RunDownload 执行下载网盘内文件
@@ -153,7 +153,8 @@ func RunDownload(paths []string, options *DownloadOptions) {
 			DownloadMode:         options.DownloadMode,
 			PcsPath:              paths[k],
 		}
-
+		// 设置下载并发数
+		executor.SetParallel(loadCount)
 		// 设置储存的路径
 		if options.SaveTo != "" {
 			unit.SavePath = filepath.Join(options.SaveTo, filepath.Base(paths[k]))

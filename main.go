@@ -55,7 +55,7 @@ const (
 
 var (
 	// Version 版本号
-	Version = "v3.7.0-stable"
+	Version = "v3.7.1-devel"
 
 	historyFilePath = filepath.Join(pcsconfig.GetConfigDir(), "pcs_command_history.txt")
 	reloadFn        = func(c *cli.Context) error {
@@ -403,7 +403,7 @@ func main() {
 	示例:
 		BaiduPCS-Go login
 		BaiduPCS-Go login -username=liuhua
-		BaiduPCS-Go login -bduss=123456789
+		BaiduPCS-Go login -bduss=123456789 -stoken=atahsrweoog
 		BaiduPCS-Go login -cookies="BDUSS=xxxxx; BAIDUID=yyyyyy; STOKEN=zzzzz; ...."
 
 	常规登录:
@@ -467,11 +467,11 @@ func main() {
 				},
 				cli.StringFlag{
 					Name:  "stoken",
-					Usage: "百度 STOKEN, 配合 -bduss 参数使用 (可选)",
+					Usage: "百度 STOKEN, 配合 -bduss 参数使用 (可选, 欲使用转存功能则必选)",
 				},
 				cli.StringFlag{
 					Name:  "cookies",
-					Usage: "使用百度 Cookies 来登录百度账号 (以此方式登录可使用分享链接转存功能)",
+					Usage: "使用百度 Cookies 来登录百度账号",
 				},
 			},
 		},
@@ -969,7 +969,7 @@ func main() {
 	自动跳过下载重名的文件!
 
 	下载模式说明:
-		pcs: 通过百度网盘的 PCS API 下载
+		pcs: 通过百度网盘的 PCS API 下载, locate模式提示user is not authorized可尝试此模式
 		stream: 通过百度网盘的 PCS API, 以流式文件的方式下载, 效果同 pcs
 		locate: 默认的下载模式。从百度网盘 Android 客户端, 获取下载链接的方式来下载
 
@@ -1138,6 +1138,7 @@ func main() {
 				pcscommand.RunUpload(subArgs[:c.NArg()-1], subArgs[c.NArg()-1], &pcscommand.UploadOptions{
 					Parallel:      c.Int("p"),
 					MaxRetry:      c.Int("retry"),
+					Load:          c.Int("l"),
 					NoRapidUpload: c.Bool("norapid"),
 					NoSplitFile:   c.Bool("nosplit"),
 				})
@@ -1152,6 +1153,10 @@ func main() {
 					Name:  "retry",
 					Usage: "上传失败最大重试次数",
 					Value: pcscommand.DefaultUploadMaxRetry,
+				},
+				cli.IntFlag{
+					Name:  "l",
+					Usage: "指定同时上传的最大文件数",
 				},
 				cli.BoolFlag{
 					Name:  "norapid",
@@ -1369,9 +1374,9 @@ func main() {
 			Description: `
 			转存文件/目录
 	如果没有提取码，则第二个位置留空；只能转存到当前网盘目录下，
-	分享链接支持常规百度云链接（不支持旧百度云的短链接）及常见秒传链接（不支持游侠）
+	分享链接支持常规百度云链接及常见秒传链接（不支持游侠格式）
 	
-	实例 (以下链接均为无效链接)：
+	实例：
 	BaiduPCS-Go transfer pan.baidu.com/s/1VYzSl7465sdrQXe8GT5RdQ 704e
 	BaiduPCS-Go transfer A5AAE70207FFD51AB839D60B39FD0FD5#EE3289A6F0473AC34F83483E80A29B42#8554286#测试.7z
 	BaiduPCS-Go transfer bdpan://xxxxx|yyyyyy|zzzz|oooo
@@ -1760,7 +1765,7 @@ func main() {
 
 		谨慎修改 appid, user_agent, pcs_ua, pan_ua 的值, 否则访问网盘服务器时, 可能会出现错误
 		cache_size 的值支持可选设置单位了, 单位不区分大小写, b 和 B 均表示字节的意思, 如 64KB, 1MB, 32kb, 65536b, 65536
-		max_upload_parallel, max_download_load 的值支持可选设置单位了, 单位为每秒的传输速率, 后缀'/s' 可省略, 如 2MB/s, 2MB, 2m, 2mb 均为一个意思
+		max_download_rate, max_upload_rate 的值支持可选设置单位了, 单位为每秒的传输速率, 后缀'/s' 可省略, 如 2MB/s, 2MB, 2m, 2mb 均为一个意思
 
 	例子:
 		BaiduPCS-Go config set -appid=266719
@@ -1808,6 +1813,9 @@ func main() {
 						if c.IsSet("max_download_load") {
 							pcsconfig.Config.MaxDownloadLoad = c.Int("max_download_load")
 						}
+						if c.IsSet("max_upload_load") {
+							pcsconfig.Config.MaxUploadLoad = c.Int("max_upload_load")
+						}
 						if c.IsSet("max_download_rate") {
 							err := pcsconfig.Config.SetMaxDownloadRateByStr(c.String("max_download_rate"))
 							if err != nil {
@@ -1854,15 +1862,19 @@ func main() {
 						},
 						cli.IntFlag{
 							Name:  "max_parallel",
-							Usage: "下载网络连接的最大并发量",
+							Usage: "下载网络全部连接的最大并发量",
 						},
 						cli.IntFlag{
 							Name:  "max_upload_parallel",
-							Usage: "上传网络连接的最大并发量",
+							Usage: "上传网络单个连接的最大并发量",
 						},
 						cli.IntFlag{
 							Name:  "max_download_load",
 							Usage: "同时进行下载文件的最大数量",
+						},
+						cli.IntFlag{
+							Name:  "max_upload_load",
+							Usage: "同时进行上传文件的最大数量",
 						},
 						cli.StringFlag{
 							Name:  "max_download_rate",
