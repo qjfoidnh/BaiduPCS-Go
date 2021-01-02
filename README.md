@@ -97,7 +97,7 @@ iikira/BaiduPCS-Go was largely inspired by [GangZhuo/BaiduPCS](https://github.co
 
 # 版本更新
 
-**2020.1.2**
+**2021.1.2**
 v3.7.1:
 * 支持了多文件并发上传，文件并发数和单文件分片数可在配置中指定
 * 修复了最大同时下载文件数配置不生效的问题
