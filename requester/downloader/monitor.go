@@ -261,7 +261,7 @@ func (mt *Monitor) TryAddNewWork() {
 	availableWorker.ClearStatus()
 
 	mt.resetController.AddResetNum()
-	pcsverbose.Verbosef("MONITER: worker[%d] add new range: %s\n", availableWorker.ID(), r.ShowDetails())
+	pcsverbose.Verbosef("MONITOR: worker[%d] add new range: %s\n", availableWorker.ID(), r.ShowDetails())
 	go availableWorker.Execute()
 }
 
