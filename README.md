@@ -101,7 +101,7 @@ iikira/BaiduPCS-Go was largely inspired by [GangZhuo/BaiduPCS](https://github.co
 
 **2021.1.9** v3.7.2:
 
-- 基本修复了登录验证失效问题(#15)
+- 基本修复了登录验证失效问题([#15](https://github.com/qjfoidnh/BaiduPCS-Go/issues/15))
 - 优化下载模块的实现策略, 保证稳定性同时进一步提升下载速度 (需按[显示和修改程序配置项](#显示和修改程序配置项)中建议修改)
 - update 功能恢复, 以后可以在线升级了
 - 支持导出秒传链接不写文件, 直接输出到控制台; 支持通用秒传格式导出, 具体参见export --help 
