@@ -14,6 +14,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"sort"
 )
 
 type (
@@ -71,7 +72,7 @@ func RunDownload(paths []string, options *DownloadOptions) {
 	cfg := &downloader.Config{
 		Mode:                       transfer.RangeGenMode_BlockSize,
 		CacheSize:                  pcsconfig.Config.CacheSize,
-		BlockSize:                  baidupcs.MaxDownloadRangeSize,
+		BlockSize:                  baidupcs.InitRangeSize,
 		MaxRate:                    pcsconfig.Config.MaxDownloadRate,
 		InstanceStateStorageFormat: downloader.InstanceStateStorageFormatProto3,
 		IsTest:                     options.IsTest,
@@ -98,29 +99,24 @@ func RunDownload(paths []string, options *DownloadOptions) {
 	)
 
 	// 预测要下载的文件数量
-	// TODO: pcscache
+	file_dir_list := make([]*baidupcs.FileDirectory,0,10)
 	for k := range paths {
 		pcs.FilesDirectoriesRecurseList(paths[k], baidupcs.DefaultOrderOptions, func(depth int, _ string, fd *baidupcs.FileDirectory, pcsError pcserror.Error) bool {
 			if pcsError != nil {
 				pcsCommandVerbose.Warnf("%s\n", pcsError)
 				return true
 			}
-
+			file_dir_list = append(file_dir_list, fd)
 			// 忽略统计文件夹数量
 			if !fd.Isdir {
 				loadCount++
 				if loadCount >= options.Load {
-					return false
+					loadCount = options.Load
 				}
 			}
 			return true
 		})
-
-		if loadCount >= options.Load {
-			break
-		}
 	}
-
 	// 修改Load, 设置MaxParallel
 	if loadCount > 0 {
 		options.Load = loadCount
@@ -136,8 +132,12 @@ func RunDownload(paths []string, options *DownloadOptions) {
 		}
 		statistic = &pcsdownload.DownloadStatistic{}
 	)
-	// 处理队列
-	for k := range paths {
+
+	// 处理队列, 小文件优先下载
+	sort.Slice(file_dir_list, func(i, j int) bool {
+		return file_dir_list[i].Size < file_dir_list[j].Size
+	})
+	for _,v := range file_dir_list {
 		newCfg := *cfg
 		unit := pcsdownload.DownloadTaskUnit{
 			Cfg:                  &newCfg, // 复制一份新的cfg
@@ -151,19 +151,20 @@ func RunDownload(paths []string, options *DownloadOptions) {
 			IsOverwrite:          options.IsOverwrite,
 			NoCheck:              options.NoCheck,
 			DownloadMode:         options.DownloadMode,
-			PcsPath:              paths[k],
+			PcsPath:              v.Path,
+			FileInfo:             v,
 		}
 		// 设置下载并发数
 		executor.SetParallel(loadCount)
 		// 设置储存的路径
 		if options.SaveTo != "" {
-			unit.SavePath = filepath.Join(options.SaveTo, filepath.Base(paths[k]))
+			unit.SavePath = filepath.Join(options.SaveTo, filepath.Base(v.Path))
 		} else {
 			// 使用默认的保存路径
-			unit.SavePath = GetActiveUser().GetSavePath(paths[k])
+			unit.SavePath = GetActiveUser().GetSavePath(v.Path)
 		}
 		info := executor.Append(&unit, options.MaxRetry)
-		fmt.Printf("[%s] 加入下载队列: %s\n", info.Id(), paths[k])
+		fmt.Printf("[%s] 加入下载队列: %s\n", info.Id(), v.Path)
 	}
 
 	// 开始计时

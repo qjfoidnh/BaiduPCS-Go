@@ -3,13 +3,13 @@ package pcscommand
 import (
 	"bytes"
 	"fmt"
-	"image/png"
-	"io/ioutil"
-
 	baidulogin "github.com/qjfoidnh/Baidu-Login"
 	"github.com/qjfoidnh/BaiduPCS-Go/internal/pcsfunctions/pcscaptcha"
 	"github.com/qjfoidnh/BaiduPCS-Go/pcsliner"
 	"github.com/qjfoidnh/BaiduPCS-Go/requester"
+	"image/png"
+	"io/ioutil"
+	"strings"
 )
 
 // handleVerifyImg 处理验证码, 下载到本地
@@ -52,7 +52,7 @@ func RunLogin(username, password string) (bduss, ptoken, stoken string, cookies 
 		}
 	}
 
-	var vcode, vcodestr string
+	var vcode_raw, vcode, vcodestr string
 	// 移除验证码文件
 	defer func() {
 		pcscaptcha.RemoveCaptchaPath()
@@ -61,7 +61,8 @@ func RunLogin(username, password string) (bduss, ptoken, stoken string, cookies 
 
 for_1:
 	for i := 0; i < 10; i++ {
-		lj := bc.BaiduLogin(username, password, vcode, vcodestr)
+	BEGIN:
+		lj := bc.BaiduLogin(username, password, vcode_raw, vcodestr)
 		switch lj.ErrInfo.No {
 		case "0": // 登录成功, 退出循环
 			return lj.Data.BDUSS, lj.Data.PToken, lj.Data.SToken, lj.Data.CookieString, nil
@@ -93,20 +94,39 @@ for_1:
 				err = fmt.Errorf("验证方式不合法")
 				return
 			}
-
-			msg := bc.SendCodeToUser(verifyType, lj.Data.Token) // 发送验证码
+			msg := ""
+			if lj.Data.AuthID != "" {
+				msg = bc.SendCodeToUser(verifyType, lj.Data.VerifyURL, lj.Data.AuthID) // 发送验证码
+			} else {
+				msg = bc.SendCodeToUser2(verifyType, lj.Data.Token)
+			}
 			fmt.Printf("消息: %s\n\n", msg)
-
-			for et := 0; et < 5; et++ {
+			if strings.Contains(msg, "系统出错") {
+				return
+			}
+			for et := 0; et < 3; et++ {
 				vcode, err = line.State.Prompt("请输入接收到的验证码 > ")
 				if err != nil {
 					return
 				}
-
-				nlj := bc.VerifyCode(verifyType, lj.Data.Token, vcode, lj.Data.U)
+				nlj := &baidulogin.LoginJSON{}
+				if lj.Data.AuthID != "" {
+					// 此处 BDUSS 等信息尚未获取到, 仅仅完成了邮箱/电话验证
+					nlj = bc.VerifyCode(vcode, verifyType, lj.Data.VerifyURL, lj.Data.AuthID, lj.Data.LoginProxy, lj.Data.AuthSID)
+				} else {
+					// 此处 BDUSS 等信息已在请求中返回
+					nlj = bc.VerifyCode2(verifyType, lj.Data.Token, vcode, lj.Data.U)
+				}
 				if nlj.ErrInfo.No != "0" {
-					fmt.Printf("[%d/5] 错误消息: %s\n\n", et+1, nlj.ErrInfo.Msg)
+					fmt.Printf("[%d/3] 错误消息: %s\n\n", et+1, nlj.ErrInfo.Msg)
+					if nlj.ErrInfo.No == "-2" { // 需要重发验证码
+						return
+					}
 					continue
+				} else {
+					vcode_raw = ""
+					vcodestr = ""
+						goto BEGIN
 				}
 				// 登录成功
 				return nlj.Data.BDUSS, nlj.Data.PToken, nlj.Data.SToken, nlj.Data.CookieString, nil
@@ -136,7 +156,7 @@ for_1:
 			fmt.Printf("或者打开以下的网址, 以查看验证码\n")
 			fmt.Printf("%s\n\n", verifyImgURL)
 
-			vcode, err = line.State.Prompt("请输入验证码 > ")
+			vcode_raw, err = line.State.Prompt("请输入验证码 > ")
 			if err != nil {
 				return
 			}

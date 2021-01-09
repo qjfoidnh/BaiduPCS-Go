@@ -31,6 +31,7 @@ github.com/cloudflare/golz4 v0.0.0-20150217214814-ef862a3cdc58/go.mod h1:EOBUe0h
 github.com/couchbase/go-couchbase v0.0.0-20200519150804-63f3cdb75e0d/go.mod h1:TWI8EKQMs5u5jLKW/tsb9VwauIrMIxQG1r5fMsswK5U=
 github.com/couchbase/gomemcached v0.0.0-20200526233749-ec430f949808/go.mod h1:srVSlQLB8iXBVXHgnqemxUXqN6FCvClgCMPCsjBDR7c=
 github.com/couchbase/goutils v0.0.0-20180530154633-e865a1461c8a/go.mod h1:BQwMFlJzDjFDG3DJUdU0KORxn88UlsOULuxLExMh3Hs=
+github.com/cpuguy83/go-md2man v1.0.10 h1:BSKMNlYxDvnunlTymqtgONjNnaRV1sTpcovwwjF22jk=
 github.com/cpuguy83/go-md2man v1.0.10/go.mod h1:SmD6nW6nTyfqj6ABTjUi3V3JVMnlJmwcJI5acqYI6dE=
 github.com/cpuguy83/go-md2man/v2 v2.0.0-20190314233015-f79a8a8ca69d h1:U+s90UTSYgptZMwQh2aRr3LuazLJIa+Pg3Kc1ylSYVY=
 github.com/cpuguy83/go-md2man/v2 v2.0.0-20190314233015-f79a8a8ca69d/go.mod h1:maD7wRr/U5Z6m/iR4s+kqSMx2CaBsrgA7czyZG/E6dU=
@@ -154,13 +155,14 @@ github.com/prometheus/common v0.10.0/go.mod h1:Tlit/dnDKsSWFlCLTWaA1cyBgKHSMdTB8
 github.com/prometheus/procfs v0.0.0-20181005140218-185b4288413d/go.mod h1:c3At6R/oaqEKCNdg8wHV1ftS6bRYblBhIjjI8uT2IGk=
 github.com/prometheus/procfs v0.0.2/go.mod h1:TjEm7ze935MbeOT/UhFTIMYKhuLP4wbCsTZCD3I8kEA=
 github.com/prometheus/procfs v0.1.3/go.mod h1:lV6e/gmhEcM9IjHGsFOCxxuZ+z1YqCvr4OA4YeYWdaU=
-github.com/qjfoidnh/Baidu-Login v1.3.8 h1:XQXeHkUu3GLrKvCxQ1f8eaZXAWExxe0P39NmzAalHkQ=
-github.com/qjfoidnh/Baidu-Login v1.3.8/go.mod h1:wNfM+DJJ7X6OD5vDWfgF5Ye5zshoYYNocw21oSBFg08=
 github.com/qjfoidnh/Baidu-Login v1.3.9 h1:pwccQOAEpAGd1taAJI7XYUOwqBS6QUjJ9DSjJYVyM/w=
 github.com/qjfoidnh/Baidu-Login v1.3.9/go.mod h1:oRFCmVYQka0KYwvbf2zS6UeMupgv0w1CSq4Jovhz6qg=
+github.com/qjfoidnh/Baidu-Login v1.4.0 h1:47WKkWgAlDSn5CBbeRfh8FwzFeE6qVnaw7+y2km5h7g=
+github.com/qjfoidnh/Baidu-Login v1.4.0/go.mod h1:oRFCmVYQka0KYwvbf2zS6UeMupgv0w1CSq4Jovhz6qg=
 github.com/qjfoidnh/BaiduPCS-Go v0.0.0-20201218134534-d55d9918bd1b/go.mod h1:00iH1dQEStMeT3t+oeVrIucWcu3fFEaFYyygNxfOEv4=
 github.com/qjfoidnh/baidu-tools v0.0.0-20201218182636-dfa5778abeed h1:Hv47YId8ZGCvLI7d32USeopK5t5o7Y1PaPwKmVdYi2w=
 github.com/qjfoidnh/baidu-tools v0.0.0-20201218182636-dfa5778abeed/go.mod h1:TzIKHinLPcQbWxAROpqoSvYxM/kDeswfXJaQ2E1p4zs=
+github.com/russross/blackfriday v1.5.2 h1:HyvC0ARfnZBqnXwABFeSZHpKvJHJJfPz81GNueLj0oo=
 github.com/russross/blackfriday v1.5.2/go.mod h1:JO/DiYxRf+HjHt06OyowR9PTA263kcR/rfWxYHBV53g=
 github.com/russross/blackfriday/v2 v2.0.1 h1:lPqVAte+HuHNfhJ/0LC98ESWRz8afy9tM/0RK8m9o+Q=
 github.com/russross/blackfriday/v2 v2.0.1/go.mod h1:+Rmxgy9KzJVeS9/2gXHxylqXiyQDYRxCVz55jmeOWTM=

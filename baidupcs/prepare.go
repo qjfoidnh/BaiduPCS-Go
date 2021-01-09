@@ -317,10 +317,23 @@ func (pcs *BaiduPCS) PrepareLocateDownload(pcspath string) (dataReadCloser io.Re
 		Host:   PCSBaiduCom,
 		Path:   "/rest/2.0/pcs/file",
 		RawQuery: (url.Values{
+			"check_blue": []string{"1"},
+			"es": []string{"1"},
+			"esl": []string{"1"},
 			"app_id": []string{PanAppID},
 			"method": []string{"locatedownload"},
 			"path":   []string{pcspath},
-			"ver":    []string{"2"},
+			"ver":    []string{"4.0"},
+			//"vip":    []string{"2"},
+			"clienttype": []string{"17"},
+			"version": []string{"2.271.76"},
+			"channel": []string{"0"},
+			"version_app": []string{"10.1.72"},
+			"apn_id": []string{"1_0"},
+			"freeisp": []string{"0"},
+			"queryfree": []string{"0"},
+			"use": []string{"0"},
+
 		}).Encode() + "&" + ns.URLParam(),
 	}
 	baiduPCSVerbose.Infof("%s URL: %s\n", OperationLocateDownload, pcsURL)

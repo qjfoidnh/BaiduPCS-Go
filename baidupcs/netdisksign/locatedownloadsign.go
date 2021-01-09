@@ -48,5 +48,5 @@ func (s *LocateDownloadSign) Sign(uid uint64, bduss string) {
 }
 
 func (s *LocateDownloadSign) URLParam() string {
-	return "time=" + strconv.FormatInt(s.Time, 10) + "&rand=" + s.Rand + "&devuid=" + s.DevUID
+	return "time=" + strconv.FormatInt(s.Time, 10) + "&rand=" + s.Rand + "&devuid=" + s.DevUID + "&cuid=" + s.DevUID
 }

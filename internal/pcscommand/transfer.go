@@ -99,6 +99,7 @@ func RunRapidTransfer(link string) {
 		}
 		link = string(decodeBytes)
 	}
+	link = strings.TrimSpace(link)
 	substrs := strings.Split(link, "#")
 	if len(substrs) == 4 {
 		md5 := strings.ToLower(substrs[0])

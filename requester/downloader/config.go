@@ -7,11 +7,12 @@ import (
 const (
 	//CacheSize 默认的下载缓存
 	CacheSize = 8192
+	ParallelSize = 5
 )
 
 var (
 	// MinParallelSize 单个线程最小的数据量
-	MinParallelSize int64 = 128 * 1024 // 128kb
+	MinParallelSize int64 = 256 * 1024 // 256kb
 )
 
 //Config 下载配置
@@ -30,7 +31,7 @@ type Config struct {
 //NewConfig 返回默认配置
 func NewConfig() *Config {
 	return &Config{
-		MaxParallel: 5,
+		MaxParallel: ParallelSize,
 		CacheSize:   CacheSize,
 		IsTest:      false,
 	}

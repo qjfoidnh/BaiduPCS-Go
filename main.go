@@ -55,7 +55,7 @@ const (
 
 var (
 	// Version 版本号
-	Version = "v3.7.1-devel"
+	Version = "v3.7.2-devel"
 
 	historyFilePath = filepath.Join(pcsconfig.GetConfigDir(), "pcs_command_history.txt")
 	reloadFn        = func(c *cli.Context) error {
@@ -1489,6 +1489,7 @@ func main() {
 					MaxRetry:   c.Int("retry"),
 					Recursive:  c.Bool("r"),
 					LinkFormat: c.Bool("link"),
+					StdOut:     c.Bool("stdout"),
 				})
 				return nil
 			},
@@ -1513,6 +1514,10 @@ func main() {
 				cli.BoolFlag{
 					Name:  "link",
 					Usage: "以通用秒传链接格式导出(将丢失路径信息)",
+				},
+				cli.BoolFlag{
+					Name:  "stdout",
+					Usage: "导出信息不存文件, 直接打印至标准输出",
 				},
 			},
 		},

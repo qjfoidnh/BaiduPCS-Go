@@ -13,8 +13,8 @@ func DevUID(feature string) string {
 	m.Write(converter.ToBytes(feature))
 	res := m.Sum(nil)
 	resHex := cachepool.RawMallocByteSlice(34)
-	hex.Encode(resHex[2:], res)
-	resHex[0] = 'O'
-	resHex[1] = '|'
+	hex.Encode(resHex[:32], res)
+	resHex[32] = '|'
+	resHex[33] = '0'
 	return converter.ToString(bytes.ToUpper(resHex))
 }

@@ -4,13 +4,13 @@ name="BaiduPCS-Go"
 version=$1
 
 if [ "$1" = "" ]; then
-  version=v3.7.0
+  version=v3.7.1
 fi
 
 output="out/"
 
 old_golang() {
-  GOROOT=/usr/local/go1.10.8
+  GOROOT=/usr/local/go
   go=$GOROOT/bin/go
 }
 
@@ -91,16 +91,16 @@ RicePack() {
 touch ./vendor/golang.org/x/sys/windows/windows.s
 
 # Android
-export NDK_INSTALL=$ANDROID_NDK_ROOT/bin
+#export NDK_INSTALL=$ANDROID_NDK_ROOT/bin
 # CC=$NDK_INSTALL/arm-linux-androideabi-4.9/bin/arm-linux-androideabi-gcc AndroidBuild $name-$version"-android-16-armv5" android arm 5
 # CC=$NDK_INSTALL/arm-linux-androideabi-4.9/bin/arm-linux-androideabi-gcc AndroidBuild $name-$version"-android-16-armv6" android arm 6
-CC=$NDK_INSTALL/arm-linux-androideabi-4.9/bin/arm-linux-androideabi-gcc AndroidBuild $name-$version"-android-16-armv7" android arm 7
-CC=$NDK_INSTALL/aarch64-linux-android-4.9/bin/aarch64-linux-android-gcc AndroidBuild $name-$version"-android-21-arm64" android arm64 7
-CC=$NDK_INSTALL/i686-linux-android-4.9/bin/i686-linux-android-gcc AndroidBuild $name-$version"-android-16-386" android 386 7
-CC=$NDK_INSTALL/x86_64-linux-android-4.9/bin/x86_64-linux-android-gcc AndroidBuild $name-$version"-android-21-amd64" android amd64 7
+#CC=$NDK_INSTALL/arm-linux-androideabi-4.9/bin/arm-linux-androideabi-gcc AndroidBuild $name-$version"-android-16-armv7" android arm 7
+#CC=$NDK_INSTALL/aarch64-linux-android-4.9/bin/aarch64-linux-android-gcc AndroidBuild $name-$version"-android-21-arm64" android arm64 7
+#CC=$NDK_INSTALL/i686-linux-android-4.9/bin/i686-linux-android-gcc AndroidBuild $name-$version"-android-16-386" android 386 7
+#CC=$NDK_INSTALL/x86_64-linux-android-4.9/bin/x86_64-linux-android-gcc AndroidBuild $name-$version"-android-21-amd64" android amd64 7
 
 # iOS
-IOSBuild $name-$version"-darwin-ios-arm"
+#IOSBuild $name-$version"-darwin-ios-arm"
 
 # OS X / macOS
 Build $name-$version"-darwin-osx-amd64" darwin amd64
@@ -113,8 +113,8 @@ Build $name-$version"-windows-x64" windows amd64
 # Linux
 Build $name-$version"-linux-386" linux 386
 Build $name-$version"-linux-amd64" linux amd64
-Build $name-$version"-linux-armv5" linux arm 5
-Build $name-$version"-linux-armv7" linux arm 7
+#Build $name-$version"-linux-armv5" linux arm 5
+Build $name-$version"-linux-arm" linux arm
 Build $name-$version"-linux-arm64" linux arm64
 GOMIPS=softfloat Build $name-$version"-linux-mips" linux mips
 Build $name-$version"-linux-mips64" linux mips64

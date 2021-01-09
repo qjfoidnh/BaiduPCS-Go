@@ -30,6 +30,7 @@ type (
 		MaxRetry   int
 		Recursive  bool
 		LinkFormat bool
+		StdOut     bool
 	}
 )
 
@@ -89,14 +90,17 @@ func RunExport(pcspaths []string, opt *ExportOptions) {
 		fmt.Println(err)
 		return
 	}
-
 	saveFile, err := os.OpenFile(opt.SavePath, os.O_CREATE|os.O_RDWR|os.O_APPEND, 0644)
 	if err != nil { // 不可写
-		fmt.Printf("%s\n", err)
-		return
+		if !opt.StdOut {
+			fmt.Printf("%s\n", err)
+			return
+		}
 	}
 	defer saveFile.Close()
-	fmt.Printf("导出的信息将保存在: %s\n", opt.SavePath)
+	if !opt.StdOut {
+		fmt.Printf("导出的信息将保存在: %s\n", opt.SavePath)
+	}
 
 	var (
 		au         = GetActiveUser()
@@ -159,7 +163,7 @@ func RunExport(pcspaths []string, opt *ExportOptions) {
 				continue
 			}
 
-			if len(fds) == 0 {
+			if len(fds) == 0 && !opt.StdOut {
 				_, writeErr = saveFile.Write(converter.ToBytes(fmt.Sprintf("BaiduPCS-Go mkdir \"%s\"\n", changeRootPath(task.rootPath, task.path, opt.RootPath))))
 				if writeErr != nil {
 					fmt.Printf("写入文件失败: %s\n", writeErr)
@@ -196,13 +200,21 @@ func RunExport(pcspaths []string, opt *ExportOptions) {
 		if opt.LinkFormat {
 			outTemplate = fmt.Sprintf("%s#%s#%d#%s\n", rinfo.ContentMD5, rinfo.SliceMD5, rinfo.ContentLength, path.Base(task.path))
 		}
-		_, writeErr = saveFile.Write(converter.ToBytes(outTemplate))
-		if writeErr != nil {
-			fmt.Printf("写入文件失败: %s\n", writeErr)
-			return // 直接返回
-		}
+		if opt.StdOut {
+			fmt.Print(outTemplate)
+		} else {
+			_, writeErr = saveFile.Write(converter.ToBytes(outTemplate))
+			if writeErr != nil {
+				fmt.Printf("写入文件失败: %s\n", writeErr)
+				return // 直接返回
+			}
 
-		fmt.Printf("[%d] - [%s] 导出成功\n", task.ID, task.path)
+			fmt.Printf("[%d] - [%s] 导出成功\n", task.ID, task.path)
+		}
+	}
+	if opt.StdOut {
+		os.Remove(opt.SavePath)
+		fmt.Println("导出完毕")
 	}
 
 	if failedList.Len() > 0 {

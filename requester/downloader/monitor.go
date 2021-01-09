@@ -356,7 +356,9 @@ func (mt *Monitor) Execute(cancelCtx context.Context) {
 
 	mt.registerAllCompleted() // 注册completed
 	ticker := time.NewTicker(990 * time.Millisecond)
+	ticker2 := time.NewTicker(99 * time.Millisecond)
 	defer ticker.Stop()
+	defer ticker2.Stop()
 
 	//开始监控
 	for {
@@ -385,8 +387,6 @@ func (mt *Monitor) Execute(cancelCtx context.Context) {
 				})
 			}
 
-			// 加入新range
-			mt.TryAddNewWork()
 
 			// 不重载worker
 			if !mt.isReloadWorker {
@@ -419,6 +419,9 @@ func (mt *Monitor) Execute(cancelCtx context.Context) {
 					mt.ResetWorker(worker)
 				}
 			} // end if 2
+		case <-ticker2.C:
+			// 加入新range
+			mt.TryAddNewWork()
 		} //end select
 	} //end for
 }

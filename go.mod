@@ -14,7 +14,7 @@ require (
 	github.com/oleiade/lane v1.0.1
 	github.com/olekukonko/tablewriter v0.0.4
 	github.com/peterh/liner v1.2.1
-	github.com/qjfoidnh/Baidu-Login v1.3.9
+	github.com/qjfoidnh/Baidu-Login v1.4.0
 	github.com/qjfoidnh/baidu-tools v0.0.0-20201218182636-dfa5778abeed
 	github.com/tidwall/gjson v1.6.4
 	github.com/urfave/cli v1.22.5

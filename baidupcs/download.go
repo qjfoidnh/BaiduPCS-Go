@@ -11,8 +11,8 @@ import (
 var (
 	// ErrLocateDownloadURLNotFound 未找到下载链接
 	ErrLocateDownloadURLNotFound = errors.New("locatedownload url not found")
-	// MaxDownloadRangeSize 文件片段最大值
-	MaxDownloadRangeSize = 55 * converter.MB
+	// InitRangeSize 初次请求的片段值
+	InitRangeSize = 32 * converter.KB
 )
 
 type (
