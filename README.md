@@ -858,7 +858,7 @@ Windows: `%APPDATA%\BaiduPCS-Go`
 
 普通用户请将`max_parallel`和`max_download_load`都设置为1, 调大线程数只会在短时间内提升下载速度, 且极易很快触发限速, 导致几小时至几天内账号在各客户端都接近0速. 本软件不支持普通用户提速.
 
-SVIP用户建议`max_parallel`设置为9 - 13, `max_download_load`设置为1 - 2, 可以维持长时间的稳定高速下载.
+SVIP用户建议`max_parallel`设置为10以上, 根据实际带宽可调大, 但不建议超过20, `max_download_load`设置为1 - 2, 实验表明可以稳定满速下载.
 
 #### 例子
 ```
