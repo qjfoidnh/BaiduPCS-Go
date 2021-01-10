@@ -173,10 +173,10 @@ func (pcs *BaiduPCS) GenerateRequestQuery(mode string, params map[string]string)
 			path := gjson.Get(string(body), `info.0.path`).String()
 			_, file := filepath.Split(path)
 			_errno := gjson.Get(string(body), `info.0.errno`).Int()
-			if _errno == -33 {
-				filenum := gjson.Get(string(body), `target_file_nums`).Int()
-				userlimit := gjson.Get(string(body), `target_file_nums_limit`).Int()
-				res["ErrMsg"] = fmt.Sprintf("转存文件数%d超过当前用户上限, 当前用户单次最大转存数%d", filenum, userlimit)
+			target_file_nums := gjson.Get(string(body), `target_file_nums`).Int()
+			target_file_nums_limit := gjson.Get(string(body), `target_file_nums_limit`).Int()
+			if target_file_nums > target_file_nums_limit {
+				res["ErrMsg"] = fmt.Sprintf("转存文件数%d超过当前用户上限, 当前用户单次最大转存数%d", target_file_nums, target_file_nums_limit)
 			} else if _errno == -30 {
 				res["ErrMsg"] = fmt.Sprintf("当前目录下已有%s同名文件/文件夹", file)
 			} else {

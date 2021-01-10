@@ -34,6 +34,8 @@ type (
 
 // RunRapidUpload 执行秒传文件, 前提是知道文件的大小, md5, 前256KB切片的 md5, crc32
 func RunRapidUpload(targetPath, contentMD5, sliceMD5, crc32 string, length int64) {
+	targetPath = strings.Replace(targetPath, `[`, `\[`, -1)
+	targetPath = strings.Replace(targetPath, `]`, `\]`, -1)
 	err := matchPathByShellPatternOnce(&targetPath)
 	if err != nil {
 		fmt.Printf("警告: %s, 获取网盘路径 %s 错误, %s\n", baidupcs.OperationRapidUpload, targetPath, err)
