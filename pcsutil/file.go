@@ -88,7 +88,7 @@ func WalkDir(dirPth, suffix string) (files []string, err error) {
 		if err != nil {
 			return err
 		}
-		if fi.IsDir() { // 忽略目录
+		if fi.IsDir() || fi.Size() == 0 { // 忽略目录和空文件
 			return nil
 		}
 		if fi.Mode()&os.ModeSymlink != 0 { // 读取 symbol link
