@@ -13,6 +13,8 @@ import (
 	"strings"
 	"unicode"
 
+	"github.com/olekukonko/tablewriter"
+	"github.com/peterh/liner"
 	"github.com/qjfoidnh/BaiduPCS-Go/baidupcs"
 	"github.com/qjfoidnh/BaiduPCS-Go/internal/pcscommand"
 	"github.com/qjfoidnh/BaiduPCS-Go/internal/pcsconfig"
@@ -29,8 +31,6 @@ import (
 	"github.com/qjfoidnh/BaiduPCS-Go/pcsutil/getip"
 	"github.com/qjfoidnh/BaiduPCS-Go/pcsutil/pcstime"
 	"github.com/qjfoidnh/BaiduPCS-Go/pcsverbose"
-	"github.com/olekukonko/tablewriter"
-	"github.com/peterh/liner"
 	"github.com/urfave/cli"
 )
 
@@ -1346,7 +1346,7 @@ func main() {
 
 					strLength, strMd5, strSliceMd5, strCrc32 := strconv.FormatInt(lp.Length, 10), hex.EncodeToString(lp.MD5), hex.EncodeToString(lp.SliceMD5), strconv.FormatUint(uint64(lp.CRC32), 10)
 					fileName := filepath.Base(filePath)
-					regFileName := strings.Replace(fileName, " ", "_", -1 )
+					regFileName := strings.Replace(fileName, " ", "_", -1)
 					regFileName = strings.Replace(regFileName, "#", "_", -1)
 					tb := pcstable.NewTable(os.Stdout)
 					tb.SetColumnAlignment([]int{tablewriter.ALIGN_LEFT, tablewriter.ALIGN_LEFT})
@@ -1921,6 +1921,23 @@ func main() {
 							Name:  "local_addrs",
 							Usage: "设置本地网卡地址, 多个地址用逗号隔开",
 						},
+					},
+				},
+				{
+					Name:        "reset",
+					Usage:       "恢复默认配置项",
+					UsageText:   app.Name + " config reset",
+					Description: "",
+					Action: func(c *cli.Context) error {
+						pcsconfig.Config.InitDefaultConfig()
+						err := pcsconfig.Config.Save()
+						if err != nil {
+							fmt.Println(err)
+							return err
+						}
+						pcsconfig.Config.PrintTable()
+						fmt.Println("恢复默认配置成功")
+						return nil
 					},
 				},
 			},
