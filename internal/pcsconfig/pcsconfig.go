@@ -133,7 +133,7 @@ func (c *PCSConfig) init() error {
 		return ErrConfigFileNotExist
 	}
 
-	c.initDefaultConfig()
+	c.InitDefaultConfig()
 	err := c.loadConfigFromFile()
 	if err != nil {
 		return err
@@ -219,7 +219,7 @@ func (c *PCSConfig) loadConfigFromFile() (err error) {
 	return nil
 }
 
-func (c *PCSConfig) initDefaultConfig() {
+func (c *PCSConfig) InitDefaultConfig() {
 	c.AppID = 266719
 	c.CacheSize = 65536
 	c.MaxParallel = 1

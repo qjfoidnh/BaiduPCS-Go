@@ -59,7 +59,7 @@ func CheckUpdate(version string, yes bool) {
 	}
 
 	// 没有更新, 或忽略 Beta 版本, 和版本前缀不符的
-	if strings.Contains(releaseInfo.TagName, "Beta") || !strings.HasPrefix(releaseInfo.TagName, "v") || version >= releaseInfo.TagName {
+	if strings.Contains(releaseInfo.TagName, "Beta") || !strings.HasPrefix(releaseInfo.TagName, "v") || needUpdate(version, releaseInfo.TagName) {
 		fmt.Printf("未检测到更新!\n")
 		return
 	}
@@ -254,4 +254,18 @@ func CheckUpdate(version string, yes bool) {
 	}
 
 	fmt.Printf("更新完毕, 请重启程序\n")
+}
+
+func needUpdate(current, latest string) bool {
+	// 去除第一个字符'v'
+	v1 := strings.Split(current[1:], ".")
+	v2 := strings.Split(latest[1:], ".")
+	for i := range v1 {
+		a, _ := strconv.Atoi(v1[i])
+		b, _ := strconv.Atoi(v2[i])
+		if a < b {
+			return true
+		}
+	}
+	return false
 }
