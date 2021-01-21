@@ -12,7 +12,7 @@ import (
 )
 
 // RunShareTransfer 执行分享链接转存到网盘
-func RunShareTransfer(params []string) {
+func RunShareTransfer(params []string, opt *baidupcs.TransferOption) {
 	var link string
 	var extracode string
 	if len(params) == 1 {
@@ -80,11 +80,21 @@ func RunShareTransfer(params []string) {
 	trans_metas["referer"] = "https://pan.baidu.com/s/" + featurestr
 	pcs.UpdatePCSCookies(true)
 	resp := pcs.GenerateRequestQuery("POST", trans_metas)
-	if resp["ErrMsg"] != "0" {
+	if resp["ErrNo"] != "0" {
 		fmt.Printf("%s失败: %s\n", baidupcs.OperationShareFileSavetoLocal, resp["ErrMsg"])
+		if resp["ErrNo"] == "4" {
+			trans_metas["shorturl"] = featurestr
+			pcs.SuperTransfer(trans_metas, resp["limit"]) // 试验性功能
+		}
 		return
 	}
 	fmt.Printf("%s成功, 保存了%s到当前目录\n", baidupcs.OperationShareFileSavetoLocal, resp["filename"])
+	if opt.Download {
+		fmt.Println("即将开始下载")
+		paths := strings.Split(resp["filenames"], ",")
+		paths = paths[0: len(paths)-1]
+		RunDownload(paths, nil)
+	}
 }
 
 // RunRapidTransfer 执行秒传链接解析及保存

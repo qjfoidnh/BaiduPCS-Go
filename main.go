@@ -55,7 +55,7 @@ const (
 
 var (
 	// Version 版本号
-	Version = "v3.7.2-devel"
+	Version = "v3.7.3-devel"
 
 	historyFilePath = filepath.Join(pcsconfig.GetConfigDir(), "pcs_command_history.txt")
 	reloadFn        = func(c *cli.Context) error {
@@ -807,11 +807,40 @@ func main() {
 			Aliases:   []string{"t"},
 			Usage:     "列出目录的树形图",
 			UsageText: app.Name + " tree <目录>",
+			Description: `
+	列出目录树形图。
+	默认从当前工作目录开始列出.
+
+	示例:
+
+	从根目录开始列出
+	BaiduPCS-Go tree /
+
+	只列出两层深度
+	BaiduPCS-Go tree --depth 2
+
+	同时显示文件名和fsid
+	BaiduPCS-Go tree --fsid
+`,
 			Category:  "百度网盘",
 			Before:    reloadFn,
 			Action: func(c *cli.Context) error {
-				pcscommand.RunTree(c.Args().Get(0))
+				pcscommand.RunTree(c.Args().Get(0), 0, &pcscommand.TreeOptions{
+					Depth: c.Int("depth"),
+					ShowFsid: c.Bool("fsid"),
+				})
 				return nil
+			},
+			Flags: []cli.Flag{
+				cli.IntFlag{
+					Name:  "depth",
+					Usage: "显示深度",
+					Value:-1,
+				},
+				cli.BoolFlag{
+					Name:  "fsid",
+					Usage: "带fsid显示",
+				},
 			},
 		},
 		{
@@ -1387,8 +1416,17 @@ func main() {
 					cli.ShowCommandHelp(c, c.Command.Name)
 					return nil
 				}
-				pcscommand.RunShareTransfer(c.Args())
+				opt := &baidupcs.TransferOption{
+					Download: c.Bool("download"),
+				}
+				pcscommand.RunShareTransfer(c.Args(), opt)
 				return nil
+			},
+			Flags: []cli.Flag{
+				cli.BoolFlag{
+					Name:  "download",
+					Usage: "转存后直接下载到本地默认目录",
+				},
 			},
 		},
 		{
@@ -1407,14 +1445,31 @@ func main() {
 					Aliases:     []string{"s"},
 					Usage:       "设置分享文件/目录",
 					UsageText:   app.Name + " share set <文件/目录1> <文件/目录2> ...",
-					Description: `目前只支持创建永久私密链接, 随机生成提取码.`,
+					Description: `支持任意有效天数, 支持自定义提取码.`,
 					Action: func(c *cli.Context) error {
 						if c.NArg() < 1 {
 							cli.ShowCommandHelp(c, c.Command.Name)
 							return nil
 						}
-						pcscommand.RunShareSet(c.Args(), nil)
+						opt := &baidupcs.ShareOption{
+							Password: c.String("p"),
+							Period: c.Int("period"),
+						}
+						pcscommand.RunShareSet(c.Args(), opt)
 						return nil
+					},
+					Flags: []cli.Flag{
+						cli.StringFlag{
+							Name:  "p",
+							Usage: "提取码",
+							Value: "",
+						},
+						cli.IntFlag{
+							Name:  "period",
+							Usage: "有效天数, 0为永久",
+							Value: 0,
+						},
+
 					},
 				},
 				{

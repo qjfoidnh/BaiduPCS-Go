@@ -12,7 +12,14 @@ const (
 	lastFilePrefix = "└──"
 )
 
-func getTree(pcspath string, depth int) {
+type (
+	TreeOptions struct {
+		Depth    int
+		ShowFsid bool
+	}
+)
+
+func getTree(pcspath string, depth int, option *TreeOptions) {
 	var (
 		err   error
 		files baidupcs.FileDirectoryList
@@ -38,22 +45,31 @@ func getTree(pcspath string, depth int) {
 	)
 	for i, file := range files {
 		if file.Isdir {
-			fmt.Printf("%v%v %v/\n", indentPrefixStr, pathPrefix, file.Filename)
-			getTree(file.Path, depth+1)
+			if option.ShowFsid {
+				fmt.Printf("%v%v %v/: %v\n", indentPrefixStr, pathPrefix, file.Filename, file.FsID)
+			} else {
+				fmt.Printf("%v%v %v/\n", indentPrefixStr, pathPrefix, file.Filename)
+			}
+			if option.Depth < 0 || depth < option.Depth {
+				getTree(file.Path, depth+1, option)
+			}
 			continue
 		}
 
 		if i+1 == fN {
 			prefix = lastFilePrefix
 		}
-
-		fmt.Printf("%v%v %v\n", indentPrefixStr, prefix, file.Filename)
+		if option.ShowFsid {
+			fmt.Printf("%v%v %v: %v\n", indentPrefixStr, prefix, file.Filename, file.FsID)
+		} else {
+			fmt.Printf("%v%v %v\n", indentPrefixStr, prefix, file.Filename)
+		}
 	}
 
 	return
 }
 
 // RunTree 列出树形图
-func RunTree(path string) {
-	getTree(path, 0)
+func RunTree(path string, depth int, option *TreeOptions) {
+	getTree(path, depth, option)
 }

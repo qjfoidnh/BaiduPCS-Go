@@ -99,6 +99,13 @@ iikira/BaiduPCS-Go was largely inspired by [GangZhuo/BaiduPCS](https://github.co
 
 # 版本更新
 
+**2021.1.22** v3.7.3:
+
+- 分享支持自定义分享码和有效天数
+- 转存支持转存完毕后自动下载到默认目录
+- 增加恢复默认配置功能
+- tree命令支持指定输出最大层数和带fsid输出
+
 **2021.1.9** v3.7.2:
 
 - 基本修复了登录验证失效问题([#15](https://github.com/qjfoidnh/BaiduPCS-Go/issues/15))

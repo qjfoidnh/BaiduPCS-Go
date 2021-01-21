@@ -30,6 +30,7 @@ type (
 		Public          int     `json:"public"`          // 是否为公开分享
 		TypicalCategory int     `json:"typicalCategory"` // 文件类型
 		TypicalPath     string  `json:"typicalPath"`
+		Valid			string							// 是否过期
 	}
 
 	shareSURLInfo struct {
@@ -64,12 +65,11 @@ var (
 
 // ShareSet 分享文件
 func (pcs *BaiduPCS) ShareSet(paths []string, option *ShareOption) (s *Shared, pcsError pcserror.Error) {
-	if option == nil {
-		option = &ShareOption{CreatePasswd(), 0}
+	if option.Password == "" || len(option.Password) != 4 {
+		option = &ShareOption{CreatePasswd(), option.Period}
 	}
-	passwd := option.Password
 
-	dataReadCloser, pcsError := pcs.PrepareSharePSet(paths, passwd, option.Period)
+	dataReadCloser, pcsError := pcs.PrepareSharePSet(paths, option.Password, option.Period)
 	if pcsError != nil {
 		return
 	}
@@ -92,7 +92,7 @@ func (pcs *BaiduPCS) ShareSet(paths []string, option *ShareOption) (s *Shared, p
 		errInfo.Err = ErrShareLinkNotFound
 		return nil, errInfo
 	}
-	jsonData.Pwd = passwd
+	jsonData.Pwd = option.Password
 
 	return jsonData.Shared, nil
 }

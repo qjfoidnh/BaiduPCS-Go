@@ -56,10 +56,15 @@ func RunShareList(page int) {
 	}
 
 	tb := pcstable.NewTable(os.Stdout)
-	tb.SetHeader([]string{"#", "ShareID", "分享链接", "提取密码", "特征目录", "特征路径"})
+	tb.SetHeader([]string{"#", "ShareID", "分享链接", "提取密码", "特征目录", "特征路径", "分享状态"})
 	for k, record := range records {
+		if record.TypicalCategory == -1 {
+			record.Valid = "已过期" // 已失效分享
+		} else {
+			record.Valid = "有效"
+		}
 		// 获取Passwd
-		if record.Public == 0 {
+		if record.Public == 0 && record.TypicalCategory != -1 {
 			// 私密分享
 			info, pcsError := pcs.ShareSURLInfo(record.ShareID)
 			if pcsError != nil {
@@ -70,7 +75,7 @@ func RunShareList(page int) {
 			}
 		}
 
-		tb.Append([]string{strconv.Itoa(k), strconv.FormatInt(record.ShareID, 10), record.Shortlink, record.Passwd, path.Clean(path.Dir(record.TypicalPath)), record.TypicalPath})
+		tb.Append([]string{strconv.Itoa(k), strconv.FormatInt(record.ShareID, 10), record.Shortlink, record.Passwd, path.Clean(path.Dir(record.TypicalPath)), record.TypicalPath, record.Valid})
 	}
 	tb.Render()
 }

@@ -5,11 +5,19 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"path"
 	"path/filepath"
 	"regexp"
 	"strings"
 
 	"github.com/tidwall/gjson"
+)
+
+type (
+	// ShareOption 分享可选项
+	TransferOption struct {
+		Download bool // 是否直接开始下载
+	}
 )
 
 func (pcs *BaiduPCS) GenerateShareQueryURL(subPath string, params map[string]string) *url.URL {
@@ -140,6 +148,7 @@ func (pcs *BaiduPCS) AccessSharePage(featurestr string, first bool) (tokens map[
 
 func (pcs *BaiduPCS) GenerateRequestQuery(mode string, params map[string]string) (res map[string]string) {
 	res = make(map[string]string)
+	res["ErrNo"] = "0"
 	headers := map[string]string{
 		"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.100 Safari/537.36",
 		"Referer":    params["referer"],
@@ -152,22 +161,25 @@ func (pcs *BaiduPCS) GenerateRequestQuery(mode string, params map[string]string)
 	postdata["path"] = params["path"]
 	dataReadCloser, panError := pcs.sendReqReturnReadCloser(reqTypePan, OperationShareFileSavetoLocal, mode, params["shareUrl"], postdata, headers)
 	if panError != nil {
+		res["ErrNo"] = "1"
 		res["ErrMsg"] = "网络错误"
 		return
 	}
 	defer dataReadCloser.Close()
 	body, err := ioutil.ReadAll(dataReadCloser)
-	res["ErrMsg"] = "0"
 	if err != nil {
+		res["ErrNo"] = "-1"
 		res["ErrMsg"] = "未知错误"
 		return
 	}
 	if !gjson.Valid(string(body)) {
+		res["ErrNo"] = "2"
 		res["ErrMsg"] = "返回json解析错误"
 		return
 	}
 	errno := gjson.Get(string(body), `errno`).Int()
 	if errno != 0 {
+		res["ErrNo"] = "3"
 		res["ErrMsg"] = "获取分享项元数据错误"
 		if mode == "POST" && errno == 12 {
 			path := gjson.Get(string(body), `info.0.path`).String()
@@ -176,8 +188,11 @@ func (pcs *BaiduPCS) GenerateRequestQuery(mode string, params map[string]string)
 			target_file_nums := gjson.Get(string(body), `target_file_nums`).Int()
 			target_file_nums_limit := gjson.Get(string(body), `target_file_nums_limit`).Int()
 			if target_file_nums > target_file_nums_limit {
+				res["ErrNo"] = "4"
 				res["ErrMsg"] = fmt.Sprintf("转存文件数%d超过当前用户上限, 当前用户单次最大转存数%d", target_file_nums, target_file_nums_limit)
+				res["limit"] = fmt.Sprintf("%d", target_file_nums_limit)
 			} else if _errno == -30 {
+				res["ErrNo"] = "9"
 				res["ErrMsg"] = fmt.Sprintf("当前目录下已有%s同名文件/文件夹", file)
 			} else {
 				res["ErrMsg"] = fmt.Sprintf("未知错误, 错误代码%d", _errno)
@@ -188,8 +203,54 @@ func (pcs *BaiduPCS) GenerateRequestQuery(mode string, params map[string]string)
 		return
 	}
 	_, res["filename"] = filepath.Split(gjson.Get(string(body), `info.0.path`).String())
+	filenames := gjson.Get(string(body), `info.#.path`).Array()
+	filenames_str := ""
+	for _, _path := range filenames {
+		filenames_str += path.Base(_path.String())+","
+	}
+	res["filenames"] = filenames_str
 	if len(gjson.Get(string(body), `info.#.fsid`).Array()) > 1 {
 		res["filename"] += "等多个文件"
 	}
 	return
+}
+
+func (pcs *BaiduPCS) SuperTransfer(params map[string]string, limit string) {
+	//headers := map[string]string{
+	//	"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.100 Safari/537.36",
+	//	"Referer":    params["referer"],
+	//}
+	//limit_num, _ := strconv.Atoi(limit)
+	//fsidlist_str := params["fs_id"]
+	//fsidlist := strings.Split(fsidlist_str[1:len(fsidlist_str)-1], ",")
+	//listUrl := &url.URL{
+	//	Scheme: GetHTTPScheme(true),
+	//	Host:   PanBaiduCom,
+	//	Path:   "/share/list",
+	//}
+	//uv := listUrl.Query()
+	//uv.Set("app_id", PanAppID)
+	//uv.Set("channel", "chunlei")
+	//uv.Set("clienttype", "0")
+	//uv.Set("web", "1")
+	//uv.Set("page", "1")
+	//uv.Set("num", "100")
+	//uv.Set("shorturl", params["shorturl"])
+	//uv.Set("root", "1")
+	//dataReadCloser, panError := pcs.sendReqReturnReadCloser(reqTypePan, OperationShareFileSavetoLocal, http.MethodGet, listUrl.String(), nil, headers)
+	//if panError != nil {
+	//	res["ErrNo"] = "1"
+	//	res["ErrMsg"] = "网络错误"
+	//	return
+	//}
+	//defer dataReadCloser.Close()
+	//body, err := ioutil.ReadAll(dataReadCloser)
+	//res["ErrNo"] = "-1"
+	//if err != nil {
+	//	res["ErrMsg"] = "未知错误"
+	//	return
+	//}
+	return
+
+
 }
