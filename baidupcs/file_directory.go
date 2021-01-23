@@ -3,11 +3,12 @@ package baidupcs
 import (
 	"errors"
 	"fmt"
+	"github.com/olekukonko/tablewriter"
 	"github.com/qjfoidnh/BaiduPCS-Go/baidupcs/pcserror"
 	"github.com/qjfoidnh/BaiduPCS-Go/pcstable"
 	"github.com/qjfoidnh/BaiduPCS-Go/pcsutil/converter"
 	"github.com/qjfoidnh/BaiduPCS-Go/pcsutil/pcstime"
-	"github.com/olekukonko/tablewriter"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"unsafe"
@@ -50,6 +51,7 @@ type (
 		Size        int64 // 文件大小 (目录为0)
 		Isdir       bool  // 是否为目录
 		Ifhassubdir bool  // 是否含有子目录 (只对目录有效)
+		PreBase   string  // 真正的base目录
 
 		Parent   *FileDirectory    // 父目录信息
 		Children FileDirectoryList // 子目录信息
@@ -123,7 +125,6 @@ func (pcs *BaiduPCS) FilesDirectoriesMeta(path string) (data *FileDirectory, pcs
 			Err:       errors.New("未知返回数据"),
 		}
 	}
-
 	return fds[0], nil
 }
 
@@ -209,7 +210,7 @@ func (pcs *BaiduPCS) Search(targetPath, keyword string, recursive bool) (fdl Fil
 	return
 }
 
-func (pcs *BaiduPCS) recurseList(path string, depth int, options *OrderOptions, handleFileDirectoryFunc HandleFileDirectoryFunc) (fdl FileDirectoryList, ok bool) {
+func (pcs *BaiduPCS) recurseList(path string, depth int, options *OrderOptions, prebase string, handleFileDirectoryFunc HandleFileDirectoryFunc) (fdl FileDirectoryList, ok bool) {
 	fdl, pcsError := pcs.FilesDirectoriesList(path, options)
 	if pcsError != nil {
 		ok := handleFileDirectoryFunc(depth, path, nil, pcsError) // 传递错误
@@ -217,6 +218,7 @@ func (pcs *BaiduPCS) recurseList(path string, depth int, options *OrderOptions, 
 	}
 
 	for k := range fdl {
+		fdl[k].PreBase = prebase
 		ok = handleFileDirectoryFunc(depth+1, fdl[k].Path, fdl[k], nil)
 		if !ok {
 			return
@@ -226,7 +228,7 @@ func (pcs *BaiduPCS) recurseList(path string, depth int, options *OrderOptions, 
 			continue
 		}
 
-		fdl[k].Children, ok = pcs.recurseList(fdl[k].Path, depth+1, options, handleFileDirectoryFunc)
+		fdl[k].Children, ok = pcs.recurseList(fdl[k].Path, depth+1, options, filepath.Join(prebase, filepath.Base(fdl[k].Path)), handleFileDirectoryFunc)
 		if !ok {
 			return
 		}
@@ -246,9 +248,11 @@ func (pcs *BaiduPCS) FilesDirectoriesRecurseList(path string, options *OrderOpti
 	if !fd.Isdir { // 不是一个目录
 		handleFileDirectoryFunc(0, path, fd, nil)
 		return FileDirectoryList{fd}
+	} else {
+		handleFileDirectoryFunc(0, path, fd, nil)
 	}
 
-	data, _ = pcs.recurseList(path, 0, options, handleFileDirectoryFunc)
+	data, _ = pcs.recurseList(path, 0, options, filepath.Base(path), handleFileDirectoryFunc)
 	return data
 }
 
