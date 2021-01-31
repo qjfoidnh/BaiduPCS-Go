@@ -126,8 +126,8 @@ func (utu *UploadTaskUnit) rapidUpload() (isContinue bool, result *taskframework
 		fmt.Printf("[%s] 检测秒传中, 请稍候...\n", utu.taskInfo.Id())
 	}
 
-	// 经测试, 文件的 crc32 值并非秒传文件所必需
-	err := utu.LocalFileChecksum.Sum(checksum.CHECKSUM_MD5 | checksum.CHECKSUM_SLICE_MD5)
+	// 虽然文件的 crc32 值并非秒传文件所必需，但算一下又不会怎样
+	err := utu.LocalFileChecksum.Sum(checksum.CHECKSUM_MD5 | checksum.CHECKSUM_SLICE_MD5| checksum.CHECKSUM_CRC32)
 	if err != nil {
 		// 不重试
 		result.ResultMessage = "计算文件秒传信息错误"
@@ -183,6 +183,17 @@ func (utu *UploadTaskUnit) rapidUpload() (isContinue bool, result *taskframework
 func (utu *UploadTaskUnit) upload() (result *taskframework.TaskUnitRunResult) {
 	utu.Step = StepUploadUpload
 
+	// 新的上传接口需要MD5等信息，如果禁用了秒传这里要再算一下
+	//if utu.LocalFileChecksum.CRC32 == 0 {
+	//	err := utu.LocalFileChecksum.Sum(checksum.CHECKSUM_MD5 | checksum.CHECKSUM_SLICE_MD5| checksum.CHECKSUM_CRC32)
+	//	if err != nil {
+	//		// 不重试
+	//		result.ResultMessage = "计算文件特征信息错误"
+	//		result.Err = err
+	//		return
+	//	}
+	//}
+
 	var blockSize int64
 	if utu.NoSplitFile {
 		// 不分片上传
@@ -191,7 +202,7 @@ func (utu *UploadTaskUnit) upload() (result *taskframework.TaskUnitRunResult) {
 		blockSize = getBlockSize(utu.LocalFileChecksum.Length)
 	}
 
-	muer := uploader.NewMultiUploader(NewPCSUpload(utu.PCS, utu.SavePath), rio.NewFileReaderAtLen64(utu.LocalFileChecksum.GetFile()), &uploader.MultiUploaderConfig{
+	muer := uploader.NewMultiUploader(NewPCSUpload(utu.PCS, utu.SavePath, utu.LocalFileChecksum), rio.NewFileReaderAtLen64(utu.LocalFileChecksum.GetFile()), &uploader.MultiUploaderConfig{
 		Parallel:  utu.Parallel,
 		BlockSize: blockSize,
 		MaxRate:   pcsconfig.Config.MaxUploadRate,

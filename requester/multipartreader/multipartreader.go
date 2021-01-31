@@ -74,7 +74,6 @@ func (mr *MultipartReader) AddFormFile(fieldname, filename string, readerlen64 r
 	if readerlen64 == nil {
 		return
 	}
-
 	mpart64 := &part64{
 		form:        fmt.Sprintf("--%s\r\nContent-Disposition: form-data; name=\"%s\"; filename=\"%s\"\r\n\r\n", mr.boundary, fieldname, filename),
 		readerlen64: readerlen64,

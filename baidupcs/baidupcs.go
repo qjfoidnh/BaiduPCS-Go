@@ -97,9 +97,10 @@ const (
 	OperationFixMD5 = "修复文件md5"
 	// OperrationMatchPathByShellPattern 通配符匹配文件路径
 	OperrationMatchPathByShellPattern = "通配符匹配文件路径"
-
 	// PCSBaiduCom pcs api地址
 	PCSBaiduCom = "pcs.baidu.com"
+	// PCS本地上传接口 api地址
+	CPCSBaiduCom = "c.pcs.baidu.com"
 	// PanBaiduCom 网盘首页api地址
 	PanBaiduCom = "pan.baidu.com"
 	// YunBaiduCom 网盘首页api地址2
@@ -136,6 +137,7 @@ type (
 		uid        uint64                // 百度uid
 		client     *requester.HTTPClient // http 客户端
 		pcsUA      string
+		pcsAddr    string
 		panUA      string
 		isSetPanUA bool
 		ph         *panhome.PanHome
@@ -325,6 +327,10 @@ func (pcs *BaiduPCS) SetPanUserAgent(ua string) {
 	pcs.isSetPanUA = true
 }
 
+func (pcs *BaiduPCS) SetPCSAddr(addr string) {
+	pcs.pcsAddr = addr
+}
+
 // SetHTTPS 是否启用https连接
 func (pcs *BaiduPCS) SetHTTPS(https bool) {
 	pcs.isHTTPS = https
@@ -334,7 +340,14 @@ func (pcs *BaiduPCS) SetHTTPS(https bool) {
 func (pcs *BaiduPCS) URL() *url.URL {
 	return &url.URL{
 		Scheme: GetHTTPScheme(pcs.isHTTPS),
-		Host:   PCSBaiduCom,
+		Host:   pcs.pcsAddr,
+	}
+}
+
+func (pcs *BaiduPCS) CURL() *url.URL {
+	return &url.URL{
+		Scheme: GetHTTPScheme(pcs.isHTTPS),
+		Host:   CPCSBaiduCom,
 	}
 }
 
@@ -346,6 +359,23 @@ func (pcs *BaiduPCS) getPanUAHeader() (header map[string]string) {
 
 func (pcs *BaiduPCS) generatePCSURL(subPath, method string, param ...map[string]string) *url.URL {
 	pcsURL := pcs.URL()
+	pcsURL.Path = "/rest/2.0/pcs/" + subPath
+
+	uv := pcsURL.Query()
+	uv.Set("app_id", strconv.Itoa(pcs.appID))
+	uv.Set("method", method)
+	for k := range param {
+		for k2 := range param[k] {
+			uv.Set(k2, param[k][k2])
+		}
+	}
+
+	pcsURL.RawQuery = uv.Encode()
+	return pcsURL
+}
+
+func (pcs *BaiduPCS) generatecPCSURL(subPath, method string, param ...map[string]string) *url.URL {
+	pcsURL := pcs.CURL()
 	pcsURL.Path = "/rest/2.0/pcs/" + subPath
 
 	uv := pcsURL.Query()

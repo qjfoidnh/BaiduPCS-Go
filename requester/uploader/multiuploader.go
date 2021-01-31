@@ -2,11 +2,15 @@ package uploader
 
 import (
 	"context"
+	"crypto/md5"
+	"fmt"
+	"github.com/qjfoidnh/BaiduPCS-Go/baidupcs"
 	"github.com/qjfoidnh/BaiduPCS-Go/pcsutil"
 	"github.com/qjfoidnh/BaiduPCS-Go/pcsutil/converter"
 	"github.com/qjfoidnh/BaiduPCS-Go/requester"
 	"github.com/qjfoidnh/BaiduPCS-Go/requester/rio"
 	"github.com/qjfoidnh/BaiduPCS-Go/requester/rio/speeds"
+	"io"
 	"sync"
 	"time"
 )
@@ -14,9 +18,9 @@ import (
 type (
 	// MultiUpload 支持多线程的上传, 可用于断点续传
 	MultiUpload interface {
-		Precreate() (perr error)
-		TmpFile(ctx context.Context, partseq int, partOffset int64, readerlen64 rio.ReaderLen64) (checksum string, terr error)
-		CreateSuperFile(checksumList ...string) (cerr error)
+		Precreate(checksumList ...string) (precreateInfo *baidupcs.PrecreateInfo, perr error)
+		TmpFile(ctx context.Context, partseq int, partOffset int64, readerlen64 rio.ReaderLen64, uploadid string) (checksum string, terr error)
+		CreateSuperFile(uploadid, bdstoken string, size int64, checksumList ...string) (cerr error)
 	}
 
 	// MultiUploader 多线程上传
@@ -83,7 +87,7 @@ func (muer *MultiUploader) lazyInit() {
 		muer.config.Parallel = 4
 	}
 	if muer.config.BlockSize <= 0 {
-		muer.config.BlockSize = 1 * converter.GB
+		muer.config.BlockSize = 4 * converter.MB
 	}
 	if muer.speedsStat == nil {
 		muer.speedsStat = &speeds.Speeds{}
@@ -97,6 +101,16 @@ func (muer *MultiUploader) check() {
 	if muer.multiUpload == nil {
 		panic("multiUpload is nil")
 	}
+}
+
+func (muer *MultiUploader) calcuSplitMD5(partoffset int64) (slicemd5 string, length int, err error) {
+	tmpbuffer := make([]byte, muer.config.BlockSize)
+	length, err = muer.file.ReadAt(tmpbuffer, partoffset)
+	if err != nil && err != io.EOF {
+			return
+		}
+	slicemd5 = fmt.Sprintf("%x", md5.Sum(tmpbuffer))
+	return
 }
 
 // Execute 执行上传

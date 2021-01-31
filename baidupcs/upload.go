@@ -4,8 +4,10 @@ import (
 	"errors"
 	"github.com/qjfoidnh/BaiduPCS-Go/baidupcs/pcserror"
 	"github.com/qjfoidnh/BaiduPCS-Go/pcsutil/converter"
+	"io/ioutil"
 	"net/http"
 	"path"
+	"regexp"
 )
 
 const (
@@ -74,6 +76,7 @@ type (
 		IsRapidUpload bool
 		UploadID      string
 		UploadSeqList []*UploadSeq
+		Bdstoken      string
 	}
 
 	uploadSuperfile2JSON struct {
@@ -177,6 +180,25 @@ func (pcs *BaiduPCS) UploadTmpFile(uploadFunc UploadFunc) (md5 string, pcsError 
 	return jsonData.MD5, nil
 }
 
+// UploadCreateFile 另一个分片上传—合并分片文件
+func (pcs *BaiduPCS) UploadCreateFile(uploadid, bdstoken, targetPath string, size int64, blockList ...string) (pcsError pcserror.Error) {
+	dataReadCloser, pcsError := pcs.CreateFinalfile(uploadid, targetPath, bdstoken, size, blockList...)
+	if pcsError != nil {
+		return pcsError
+	}
+
+	defer dataReadCloser.Close()
+
+	errInfo := pcserror.DecodePCSJSONError(OperationUploadCreateSuperFile, dataReadCloser)
+	if errInfo != nil {
+		return errInfo
+	}
+
+	// 更新缓存
+	pcs.deleteCache([]string{path.Dir(targetPath)})
+	return nil
+}
+
 // UploadCreateSuperFile 分片上传—合并分片文件
 func (pcs *BaiduPCS) UploadCreateSuperFile(checkDir bool, targetPath string, blockList ...string) (pcsError pcserror.Error) {
 	dataReadCloser, pcsError := pcs.PrepareUploadCreateSuperFile(checkDir, targetPath, blockList...)
@@ -197,14 +219,30 @@ func (pcs *BaiduPCS) UploadCreateSuperFile(checkDir bool, targetPath string, blo
 }
 
 // UploadPrecreate 分片上传—Precreate,
-// 支持检验秒传
-func (pcs *BaiduPCS) UploadPrecreate(targetPath, contentMD5, sliceMD5, crc32 string, size int64, bolckList ...string) (precreateInfo *PrecreateInfo, pcsError pcserror.Error) {
-	dataReadCloser, pcsError := pcs.PrepareUploadPrecreate(targetPath, contentMD5, sliceMD5, crc32, size, bolckList...)
+// 本来支持检验秒传，此处未使用
+func (pcs *BaiduPCS) UploadPrecreate(targetPath string, blockList ...string) (precreateInfo *PrecreateInfo, pcsError pcserror.Error) {
+	main_page := "https://pan.baidu.com/disk/home"
+	headers := make(map[string]string)
+	headers["User-Agent"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.100 Safari/537.36"
+	dataReadCloser0, pcsError := pcs.sendReqReturnReadCloser(reqTypePan, OperationUploadPrecreate, http.MethodGet, main_page, nil, headers)
+	body, _ := ioutil.ReadAll(dataReadCloser0)
+	re, _ := regexp.Compile(`"bdstoken":"([\d\w]+)"`)
+	sub := re.FindSubmatch(body)
+	if len(sub) < 2 {
+		pcsError = &pcserror.PCSErrInfo{
+			Operation: OperationUploadPrecreate,
+			ErrType:   pcserror.ErrTypeOthers,
+			Err:       errors.New("从网盘主页解析bdstoken错误"),
+		}
+	}
+	bdstoken := string(sub[1])
+	dataReadCloser, pcsError := pcs.PrepareUploadPrecreate(bdstoken, targetPath, blockList...)
 	if pcsError != nil {
 		return
 	}
 
 	defer dataReadCloser.Close()
+	defer dataReadCloser0.Close()
 
 	errInfo := pcserror.NewPanErrorInfo(OperationUploadPrecreate)
 	jsonData := uploadPrecreateJSON{
@@ -219,7 +257,8 @@ func (pcs *BaiduPCS) UploadPrecreate(targetPath, contentMD5, sliceMD5, crc32 str
 	switch jsonData.ReturnType {
 	case 1: // 上传
 		seqLen := len(jsonData.BlockList)
-		if seqLen != len(bolckList) {
+		// 如果文件小到不足一个块是会有seqLen为0的
+		if !(len(blockList) == 1 && seqLen == 0) && seqLen != len(blockList) {
 			errInfo.ErrType = pcserror.ErrTypeRemoteError
 			errInfo.Err = ErrUploadSeqNotMatch
 			return nil, errInfo
@@ -229,15 +268,16 @@ func (pcs *BaiduPCS) UploadPrecreate(targetPath, contentMD5, sliceMD5, crc32 str
 		for k, seq := range jsonData.BlockList {
 			seqList = append(seqList, &UploadSeq{
 				Seq:   seq,
-				Block: bolckList[k],
+				Block: blockList[k],
 			})
 		}
 		return &PrecreateInfo{
 			UploadID:      jsonData.UploadID,
 			UploadSeqList: seqList,
+			Bdstoken:      bdstoken,
 		}, nil
 
-	case 2: // 秒传
+	case 2: // 秒传，但目前秒传不使用该接口检测所以此逻辑不会进入
 		return &PrecreateInfo{
 			IsRapidUpload: true,
 		}, nil

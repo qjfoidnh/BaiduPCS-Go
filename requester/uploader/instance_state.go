@@ -22,11 +22,17 @@ func (muer *MultiUploader) getWorkerListByInstanceState(is *InstanceState) worke
 	workers := make(workerList, 0, len(is.BlockList))
 	for _, blockState := range is.BlockList {
 		if blockState.CheckSum == "" {
+			// 这里CheckSum与worker的checksum值相同但意义不同，可以代表一个块是否已经上传到了服务器
+			slicemd5, length, err := muer.calcuSplitMD5(blockState.Range.Begin)
+			if err != nil || blockState.Range.Len() != int64(length){
+				slicemd5 = blockState.CheckSum
+			}
 			workers = append(workers, &worker{
 				id:         blockState.ID,
 				partOffset: blockState.Range.Begin,
 				splitUnit:  NewBufioSplitUnit(muer.file, blockState.Range, muer.speedsStat, muer.rateLimit),
-				checksum:   blockState.CheckSum,
+				//checksum:   blockState.CheckSum,
+				checksum:   slicemd5,
 			})
 		} else {
 			// 已经完成的, 也要加入 (可继续优化)
@@ -39,6 +45,7 @@ func (muer *MultiUploader) getWorkerListByInstanceState(is *InstanceState) worke
 					readerAt:  muer.file,
 				},
 				checksum: blockState.CheckSum,
+				uploaded: true,
 			})
 		}
 	}

@@ -193,6 +193,18 @@ func (c *PCSConfig) SetPCSUA(pcsUA string) {
 	}
 }
 
+// SetPCSAddr 设置 PCS 服务器地址
+func (c *PCSConfig) SETPCSAddr(pcsaddr string) bool {
+	match, _ := regexp.MatchString("^([cd]\\d?\\.)?pcs\\.baidu\\.com", pcsaddr)
+	if match {
+		c.PCSAddr = pcsaddr
+		if c.pcs != nil {
+			c.pcs.SetPCSAddr(pcsaddr)
+		}
+	}
+	return match
+}
+
 // SetPanUA 设置 Pan User-Agent
 func (c *PCSConfig) SetPanUA(panUA string) {
 	c.PanUA = panUA

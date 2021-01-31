@@ -3,17 +3,19 @@ package baidupcs
 import (
 	"bytes"
 	"fmt"
+	"github.com/json-iterator/go"
 	"github.com/qjfoidnh/BaiduPCS-Go/baidupcs/netdisksign"
 	"github.com/qjfoidnh/BaiduPCS-Go/baidupcs/pcserror"
 	"github.com/qjfoidnh/BaiduPCS-Go/pcsutil/converter"
 	"github.com/qjfoidnh/BaiduPCS-Go/requester/multipartreader"
 	"github.com/qjfoidnh/baidu-tools/tieba"
-	"github.com/json-iterator/go"
 	"io"
 	"net/http"
 	"net/url"
+	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 	"unsafe"
 )
 
@@ -314,7 +316,7 @@ func (pcs *BaiduPCS) PrepareLocateDownload(pcspath string) (dataReadCloser io.Re
 	ns := netdisksign.NewLocateDownloadSign(pcs.uid, bduss)
 	pcsURL := &url.URL{
 		Scheme: GetHTTPScheme(pcs.isHTTPS),
-		Host:   PCSBaiduCom,
+		Host:   pcs.pcsAddr,
 		Path:   "/rest/2.0/pcs/file",
 		RawQuery: (url.Values{
 			"check_blue": []string{"1"},
@@ -465,25 +467,58 @@ func (pcs *BaiduPCS) PrepareUploadCreateSuperFile(checkDir bool, targetPath stri
 }
 
 // PrepareUploadPrecreate 分片上传—Precreate, 只返回服务器响应数据和错误信息
-func (pcs *BaiduPCS) PrepareUploadPrecreate(targetPath, contentMD5, sliceMD5, crc32 string, size int64, bolckList ...string) (dataReadCloser io.ReadCloser, panError pcserror.Error) {
+func (pcs *BaiduPCS) PrepareUploadPrecreate(bdstoken, targetPath string, blockList ...string) (dataReadCloser io.ReadCloser, panError pcserror.Error) {
 	pcs.lazyInit()
-	panURL := &url.URL{
-		Scheme: "https",
-		Host:   PanBaiduCom,
-		Path:   "api/precreate",
-	}
-	baiduPCSVerbose.Infof("%s URL: %s\n", OperationUploadPrecreate, panURL)
+
+	timestr := strconv.FormatInt(time.Now().Unix(), 10)
+	panURL := pcs.generatePanURL("precreate", map[string]string{
+		"clienttype":   "0",
+		"channel": "chunlei",
+		"app_id": strconv.Itoa(pcs.appID),
+		"bdstoken": bdstoken,
+	})
+	baiduPCSVerbose.Infof("%s URL: %s\n", OperationUploadPrecreate, panURL.String())
 
 	dataReadCloser, panError = pcs.sendReqReturnReadCloser(reqTypePan, OperationUploadPrecreate, http.MethodPost, panURL.String(), map[string]string{
 		"path":         targetPath,
-		"size":         strconv.FormatInt(size, 10),
-		"isdir":        "0",
-		"block_list":   mergeStringList(bolckList...),
+		"target_path":  filepath.Dir(targetPath),
+		//"size":         strconv.FormatInt(size, 10),
+		//"isdir":        "0",
+		"local_mtime":  timestr,
+		//"local_ctime":  timestr,
+		"block_list":   mergeStringList(blockList...),
 		"autoinit":     "1",
-		"content-md5":  contentMD5,
-		"slice-md5":    sliceMD5,
-		"contentCrc32": crc32,
-		"rtype":        "2",
+		//"content-md5":  contentMD5,
+		//"slice-md5":    sliceMD5,
+		//"checkexist":   "1",
+		//"contentCrc32": crc32,
+		//"rtype":        "2",
+		//"mode":         "1",
+	}, map[string]string{
+		"Content-Type": "application/x-www-form-urlencoded",
+	})
+	return
+}
+
+func (pcs *BaiduPCS) CreateFinalfile(uploadid, targetPath, bdstoken string, size int64, blockList ...string) (dataReadCloser io.ReadCloser, panError pcserror.Error) {
+	pcs.lazyInit()
+	panURL := pcs.generatePanURL("create", map[string]string{
+		"rtype":       "1",
+		"clienttype":  "0",
+		"channel":     "chunlei",
+		"app_id":      strconv.Itoa(pcs.appID),
+		"bdstoken":    bdstoken,
+	})
+	timestr := strconv.FormatInt(time.Now().Unix(), 10)
+	dataReadCloser, panError = pcs.sendReqReturnReadCloser(reqTypePan, OperationUploadCreateSuperFile, http.MethodPost, panURL.String(), map[string]string{
+		"path":         targetPath,
+		"target_path":  filepath.Dir(targetPath),
+		"size":         strconv.FormatInt(size, 10),
+		"uploadid":     uploadid,
+		//"isdir":        "0",
+		"local_mtime":  timestr,
+		//"local_ctime":  timestr,
+		"block_list":   mergeStringList(blockList...),
 	}, map[string]string{
 		"Content-Type": "application/x-www-form-urlencoded",
 	})

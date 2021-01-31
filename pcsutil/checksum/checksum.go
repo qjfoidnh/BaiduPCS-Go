@@ -158,7 +158,7 @@ read:
 	return
 }
 
-func (lfc *LocalFileChecksum) createChecksumWriteUnit(cw ChecksumWriter, isAll, isSlice bool, getSumFunc func(sliceSum interface{}, sum interface{})) (wu *ChecksumWriteUnit, deferFunc func(err error)) {
+func (lfc *LocalFileChecksum) createChecksumWriteUnit(cw ChecksumWriter, isAll, isSlice, isCRC bool, getSumFunc func(sliceSum interface{}, sum interface{}, crc interface{})) (wu *ChecksumWriteUnit, deferFunc func(err error)) {
 	wu = &ChecksumWriteUnit{
 		ChecksumWriter: cw,
 		End:            lfc.LocalFileMeta.Length,
@@ -173,26 +173,30 @@ func (lfc *LocalFileChecksum) createChecksumWriteUnit(cw ChecksumWriter, isAll, 
 		if err != nil {
 			return
 		}
-		getSumFunc(wu.SliceSum, wu.Sum)
+		getSumFunc(wu.SliceSum, wu.Sum, wu.CRC32)
 	}
 }
 
 // Sum 计算文件摘要值
 func (lfc *LocalFileChecksum) Sum(checkSumFlag int) (err error) {
 	lfc.fix()
-	wus := make([]*ChecksumWriteUnit, 0, 2)
-	if (checkSumFlag & (CHECKSUM_MD5 | CHECKSUM_SLICE_MD5)) != 0 {
+	wus := make([]*ChecksumWriteUnit, 0, 3)
+	if (checkSumFlag & (CHECKSUM_MD5 | CHECKSUM_SLICE_MD5| CHECKSUM_CRC32)) != 0 {
 		md5w := md5.New()
 		wu, d := lfc.createChecksumWriteUnit(
 			NewHashChecksumWriter(md5w),
 			(checkSumFlag&CHECKSUM_MD5) != 0,
 			(checkSumFlag&CHECKSUM_SLICE_MD5) != 0,
-			func(sliceSum interface{}, sum interface{}) {
+			(checkSumFlag&CHECKSUM_CRC32) !=0,
+			func(sliceSum interface{}, sum interface{}, crc interface{}) {
 				if sliceSum != nil {
 					lfc.SliceMD5 = sliceSum.([]byte)
 				}
 				if sum != nil {
 					lfc.MD5 = sum.([]byte)
+				}
+				if crc != nil {
+					lfc.CRC32 = crc.(uint32)
 				}
 			},
 		)
@@ -206,7 +210,8 @@ func (lfc *LocalFileChecksum) Sum(checkSumFlag int) (err error) {
 			NewHash32ChecksumWriter(crc32w),
 			true,
 			false,
-			func(sliceSum interface{}, sum interface{}) {
+			true,
+			func(sliceSum interface{}, sum interface{}, crc interface{}) {
 				if sum != nil {
 					lfc.CRC32 = sum.(uint32)
 				}

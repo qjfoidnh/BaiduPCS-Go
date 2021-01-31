@@ -1,6 +1,8 @@
 package pcsupload
 
-import "github.com/qjfoidnh/BaiduPCS-Go/baidupcs"
+import (
+	"github.com/qjfoidnh/BaiduPCS-Go/baidupcs"
+)
 
 func getBlockSize(fileSize int64) int64 {
 	blockNum := fileSize / baidupcs.MinUploadBlockSize

@@ -15,6 +15,7 @@ type (
 		SliceEnd       int64
 		End            int64
 		SliceSum       interface{}
+		CRC32          interface{}
 		Sum            interface{}
 		OnlySliceSum   bool
 		ChecksumWriter ChecksumWriter

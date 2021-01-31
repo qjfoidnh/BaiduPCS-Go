@@ -2,8 +2,9 @@ package uploader
 
 import (
 	"context"
-	"github.com/qjfoidnh/BaiduPCS-Go/pcsutil/waitgroup"
+	"fmt"
 	"github.com/oleiade/lane"
+	"github.com/qjfoidnh/BaiduPCS-Go/pcsutil/waitgroup"
 	"os"
 )
 
@@ -13,6 +14,7 @@ type (
 		partOffset int64
 		splitUnit  SplitUnit
 		checksum   string
+		uploaded bool
 	}
 
 	workerList []*worker
@@ -37,20 +39,28 @@ func (werl *workerList) Readed() int64 {
 }
 
 func (muer *MultiUploader) upload() (uperr error) {
-	err := muer.multiUpload.Precreate()
-	if err != nil {
-		return err
-	}
 
 	var (
 		uploadDeque = lane.NewDeque()
 	)
-
+	needprecreate := true
 	// 加入队列
 	for _, wer := range muer.workers {
-		if wer.checksum == "" {
+		if !wer.uploaded {
+			fmt.Println(wer.checksum)
 			uploadDeque.Append(wer)
+		} else {
+			needprecreate = false
 		}
+	}
+	var uploadID, bdstoken string
+ 	if needprecreate {
+		precreateinfo, err := muer.multiUpload.Precreate(muer.workers.CheckSumList()...)
+		if err != nil {
+			return err
+		}
+		uploadID = precreateinfo.UploadID
+		bdstoken = precreateinfo.Bdstoken
 	}
 
 	for {
@@ -73,7 +83,7 @@ func (muer *MultiUploader) upload() (uperr error) {
 					terr        error
 				)
 				go func() {
-					checksum, terr = muer.multiUpload.TmpFile(ctx, int(wer.id), wer.partOffset, wer.splitUnit)
+					checksum, terr = muer.multiUpload.TmpFile(ctx, int(wer.id), wer.partOffset, wer.splitUnit, uploadID)
 					close(doneChan)
 				}()
 				select {
@@ -124,8 +134,7 @@ func (muer *MultiUploader) upload() (uperr error) {
 		return context.Canceled
 	default:
 	}
-
-	cerr := muer.multiUpload.CreateSuperFile(muer.workers.CheckSumList()...)
+	cerr := muer.multiUpload.CreateSuperFile(uploadID, bdstoken, muer.file.Len(), muer.workers.CheckSumList()...)
 	if cerr != nil {
 		return cerr
 	}
