@@ -29,7 +29,9 @@ type (
 		Status          int     `json:"status"`          // 状态
 		Public          int     `json:"public"`          // 是否为公开分享
 		TypicalCategory int     `json:"typicalCategory"` // 文件类型
-		TypicalPath     string  `json:"typicalPath"`
+		TypicalPath     string  `json:"typicalPath"`     // 路径
+		ExpireType      int     `json:"expiredType"`     // 过期类型
+		ExpireTime      int64     `json:"expiredTime"`     // 过期时间
 		Valid			string							// 是否过期
 	}
 

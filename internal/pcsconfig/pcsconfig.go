@@ -48,6 +48,7 @@ type PCSConfig struct {
 
 	UserAgent   string `json:"user_agent"`   // 浏览器标识
 	PCSUA       string `json:"pcs_ua"`       // PCS浏览器标识
+	PCSAddr     string `json:"pcs_addr"`     // PCS服务器域名
 	PanUA       string `json:"pan_ua"`       // PAN浏览器标识
 	SaveDir     string `json:"savedir"`      // 下载储存路径
 	EnableHTTPS bool   `json:"enable_https"` // 启用https
@@ -152,6 +153,7 @@ func (c *PCSConfig) init() error {
 		return err
 	}
 	c.pcs = c.activeUser.BaiduPCS()
+	c.pcs.SetPCSAddr(c.PCSAddr)
 
 	// 设置全局User-Agent
 	requester.UserAgent = c.UserAgent
@@ -228,6 +230,7 @@ func (c *PCSConfig) InitDefaultConfig() {
 	c.MaxDownloadLoad = 1
 	c.UserAgent = requester.UserAgent
 	c.PCSUA = ""
+	c.PCSAddr = "pcs.baidu.com"
 	c.PanUA = baidupcs.NetdiskUA
 	c.EnableHTTPS = true
 	c.NoCheck = true

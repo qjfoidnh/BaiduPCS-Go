@@ -7,6 +7,8 @@ import (
 	"os"
 	"path"
 	"strconv"
+	"strings"
+	"time"
 )
 
 // RunShareSet 执行分享
@@ -56,22 +58,29 @@ func RunShareList(page int) {
 	}
 
 	tb := pcstable.NewTable(os.Stdout)
-	tb.SetHeader([]string{"#", "ShareID", "分享链接", "提取密码", "特征目录", "特征路径", "分享状态"})
+	tb.SetHeader([]string{"#", "ShareID", "分享链接", "提取密码", "特征目录", "特征路径", "过期时间"})
 	for k, record := range records {
-		if record.TypicalCategory == -1 {
+		if record.ExpireType == -1 {
 			record.Valid = "已过期" // 已失效分享
 		} else {
-			record.Valid = "有效"
+			if record.ExpireTime == 0 {
+				record.Valid = "永久"
+			} else {
+				tm := time.Unix(time.Now().Unix() + record.ExpireTime, 0)
+				record.Valid = tm.Format("2006/01/02 15:04:05")
+
+			}
+
 		}
 		// 获取Passwd
-		if record.Public == 0 && record.TypicalCategory != -1 {
+		if record.Public == 0 && record.ExpireType != -1 {
 			// 私密分享
 			info, pcsError := pcs.ShareSURLInfo(record.ShareID)
 			if pcsError != nil {
 				// 获取错误
 				fmt.Printf("[%d] 获取分享密码错误: %s\n", k, pcsError)
 			} else {
-				record.Passwd = info.Pwd
+				record.Passwd = strings.TrimSpace(info.Pwd)
 			}
 		}
 

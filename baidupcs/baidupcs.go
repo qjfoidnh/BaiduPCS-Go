@@ -136,6 +136,7 @@ type (
 		uid        uint64                // 百度uid
 		client     *requester.HTTPClient // http 客户端
 		pcsUA      string
+		pcsAddr    string
 		panUA      string
 		isSetPanUA bool
 		ph         *panhome.PanHome
@@ -319,6 +320,11 @@ func (pcs *BaiduPCS) SetPCSUserAgent(ua string) {
 	pcs.pcsUA = ua
 }
 
+// SetPCSAddr 设置 PCS 服务器地址
+func (pcs *BaiduPCS) SetPCSAddr(addr string) {
+	pcs.pcsAddr = addr
+}
+
 // SetPanUserAgent 设置 Pan User-Agent
 func (pcs *BaiduPCS) SetPanUserAgent(ua string) {
 	pcs.panUA = ua
@@ -334,7 +340,7 @@ func (pcs *BaiduPCS) SetHTTPS(https bool) {
 func (pcs *BaiduPCS) URL() *url.URL {
 	return &url.URL{
 		Scheme: GetHTTPScheme(pcs.isHTTPS),
-		Host:   PCSBaiduCom,
+		Host:   pcs.pcsAddr,
 	}
 }
 
