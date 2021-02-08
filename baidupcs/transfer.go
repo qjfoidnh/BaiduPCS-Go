@@ -8,6 +8,7 @@ import (
 	"path"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/tidwall/gjson"
@@ -17,6 +18,7 @@ type (
 	// ShareOption 分享可选项
 	TransferOption struct {
 		Download bool // 是否直接开始下载
+		Collect bool  // 多文件整合
 	}
 )
 
@@ -52,10 +54,8 @@ func (pcs *BaiduPCS) ExtractShareInfo(metajsonstr string) (res map[string]string
 	}
 	res["filename"] = gjson.Get(metajsonstr, `file_list.list.0.server_filename`).String()
 	fsid_list := gjson.Get(metajsonstr, `file_list.list.#.fs_id`).Array()
+	res["item_num"] = strconv.Itoa(len(fsid_list))
 	var fids_str string = "["
-	if len(fsid_list) > 1 {
-		res["filename"] += " 等多个文件"
-	}
 	for _, sid := range fsid_list {
 		fids_str += sid.String() + ","
 	}
@@ -137,7 +137,7 @@ func (pcs *BaiduPCS) AccessSharePage(featurestr string, first bool) (tokens map[
 		re, _ := regexp.Compile(`yunData\.setData\((\{"loginstate.+?\})\);`)
 		sub := re.FindSubmatch(body)
 		if len(sub) < 2 {
-			tokens["ErrMsg"] = "分享页面解析失败"
+			tokens["ErrMsg"] = "请确认登录参数中已经包含了网盘STOKEN"
 			return
 		}
 		tokens["metajson"] = string(sub[1])
@@ -183,7 +183,7 @@ func (pcs *BaiduPCS) GenerateRequestQuery(mode string, params map[string]string)
 		res["ErrMsg"] = "获取分享项元数据错误"
 		if mode == "POST" && errno == 12 {
 			path := gjson.Get(string(body), `info.0.path`).String()
-			_, file := filepath.Split(path)
+			_, file := filepath.Split(path) // Should be path.Split here, but never mind~
 			_errno := gjson.Get(string(body), `info.0.errno`).Int()
 			target_file_nums := gjson.Get(string(body), `target_file_nums`).Int()
 			target_file_nums_limit := gjson.Get(string(body), `target_file_nums_limit`).Int()
@@ -206,11 +206,11 @@ func (pcs *BaiduPCS) GenerateRequestQuery(mode string, params map[string]string)
 	filenames := gjson.Get(string(body), `info.#.path`).Array()
 	filenames_str := ""
 	for _, _path := range filenames {
-		filenames_str += path.Base(_path.String())+","
+		filenames_str += "," + path.Base(_path.String())
 	}
-	res["filenames"] = filenames_str
+	res["filenames"] = filenames_str[1:]
 	if len(gjson.Get(string(body), `info.#.fsid`).Array()) > 1 {
-		res["filename"] += "等多个文件"
+		res["filename"] += "等多个文件/文件夹"
 	}
 	return
 }

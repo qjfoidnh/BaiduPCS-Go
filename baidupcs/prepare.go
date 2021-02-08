@@ -314,7 +314,7 @@ func (pcs *BaiduPCS) PrepareLocateDownload(pcspath string) (dataReadCloser io.Re
 	ns := netdisksign.NewLocateDownloadSign(pcs.uid, bduss)
 	pcsURL := &url.URL{
 		Scheme: GetHTTPScheme(pcs.isHTTPS),
-		Host:   pcs.pcsAddr,
+		Host:   pcs.URL().Host,
 		Path:   "/rest/2.0/pcs/file",
 		RawQuery: (url.Values{
 			"check_blue": []string{"1"},

@@ -3,7 +3,7 @@ package pcscommand
 import (
 	"encoding/base64"
 	"fmt"
-	"path/filepath"
+	"path"
 	"regexp"
 	"strconv"
 	"strings"
@@ -77,6 +77,11 @@ func RunShareTransfer(params []string, opt *baidupcs.TransferOption) {
 		return
 	}
 	trans_metas["path"] = GetActiveUser().Workdir
+	if trans_metas["item_num"] != "1" && opt.Collect {
+		trans_metas["filename"] += "等文件"
+		trans_metas["path"] = path.Join(GetActiveUser().Workdir, trans_metas["filename"])
+		pcs.Mkdir(trans_metas["path"])
+	}
 	trans_metas["referer"] = "https://pan.baidu.com/s/" + featurestr
 	pcs.UpdatePCSCookies(true)
 	resp := pcs.GenerateRequestQuery("POST", trans_metas)
@@ -87,6 +92,9 @@ func RunShareTransfer(params []string, opt *baidupcs.TransferOption) {
 			pcs.SuperTransfer(trans_metas, resp["limit"]) // 试验性功能
 		}
 		return
+	}
+	if opt.Collect {
+		resp["filename"] = trans_metas["filename"]
 	}
 	fmt.Printf("%s成功, 保存了%s到当前目录\n", baidupcs.OperationShareFileSavetoLocal, resp["filename"])
 	if opt.Download {
@@ -115,7 +123,7 @@ func RunRapidTransfer(link string) {
 		md5 := strings.ToLower(substrs[0])
 		slicemd5 := strings.ToLower(substrs[1])
 		length, _ := strconv.ParseInt(substrs[2], 10, 64)
-		filename := filepath.Join(GetActiveUser().Workdir, substrs[3])
+		filename := path.Join(GetActiveUser().Workdir, substrs[3])
 		RunRapidUpload(filename, md5, slicemd5, "", length)
 		return
 	}
@@ -124,7 +132,7 @@ func RunRapidTransfer(link string) {
 		md5 := strings.ToLower(substrs[2])
 		slicemd5 := strings.ToLower(substrs[3])
 		length, _ := strconv.ParseInt(substrs[1], 10, 64)
-		filename := filepath.Join(GetActiveUser().Workdir, substrs[0])
+		filename := path.Join(GetActiveUser().Workdir, substrs[0])
 		RunRapidUpload(filename, md5, slicemd5, "", length)
 		return
 	}

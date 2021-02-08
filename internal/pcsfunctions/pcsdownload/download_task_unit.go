@@ -458,6 +458,14 @@ func (dtu *DownloadTaskUnit) Run() (result *taskframework.TaskUnitRunResult) {
 		result.Succeed = true // 执行成功
 		return
 	}
+	
+	if dtu.FileInfo.Size == 0 {
+		if !dtu.Cfg.IsTest {
+			os.Create(dtu.SavePath)
+		}
+		result.Succeed = true // 执行成功
+		return
+	}
 
 	fmt.Printf("[%s] 准备下载: %s\n", dtu.taskInfo.Id(), dtu.PcsPath)
 

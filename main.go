@@ -55,7 +55,7 @@ const (
 
 var (
 	// Version 版本号
-	Version = "v3.7.4-devel"
+	Version = "v3.7.5-devel"
 
 	historyFilePath = filepath.Join(pcsconfig.GetConfigDir(), "pcs_command_history.txt")
 	reloadFn        = func(c *cli.Context) error {
@@ -1418,6 +1418,7 @@ func main() {
 				}
 				opt := &baidupcs.TransferOption{
 					Download: c.Bool("download"),
+					Collect: c.Bool("collect"),
 				}
 				pcscommand.RunShareTransfer(c.Args(), opt)
 				return nil
@@ -1426,6 +1427,10 @@ func main() {
 				cli.BoolFlag{
 					Name:  "download",
 					Usage: "转存后直接下载到本地默认目录",
+				},
+				cli.BoolFlag{
+					Name:  "collect",
+					Usage: "多文件整合到一个文件夹中",
 				},
 			},
 		},

@@ -49,8 +49,6 @@ func (baidu *Baidu) BaiduPCS() *baidupcs.BaiduPCS {
 	if strings.Contains(baidu.COOKIES, "STOKEN=") && baidu.STOKEN == "" {
 		// 未显式指定stoken则从cookies中读取
 		pcs = baidupcs.NewPCSWithCookieStr(Config.AppID, baidu.COOKIES)
-	} else if(!strings.Contains(strings.ToLower(baidu.COOKIES), "stoken=") && baidu.STOKEN == "") {
-		fmt.Println("缺少stoken，将无法使用转存功能")
 	}
 	pcs.SetHTTPS(Config.EnableHTTPS)
 	pcs.SetPCSUserAgent(Config.PCSUA)

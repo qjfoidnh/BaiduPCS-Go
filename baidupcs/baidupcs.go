@@ -338,9 +338,13 @@ func (pcs *BaiduPCS) SetHTTPS(https bool) {
 
 // URL 返回 url
 func (pcs *BaiduPCS) URL() *url.URL {
+	host := pcs.pcsAddr
+	if host == "" {
+		host = PCSBaiduCom
+	}
 	return &url.URL{
 		Scheme: GetHTTPScheme(pcs.isHTTPS),
-		Host:   pcs.pcsAddr,
+		Host:   host,
 	}
 }
 
