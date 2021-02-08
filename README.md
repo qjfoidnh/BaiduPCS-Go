@@ -100,6 +100,13 @@ iikira/BaiduPCS-Go was largely inspired by [GangZhuo/BaiduPCS](https://github.co
 
 # 版本更新
 
+**2021.2.8** v3.7.5:
+
+- fix 某些时候误报stoken缺失
+- fix windows平台上秒传链接转存失败
+- fix 某些时候pcs请求缺少Host
+- 当分享链接包含多文件/目录时，可选归档到第一个文件命名的目录里（不支持秒传）
+
 **2021.1.31** v3.7.4:
 
 - fix 下载目录会丢失目录结构
