@@ -253,6 +253,8 @@ func (dtu *DownloadTaskUnit) handleError(result *taskframework.TaskUnitRunResult
 			fallthrough
 		case 31066: // file does not exist
 			result.NeedRetry = false
+		case 31297: // file does not exist
+			result.NeedRetry = false
 		case 31626: // user is not authorized
 			//可能是User-Agent不对
 			//重试
@@ -293,8 +295,13 @@ func (dtu *DownloadTaskUnit) locateDownload(result *taskframework.TaskUnitRunRes
 	}
 
 	// 更新链接的协议
-	FixHTTPLinkURL(rawDlinks[0])
-	dlink := rawDlinks[0].String()
+	// 跳过nb.cache这种还没有证书的
+	raw_dlink := rawDlinks[0]
+	if strings.HasPrefix(rawDlinks[0].Host, "nb.cache") && len(rawDlinks) > 1 {
+		raw_dlink = rawDlinks[1]
+	}
+	FixHTTPLinkURL(raw_dlink)
+	dlink := raw_dlink.String()
 
 	dtu.execPanDownload(dlink, result, &ok)
 	return

@@ -294,6 +294,10 @@ func (wer *Worker) Execute() {
 		fallthrough
 	case 403: // Forbidden
 		fallthrough
+	case 404: // file block not exists
+		wer.status.statusCode = StatusCodeInternalError
+		wer.err = errors.New(resp.Status)
+		return
 	case 406: // Not Acceptable
 		wer.status.statusCode = StatusCodeNetError
 		wer.err = errors.New(resp.Status)

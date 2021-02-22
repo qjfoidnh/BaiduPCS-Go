@@ -30,6 +30,7 @@ type (
 		Load                 int
 		MaxRetry             int
 		NoCheck              bool
+		FullPath             bool
 	}
 
 	// LocateDownloadOption 获取下载链接可选参数
@@ -157,11 +158,15 @@ func RunDownload(paths []string, options *DownloadOptions) {
 		// 设置下载并发数
 		executor.SetParallel(loadCount)
 		// 设置储存的路径
+		vPath := v.Path
+		if !options.FullPath {
+			vPath = filepath.Join(v.PreBase, filepath.Base(v.Path))
+		}
 		if options.SaveTo != "" {
-			unit.SavePath = filepath.Join(options.SaveTo, filepath.Join(v.PreBase, filepath.Base(v.Path)))
+			unit.SavePath = filepath.Join(options.SaveTo, vPath)
 		} else {
 			// 使用默认的保存路径
-			unit.SavePath = GetActiveUser().GetSavePath(filepath.Join(v.PreBase, filepath.Base(v.Path)))
+			unit.SavePath = GetActiveUser().GetSavePath(vPath)
 		}
 		info := executor.Append(&unit, options.MaxRetry)
 		fmt.Printf("[%s] 加入下载队列: %s\n", info.Id(), v.Path)

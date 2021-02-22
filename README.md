@@ -100,6 +100,12 @@ iikira/BaiduPCS-Go was largely inspired by [GangZhuo/BaiduPCS](https://github.co
 
 # 版本更新
 
+**2021.2.23** v3.7.6:
+
+- fix 下载文件报```x509: certificate is valid```错误
+- 完善了下载错误的捕获种类
+- download增加--fullpath参数，本地目录保留网盘从根目录开始的完整结构
+
 **2021.2.8** v3.7.5:
 
 - fix 某些时候误报stoken缺失

@@ -55,7 +55,7 @@ const (
 
 var (
 	// Version 版本号
-	Version = "v3.7.5-devel"
+	Version = "v3.7.6-devel"
 
 	historyFilePath = filepath.Join(pcsconfig.GetConfigDir(), "pcs_command_history.txt")
 	reloadFn        = func(c *cli.Context) error {
@@ -1066,6 +1066,7 @@ func main() {
 					Load:                 c.Int("l"),
 					MaxRetry:             c.Int("retry"),
 					NoCheck:              c.Bool("nocheck"),
+					FullPath:             c.Bool("fullpath"),
 				}
 
 				pcscommand.RunDownload(c.Args(), do)
@@ -1118,6 +1119,10 @@ func main() {
 				cli.BoolFlag{
 					Name:  "nocheck",
 					Usage: "下载文件完成后不校验文件",
+				},
+				cli.BoolFlag{
+					Name:        "fullpath",
+					Usage:       "以网盘完整路径保存到本地",
 				},
 			},
 		},
