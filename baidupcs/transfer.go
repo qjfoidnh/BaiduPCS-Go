@@ -52,16 +52,15 @@ func (pcs *BaiduPCS) ExtractShareInfo(metajsonstr string) (res map[string]string
 		res["ErrMsg"] = "提取码错误"
 		return
 	}
-	res["filename"] = gjson.Get(metajsonstr, `file_list.list.0.server_filename`).String()
-	fsid_list := gjson.Get(metajsonstr, `file_list.list.#.fs_id`).Array()
-	res["item_num"] = strconv.Itoa(len(fsid_list))
+	res["filename"] = gjson.Get(metajsonstr, `file_list.0.server_filename`).String()
+	fsid_list := gjson.Get(metajsonstr, `file_list.#.fs_id`).Array()
 	var fids_str string = "["
 	for _, sid := range fsid_list {
 		fids_str += sid.String() + ","
 	}
 
 	res["shareid"] = gjson.Get(metajsonstr, `shareid`).String()
-	res["from"] = gjson.Get(metajsonstr, `uk`).String()
+	res["from"] = gjson.Get(metajsonstr, `share_uk`).String()
 	res["bdstoken"] = gjson.Get(metajsonstr, `bdstoken`).String()
 	shareUrl := &url.URL{
 		Scheme: GetHTTPScheme(true),
@@ -76,6 +75,7 @@ func (pcs *BaiduPCS) ExtractShareInfo(metajsonstr string) (res map[string]string
 	for key, value := range res {
 		uv.Set(key, value)
 	}
+	res["item_num"] = strconv.Itoa(len(fsid_list))
 	res["ErrMsg"] = "0"
 	res["fs_id"] = fids_str[:len(fids_str)-1] + "]"
 	shareUrl.RawQuery = uv.Encode()
@@ -134,13 +134,14 @@ func (pcs *BaiduPCS) AccessSharePage(featurestr string, first bool) (tokens map[
 		tokens["ErrMsg"] = "分享链接已失效"
 		return
 	} else {
-		re, _ := regexp.Compile(`yunData\.setData\((\{"loginstate.+?\})\);`)
+		re, _ := regexp.Compile(`(\{.+?loginstate.+?\})\);`)
 		sub := re.FindSubmatch(body)
 		if len(sub) < 2 {
 			tokens["ErrMsg"] = "请确认登录参数中已经包含了网盘STOKEN"
 			return
 		}
 		tokens["metajson"] = string(sub[1])
+		tokens["bdstoken"] = gjson.Get(string(sub[1]), `bdstoken`).String()
 		return
 	}
 

@@ -315,6 +315,22 @@ func (pcs *BaiduPCS) SetStoken(stoken string) {
 	})
 }
 
+// SetSboxtkn 设置sboxtkn
+func (pcs *BaiduPCS) SetSboxtkn(sboxtkn string) {
+	pcs.lazyInit()
+	if pcs.client.Jar == nil {
+		pcs.client.ResetCookiejar()
+	}
+
+	pcs.client.Jar.SetCookies(baiduComURL, []*http.Cookie{
+		&http.Cookie{
+			Name:   "SBOXTKN",
+			Value:  sboxtkn,
+			Domain: DotBaiduCom,
+		},
+	})
+}
+
 // SetPCSUserAgent 设置 PCS User-Agent
 func (pcs *BaiduPCS) SetPCSUserAgent(ua string) {
 	pcs.pcsUA = ua

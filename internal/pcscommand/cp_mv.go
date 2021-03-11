@@ -52,7 +52,7 @@ func runCpMvOp(op string, paths ...string) {
 	pcs := GetBaiduPCS()
 	toInfo, pcsError := pcs.FilesDirectoriesMeta(to)
 	switch {
-	case toInfo != nil && toInfo.Path != to:
+	case toInfo != nil && toInfo.Path != path.Clean(to):
 		fallthrough
 	case pcsError != nil && pcsError.GetErrType() == pcserror.ErrTypeRemoteError:
 		// 判断路径是否存在
@@ -78,7 +78,7 @@ func runCpMvOp(op string, paths ...string) {
 			fmt.Println("文件/目录拷贝成功: ")
 			fmt.Printf("%s <-> %s\n", froms[0], to)
 		} else { // 重命名
-			err = pcs.Rename(froms[0], to)
+			err = pcs.Rename(froms[0], path.Clean(to))
 			if err != nil {
 				fmt.Println(err)
 				fmt.Println("重命名失败: ")

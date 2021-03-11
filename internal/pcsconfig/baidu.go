@@ -37,6 +37,7 @@ type Baidu struct {
 	BDUSS   string `json:"bduss"`
 	PTOKEN  string `json:"ptoken"`
 	STOKEN  string `json:"stoken"`
+	SBOXTKN string `json:"sboxtkn"`
 	COOKIES string `json:"cookies"`
 
 	Workdir string `json:"workdir"` // 工作目录
@@ -46,6 +47,9 @@ type Baidu struct {
 func (baidu *Baidu) BaiduPCS() *baidupcs.BaiduPCS {
 	pcs := baidupcs.NewPCS(Config.AppID, baidu.BDUSS)
 	pcs.SetStoken(baidu.STOKEN)
+	if baidu.SBOXTKN != "" {
+		pcs.SetSboxtkn(baidu.SBOXTKN)
+	}
 	if strings.Contains(baidu.COOKIES, "STOKEN=") && baidu.STOKEN == "" {
 		// 未显式指定stoken则从cookies中读取
 		pcs = baidupcs.NewPCSWithCookieStr(Config.AppID, baidu.COOKIES)

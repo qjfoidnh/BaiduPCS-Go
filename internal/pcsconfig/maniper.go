@@ -130,7 +130,7 @@ func (c *PCSConfig) SetupUserByBDUSS(bduss, ptoken, stoken, cookies string) (bai
 		UID: b.UID,
 	}) // 删除旧的信息
 
-	b.PTOKEN = ptoken
+	b.PTOKEN = ptoken // 实际未使用
 	b.STOKEN = stoken
 	b.COOKIES = cookies
 
