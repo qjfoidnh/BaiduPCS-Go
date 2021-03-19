@@ -19,6 +19,7 @@ type (
 	TransferOption struct {
 		Download bool // 是否直接开始下载
 		Collect bool  // 多文件整合
+		Fix bool // 和谐修复
 	}
 )
 

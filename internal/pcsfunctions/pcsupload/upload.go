@@ -23,6 +23,8 @@ type (
 	}
 )
 
+var client *requester.HTTPClient = pcsconfig.Config.PCSHTTPClient()
+
 func (e EmptyReaderLen64) Read(p []byte) (n int, err error) {
 	return 0, io.EOF
 }
@@ -54,7 +56,7 @@ func (pu *PCSUpload) TmpFile(ctx context.Context, partseq int, partOffset int64,
 
 	var respErr *uploader.MultiError
 	checksum, pcsError := pu.pcs.UploadTmpFile(func(uploadURL string, jar http.CookieJar) (resp *http.Response, err error) {
-		client := pcsconfig.Config.PCSHTTPClient()
+		//client := pcsconfig.Config.PCSHTTPClient()
 		client.SetCookiejar(jar)
 		client.SetTimeout(0)
 
