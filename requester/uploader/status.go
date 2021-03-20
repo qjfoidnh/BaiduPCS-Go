@@ -44,7 +44,7 @@ func (us *UploadStatus) TimeElapsed() time.Duration {
 	return us.timeElapsed
 }
 
-// GetStatusChan 获取上传状态
+// GetStatusChan 获取上传状态，未使用
 func (u *Uploader) GetStatusChan() <-chan Status {
 	c := make(chan Status)
 
@@ -76,13 +76,16 @@ func (u *Uploader) GetStatusChan() <-chan Status {
 	return c
 }
 
+
+// 使用中的速度状态
 func (muer *MultiUploader) uploadStatusEvent() {
 	if muer.onUploadStatusEvent == nil {
 		return
 	}
 
 	go func() {
-		ticker := time.NewTicker(1 * time.Second) // 每秒统计
+		ticker := time.NewTicker(3 * time.Second) // 每3秒统计
+		//ticker := time.NewTicker(990 * time.Millisecond) // 每秒统计
 		defer ticker.Stop()
 		for {
 			select {

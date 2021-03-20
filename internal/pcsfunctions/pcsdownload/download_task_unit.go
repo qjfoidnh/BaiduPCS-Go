@@ -77,6 +77,8 @@ const (
 	DownloadModeStreaming
 )
 
+var client *requester.HTTPClient
+
 func (dtu *DownloadTaskUnit) SetTaskInfo(info *taskframework.TaskInfo) {
 	dtu.taskInfo = info
 }
@@ -226,8 +228,11 @@ func (dtu *DownloadTaskUnit) download(downloadURL string, client *requester.HTTP
 }
 
 //panHTTPClient 获取包含特定User-Agent的HTTPClient
-func (dtu *DownloadTaskUnit) panHTTPClient() (client *requester.HTTPClient) {
-	client = pcsconfig.Config.PanHTTPClient()
+func (dtu *DownloadTaskUnit) panHTTPClient() (*requester.HTTPClient) {
+	if client == nil {
+		client = pcsconfig.Config.PanHTTPClient()
+	}
+	//client = pcsconfig.Config.PanHTTPClient() // 此处将client 设为全局变量，理论上可优化TCP连接数
 	client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
 		// 去掉 Referer
 		if !pcsconfig.Config.EnableHTTPS {
@@ -238,7 +243,7 @@ func (dtu *DownloadTaskUnit) panHTTPClient() (client *requester.HTTPClient) {
 		}
 		return nil
 	}
-	client.SetTimeout(20 * time.Minute)
+	client.SetTimeout(5 * time.Minute)
 	client.SetKeepAlive(true)
 	return client
 }

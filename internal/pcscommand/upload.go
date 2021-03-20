@@ -32,6 +32,13 @@ type (
 	}
 )
 
+func uploadPrintFormat(load int) string {
+	if load <= 1 {
+		return pcsupload.DefaultPrintFormat
+	}
+	return "[%s] ↑ %s/%s %s/s in %s ...\n"
+}
+
 // RunRapidUpload 执行秒传文件, 前提是知道文件的大小, md5, 前256KB切片的 md5, crc32
 func RunRapidUpload(targetPath, contentMD5, sliceMD5, crc32 string, length int64) {
 	dirname := path.Dir(targetPath)
@@ -120,7 +127,7 @@ func RunUpload(localPaths []string, savePath string, opt *UploadOptions) {
 
 	statistic.StartTimer() // 开始计时
 
-	LoadCount := 1
+	LoadCount := 0
 
 	for k := range localPaths {
 		walkedFiles, err := pcsutil.WalkDir(localPaths[k], "")
@@ -143,7 +150,9 @@ func RunUpload(localPaths []string, savePath string, opt *UploadOptions) {
 			if localPathDir == "." {
 				localPathDir = ""
 			}
-
+			if len(localPaths) == 1 && len(walkedFiles) == 1 {
+				opt.Load = 1
+			}
 			subSavePath = strings.TrimPrefix(walkedFiles[k3], localPathDir)
 			LoadCount++
 			info := executor.Append(&pcsupload.UploadTaskUnit{
@@ -152,6 +161,7 @@ func RunUpload(localPaths []string, savePath string, opt *UploadOptions) {
 				PCS:               pcs,
 				UploadingDatabase: uploadDatabase,
 				Parallel:          opt.Parallel,
+				PrintFormat:       uploadPrintFormat(opt.Load),
 				NoRapidUpload:     opt.NoRapidUpload,
 				NoSplitFile:       opt.NoSplitFile,
 				UploadStatistic:   statistic,

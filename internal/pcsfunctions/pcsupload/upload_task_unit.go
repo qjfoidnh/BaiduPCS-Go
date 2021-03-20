@@ -28,6 +28,7 @@ type (
 		LocalFileChecksum *checksum.LocalFileChecksum // 要上传的本地文件详情
 		Step              StepUpload
 		SavePath          string // 保存路径
+		PrintFormat       string
 
 		PCS               *baidupcs.BaiduPCS
 		UploadingDatabase *UploadingDatabase // 数据库
@@ -55,6 +56,7 @@ const (
 
 const (
 	StrUploadFailed = "上传文件失败"
+	DefaultPrintFormat = "\r[%s] ↑ %s/%s %s/s in %s ............"
 )
 
 func (utu *UploadTaskUnit) SetTaskInfo(taskInfo *taskframework.TaskInfo) {
@@ -201,7 +203,6 @@ func (utu *UploadTaskUnit) upload() (result *taskframework.TaskUnitRunResult) {
 	if utu.state != nil {
 		muer.SetInstanceState(utu.state)
 	}
-
 	muer.OnUploadStatusEvent(func(status uploader.Status, updateChan <-chan struct{}) {
 		select {
 		case <-updateChan:
@@ -210,7 +211,7 @@ func (utu *UploadTaskUnit) upload() (result *taskframework.TaskUnitRunResult) {
 		default:
 		}
 
-		fmt.Printf("\r[%s] ↑ %s/%s %s/s in %s ............", utu.taskInfo.Id(),
+		fmt.Printf(utu.PrintFormat, utu.taskInfo.Id(),
 			converter.ConvertFileSize(status.Uploaded(), 2),
 			converter.ConvertFileSize(status.TotalSize(), 2),
 			converter.ConvertFileSize(status.SpeedsPerSecond(), 2),
