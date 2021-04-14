@@ -110,7 +110,7 @@ func (der *Downloader) lazyInit() {
 	}
 	if der.client == nil {
 		der.client = requester.NewHTTPClient()
-		der.client.SetTimeout(20 * time.Minute)
+		der.client.SetTimeout(5 * time.Minute)
 	}
 	if der.monitor == nil {
 		der.monitor = NewMonitor()

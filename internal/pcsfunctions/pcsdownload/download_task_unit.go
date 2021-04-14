@@ -243,7 +243,7 @@ func (dtu *DownloadTaskUnit) panHTTPClient() (*requester.HTTPClient) {
 		}
 		return nil
 	}
-	client.SetTimeout(5 * time.Minute)
+	client.SetTimeout(4 * time.Minute)
 	client.SetKeepAlive(true)
 	return client
 }

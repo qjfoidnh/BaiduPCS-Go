@@ -122,7 +122,8 @@ func CheckUpdate(version string, yes bool) {
 			targetList = append(targetList, &info{
 				filename:    asset.Name,
 				size:        asset.Size,
-				downloadURL: asset.BrowserDownloadURL,
+				//downloadURL: asset.BrowserDownloadURL,
+				downloadURL: strings.Replace(asset.BrowserDownloadURL, "github.com", "hub.fastgit.org", -1),
 			})
 		}
 	}

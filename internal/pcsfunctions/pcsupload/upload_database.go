@@ -50,7 +50,10 @@ func NewUploadingDatabase() (ud *UploadingDatabase, err error) {
 
 	err = jsonhelper.UnmarshalData(file, ud)
 	if err != nil {
-		return nil, err
+		_, err = file.Write([]byte(""))
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return ud, nil
