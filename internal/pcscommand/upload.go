@@ -154,7 +154,7 @@ func RunUpload(localPaths []string, savePath string, opt *UploadOptions) {
 				opt.Load = 1
 			}
 			subSavePath = strings.TrimPrefix(walkedFiles[k3], localPathDir)
-			if !pcsutil.ChPathLegal(localPathDir, strings.TrimLeft(subSavePath, "/")) {
+			if !pcsutil.ChPathLegal(walkedFiles[k3]) {
 				fmt.Printf("[0] %s 文件路径含有非法字符，已跳过!\n", walkedFiles[k3])
 				continue
 			}
