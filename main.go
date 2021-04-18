@@ -96,8 +96,8 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "BaiduPCS-Go"
 	app.Version = Version
-	app.Author = "iikira/BaiduPCS-Go: https://github.com/qjfoidnh/BaiduPCS-Go"
-	app.Copyright = "(c) 2016-2020 qjfoidnh."
+	app.Author = "qjfoidnh/BaiduPCS-Go: https://github.com/qjfoidnh/BaiduPCS-Go"
+	app.Copyright = "(c) 2016-2020 iikira."
 	app.Usage = "百度网盘客户端 for " + runtime.GOOS + "/" + runtime.GOARCH
 	app.Description = `BaiduPCS-Go 使用Go语言编写的百度网盘命令行客户端, 为操作百度网盘, 提供实用功能.
 	具体功能, 参见 COMMANDS 列表
@@ -410,8 +410,7 @@ func main() {
 		按提示一步一步来即可.
 
 	百度BDUSS获取方法:
-		参考这篇 Wiki: https://github.com/qjfoidnh/BaiduPCS-Go/wiki/关于-获取百度-BDUSS
-		或者百度搜索: 获取百度BDUSS
+		百度搜索: 获取百度BDUSS
 		
 	百度Cookies获取办法:
 	以Chrome为例，登录到自己的百度网盘主页，F12，然后切换到Network标签，刷新页面，Network标签下会刷出一大堆东西

@@ -112,7 +112,12 @@ func ConvertToUnixPathSeparator(p string) string {
 }
 
 func ChPathLegal(p string) bool {
-	if strings.ContainsAny(p, "<>|:'\"*?,\\") {
+	illegal_chars := "<>|:'\"*?,\\"
+	if runtime.GOOS == "windows" {
+		illegal_chars = "<>|'\"*?,\\"
+	}
+
+	if strings.ContainsAny(p, illegal_chars) {
 		return false
 	}
 	return true
