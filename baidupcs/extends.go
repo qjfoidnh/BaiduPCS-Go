@@ -11,7 +11,6 @@ import (
 	"io"
 	"mime"
 	"net/http"
-	"net/url"
 	"path"
 	"strconv"
 	"strings"
@@ -153,11 +152,8 @@ func (pcs *BaiduPCS) GetRapidUploadInfoByLink(link string, compareRInfo *RapidUp
 		errInfo.Err = err
 		return nil, errInfo
 	}
-	filename, err := url.QueryUnescape(params["filename"])
-	if err != nil {
-		errInfo.Err = err
-		return nil, errInfo
-	}
+	filename := params["filename"]
+	
 	if compareRInfo != nil && compareRInfo.Filename != "" && compareRInfo.Filename != filename {
 		errInfo.Err = ErrGetRapidUploadInfoFilenameNotEqual
 		return nil, errInfo

@@ -59,7 +59,7 @@ func (pu *PCSUpload) TmpFile(ctx context.Context, partseq int, partOffset int64,
 	checksum, pcsError := pu.pcs.UploadTmpFile(func(uploadURL string, jar http.CookieJar) (resp *http.Response, err error) {
 		//client := pcsconfig.Config.PCSHTTPClient()
 		client.SetCookiejar(jar)
-		client.SetTimeout(40 * time.Second)
+		client.SetTimeout(200 * time.Second)
 
 		mr := multipartreader.NewMultipartReader()
 		mr.AddFormFile("uploadedfile", "", r)

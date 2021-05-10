@@ -134,11 +134,11 @@ func RunRapidTransfer(link string, fix bool) {
 	link = strings.TrimSpace(link)
 	substrs := strings.Split(link, "#")
 	if len(substrs) == 4 {
-		md5 := strings.ToLower(substrs[0])
+		md5 := strings.ToUpper(substrs[0])
 		if fix {
 			md5 = randomifyMD5(md5)
 		}
-		slicemd5 := strings.ToLower(substrs[1])
+		slicemd5 := strings.ToUpper(substrs[1])
 		length, _ := strconv.ParseInt(substrs[2], 10, 64)
 		filename := path.Join(GetActiveUser().Workdir, substrs[3])
 		RunRapidUpload(filename, md5, slicemd5, "", length)
@@ -146,11 +146,11 @@ func RunRapidTransfer(link string, fix bool) {
 	}
 	substrs = strings.Split(link, "|")
 	if len(substrs) == 4 {
-		md5 := strings.ToLower(substrs[2])
+		md5 := strings.ToUpper(substrs[2])
 		if fix {
 			md5 = randomifyMD5(md5)
 		}
-		slicemd5 := strings.ToLower(substrs[3])
+		slicemd5 := strings.ToUpper(substrs[3])
 		length, _ := strconv.ParseInt(substrs[1], 10, 64)
 		filename := path.Join(GetActiveUser().Workdir, substrs[0])
 		RunRapidUpload(filename, md5, slicemd5, "", length)
