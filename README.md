@@ -100,6 +100,12 @@ iikira/BaiduPCS-Go was largely inspired by [GangZhuo/BaiduPCS](https://github.co
 
 # 版本更新
 
+**2021.5.21** v3.8.0:
+- fix 上传到100M左右自动回滚（待测试）
+- fix 个别正常的秒传链接无法转存
+- fix 文件名含有百分号导出异常
+- 优化上传重试策略（待测试）
+
 **2021.4.14** v3.7.9:
 - fix 上传时异常退出导致无法加载断点信息
 - fix 上传偶发出现0B/s卡住
