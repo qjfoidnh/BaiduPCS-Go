@@ -153,7 +153,7 @@ func (pcs *BaiduPCS) GetRapidUploadInfoByLink(link string, compareRInfo *RapidUp
 		return nil, errInfo
 	}
 	filename := params["filename"]
-	
+
 	if compareRInfo != nil && compareRInfo.Filename != "" && compareRInfo.Filename != filename {
 		errInfo.Err = ErrGetRapidUploadInfoFilenameNotEqual
 		return nil, errInfo

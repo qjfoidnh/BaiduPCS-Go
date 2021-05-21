@@ -235,11 +235,11 @@ func (der *Downloader) checkLoadBalancers() *LoadBalancerResponseList {
 		URL: der.durl,
 	})
 
-	// 负载均衡
-	wg := waitgroup.NewWaitGroup(10)
+	// 多下载服务器的负载均衡, 在本项目中无意义，因为百度只用单下载服务器
+	wg := waitgroup.NewWaitGroup(4)
 	privTimeout := der.client.Client.Timeout
 	der.client.SetTimeout(5 * time.Second)
-	for _, loadBalanser := range der.loadBalansers {
+	for _, loadBalanser := range der.loadBalansers { // 这里服务器列表数量为0，所以逻辑实际未生效
 		wg.AddDelta()
 		go func(loadBalanser string) {
 			defer wg.Done()
