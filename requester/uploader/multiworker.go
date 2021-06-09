@@ -125,7 +125,7 @@ func (muer *MultiUploader) upload() (uperr error) {
 	default:
 	}
 
-	cerr := muer.multiUpload.CreateSuperFile(muer.workers.CheckSumList()...)
+	cerr := muer.multiUpload.CreateSuperFile(muer.config.Skip, muer.workers.CheckSumList()...)
 	if cerr != nil {
 		return cerr
 	}

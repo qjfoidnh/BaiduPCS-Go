@@ -29,6 +29,7 @@ type (
 		Load 		  int
 		NoRapidUpload bool
 		NoSplitFile   bool // 禁用分片上传
+		Skip        bool // 同名文件自动跳过
 	}
 )
 
@@ -64,7 +65,7 @@ func RunCreateSuperFile(targetPath string, blockList ...string) {
 		fmt.Printf("警告: %s, 获取网盘路径 %s 错误, %s\n", baidupcs.OperationUploadCreateSuperFile, targetPath, err)
 	}
 
-	err = GetBaiduPCS().UploadCreateSuperFile(true, targetPath, blockList...)
+	err = GetBaiduPCS().UploadCreateSuperFile(false, true, targetPath, blockList...)
 	if err != nil {
 		fmt.Printf("%s失败, 消息: %s\n", baidupcs.OperationUploadCreateSuperFile, err)
 		return
@@ -169,6 +170,7 @@ func RunUpload(localPaths []string, savePath string, opt *UploadOptions) {
 				NoRapidUpload:     opt.NoRapidUpload,
 				NoSplitFile:       opt.NoSplitFile,
 				UploadStatistic:   statistic,
+				Skip:              opt.Skip,
 			}, opt.MaxRetry)
 			if LoadCount >= opt.Load {
 				LoadCount = opt.Load

@@ -73,8 +73,7 @@ func (pu *PCSUpload) TmpFile(ctx context.Context, partseq int, partOffset int64,
 			if resp != nil {
 				// 不可恢复的错误
 				switch resp.StatusCode {
-				//case 400, 401, 403, 413: // 实际发现400可能是偶发错误
-				case 401, 403, 413:
+				case 400, 401, 403, 413: // 4xx通常是由客户端非法操作引发，直接深度重试
 					respErr = &uploader.MultiError{
 						Terminated: true,
 					}
@@ -99,7 +98,7 @@ func (pu *PCSUpload) TmpFile(ctx context.Context, partseq int, partOffset int64,
 	return checksum, pcsError
 }
 
-func (pu *PCSUpload) CreateSuperFile(checksumList ...string) (err error) {
+func (pu *PCSUpload) CreateSuperFile(skip bool, checksumList ...string) (err error) {
 	pu.lazyInit()
 
 	// 先在网盘目标位置, 上传一个空文件
@@ -119,5 +118,5 @@ func (pu *PCSUpload) CreateSuperFile(checksumList ...string) (err error) {
 		return pcsError
 	}
 
-	return pu.pcs.UploadCreateSuperFile(false, pu.targetPath, checksumList...)
+	return pu.pcs.UploadCreateSuperFile(skip,false, pu.targetPath, checksumList...)
 }

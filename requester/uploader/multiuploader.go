@@ -16,7 +16,7 @@ type (
 	MultiUpload interface {
 		Precreate() (perr error)
 		TmpFile(ctx context.Context, partseq int, partOffset int64, readerlen64 rio.ReaderLen64) (checksum string, terr error)
-		CreateSuperFile(checksumList ...string) (cerr error)
+		CreateSuperFile(skip bool, checksumList ...string) (cerr error)
 	}
 
 	// MultiUploader 多线程上传
@@ -49,6 +49,7 @@ type (
 		Parallel  int   // 上传并发量
 		BlockSize int64 // 上传分块
 		MaxRate   int64 // 限制最大上传速度
+		Skip    bool  // 是否跳过
 	}
 )
 

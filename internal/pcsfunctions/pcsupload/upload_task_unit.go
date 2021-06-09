@@ -35,6 +35,7 @@ type (
 		Parallel          int
 		NoRapidUpload     bool // 禁用秒传
 		NoSplitFile       bool // 禁用分片上传
+		Skip            bool // 自动跳过
 
 		UploadStatistic *UploadStatistic
 
@@ -197,6 +198,7 @@ func (utu *UploadTaskUnit) upload() (result *taskframework.TaskUnitRunResult) {
 		Parallel:  utu.Parallel,
 		BlockSize: blockSize,
 		MaxRate:   pcsconfig.Config.MaxUploadRate,
+		Skip:    utu.Skip,
 	})
 
 	// 设置断点续传
