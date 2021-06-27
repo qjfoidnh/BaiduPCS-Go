@@ -1132,7 +1132,6 @@ func main() {
 			UsageText: app.Name + " upload <本地文件/目录的路径1> <文件/目录2> <文件/目录3> ... <目标目录>",
 			Description: `
 	上传默认采用分片上传的方式, 上传的文件将会保存到, <目标目录>.
-	遇到同名文件默认会自动覆盖，可用--rename 参数开启自动重命名
 	当上传的文件名和网盘的目录名称相同时, 不会覆盖目录, 防止丢失数据.
 
 	注意: 
@@ -1174,7 +1173,7 @@ func main() {
 					Load:          c.Int("l"),
 					NoRapidUpload: c.Bool("norapid"),
 					NoSplitFile:   c.Bool("nosplit"),
-					Skip:        c.Bool("skip"),
+					Policy:        c.String("policy"),
 				})
 				return nil
 			},
@@ -1200,9 +1199,9 @@ func main() {
 					Name:  "nosplit",
 					Usage: "禁用分片上传",
 				},
-				cli.BoolFlag{
-					Name:  "skip",
-					Usage: "跳过已存在文件",
+				cli.StringFlag{
+					Name:  "policy",
+					Usage: "对同名文件的处理策略",
 				},
 			},
 		},
@@ -1294,7 +1293,7 @@ func main() {
 			Description: `
 	block1, block2 ... 为文件分片的md5值
 	上传的文件将会保存到网盘的目标目录.
-	遇到同名文件将会自动覆盖!
+	遇到同名文件默认会自动覆盖!
 
 	示例:
 
@@ -1308,7 +1307,7 @@ func main() {
 					return nil
 				}
 
-				pcscommand.RunCreateSuperFile(c.String("path"), c.Args()...)
+				pcscommand.RunCreateSuperFile(c.String("policy"), c.String("path"), c.Args()...)
 				return nil
 			},
 			Flags: []cli.Flag{
@@ -1316,6 +1315,11 @@ func main() {
 					Name:  "path",
 					Usage: "保存的网盘路径",
 					Value: "superfile",
+				},
+				cli.StringFlag{
+					Name:  "policy",
+					Usage: "同名文件处理策略",
+					Value: "overwrite",
 				},
 			},
 		},
@@ -1867,6 +1871,9 @@ func main() {
 						if c.IsSet("no_check") {
 							pcsconfig.Config.SetNoCheck(c.Bool("no_check"))
 						}
+						if c.IsSet("upload_policy") {
+							pcsconfig.Config.SetUploadPolicy(c.String("upload_policy"))
+						}
 						if c.IsSet("user_agent") {
 							pcsconfig.Config.SetUserAgent(c.String("user_agent"))
 						}
@@ -1981,6 +1988,10 @@ func main() {
 						cli.BoolFlag{
 							Name:  "no_check",
 							Usage: "关闭下载文件md5校验",
+						},
+						cli.StringFlag{
+							Name:  "upload_policy",
+							Usage: "设置上传遇到同名文件时的策略",
 						},
 						cli.StringFlag{
 							Name:  "user_agent",

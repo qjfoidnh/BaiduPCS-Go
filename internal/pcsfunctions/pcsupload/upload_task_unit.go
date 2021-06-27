@@ -35,7 +35,7 @@ type (
 		Parallel          int
 		NoRapidUpload     bool // 禁用秒传
 		NoSplitFile       bool // 禁用分片上传
-		Skip            bool // 自动跳过
+		Policy            string // 上传重名文件策略
 
 		UploadStatistic *UploadStatistic
 
@@ -198,7 +198,7 @@ func (utu *UploadTaskUnit) upload() (result *taskframework.TaskUnitRunResult) {
 		Parallel:  utu.Parallel,
 		BlockSize: blockSize,
 		MaxRate:   pcsconfig.Config.MaxUploadRate,
-		Skip:    utu.Skip,
+		Policy:    utu.Policy,
 	})
 
 	// 设置断点续传
@@ -257,10 +257,12 @@ func (utu *UploadTaskUnit) upload() (result *taskframework.TaskUnitRunResult) {
 
 				result.ResultMessage = StrUploadFailed
 				result.Err = errors.New("上传状态过期, 重新上传")
-			case 31200:
-				//服务器错误
-				//[Method:Insert][Error:Insert Request Forbid]
-				// do nothing
+			case 31061:
+				// 已存在重名文件, 不重试
+				result.ResultMessage = StrUploadFailed
+				result.Err = pcsError
+				result.NeedRetry = false
+				return
 			default:
 				result.ResultMessage = StrUploadFailed
 				result.Err = pcsError

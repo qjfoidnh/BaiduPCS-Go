@@ -77,6 +77,7 @@ func (c *PCSConfig) PrintTable() {
 		[]string{"savedir", c.SaveDir, "", "下载文件的储存目录"},
 		[]string{"enable_https", fmt.Sprint(c.EnableHTTPS), "true", "启用 https"},
 		[]string{"no_check", fmt.Sprint(c.NoCheck), "true", "关闭下载文件md5校验"},
+		[]string{"upload_policy", fmt.Sprint(c.UPolicy), "fail", "上传遇到重名文件时的处理策略, fail(默认，直接返回失败)、newcopy(重命名文件)、overwrite、skip"},
 		[]string{"user_agent", c.UserAgent, requester.DefaultUserAgent, "浏览器标识"},
 		[]string{"pcs_ua", c.PCSUA, "", "PCS 浏览器标识"},
 		[]string{"pcs_addr", c.PCSAddr, "pcs.baidu.com", "PCS 服务器地址"},

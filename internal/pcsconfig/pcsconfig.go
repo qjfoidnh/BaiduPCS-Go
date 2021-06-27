@@ -55,6 +55,7 @@ type PCSConfig struct {
 	Proxy       string `json:"proxy"`        // 代理
 	LocalAddrs  string `json:"local_addrs"`  // 本地网卡地址
 	NoCheck     bool   `json:"no_check"`     // 禁用下载md5校验
+	UPolicy     string `json:"u_policy"`     // 上传重名文件处理策略
 
 	configFilePath string
 	configFile     *os.File
@@ -234,6 +235,7 @@ func (c *PCSConfig) InitDefaultConfig() {
 	c.PanUA = baidupcs.NetdiskUA
 	c.EnableHTTPS = true
 	c.NoCheck = true
+	c.UPolicy = "fail"
 
 	// 设置默认的下载路径
 	switch runtime.GOOS {
@@ -314,5 +316,8 @@ func (c *PCSConfig) fix() {
 	}
 	if c.MaxUploadLoad < 1 {
 		c.MaxUploadLoad = 1
+	}
+	if c.UPolicy != "fail" && c.UPolicy != "newcopy" && c.UPolicy != "overwrite" && c.UPolicy != "skip" {
+		c.UPolicy = "fail"
 	}
 }

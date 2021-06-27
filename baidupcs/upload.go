@@ -119,8 +119,8 @@ func (pcs *BaiduPCS) RapidUploadNoCheckDir(targetPath, contentMD5, sliceMD5, crc
 }
 
 // Upload 上传单个文件
-func (pcs *BaiduPCS) Upload(targetPath string, uploadFunc UploadFunc) (pcsError pcserror.Error) {
-	dataReadCloser, pcsError := pcs.PrepareUpload(targetPath, uploadFunc)
+func (pcs *BaiduPCS) Upload(policy, targetPath string, uploadFunc UploadFunc) (pcsError pcserror.Error) {
+	dataReadCloser, pcsError := pcs.PrepareUpload(policy, targetPath, uploadFunc)
 	if pcsError != nil {
 		return pcsError
 	}
@@ -178,11 +178,7 @@ func (pcs *BaiduPCS) UploadTmpFile(uploadFunc UploadFunc) (md5 string, pcsError 
 }
 
 // UploadCreateSuperFile 分片上传—合并分片文件
-func (pcs *BaiduPCS) UploadCreateSuperFile(skip bool, checkDir bool, targetPath string, blockList ...string) (pcsError pcserror.Error) {
-	policy := "overwrite"
-	if skip {
-		policy = "skip"
-	}
+func (pcs *BaiduPCS) UploadCreateSuperFile(policy string, checkDir bool, targetPath string, blockList ...string) (pcsError pcserror.Error) {
 	dataReadCloser, pcsError := pcs.PrepareUploadCreateSuperFile(policy, checkDir, targetPath, blockList...)
 	if pcsError != nil {
 		return pcsError

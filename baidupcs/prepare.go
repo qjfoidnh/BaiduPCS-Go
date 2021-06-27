@@ -2,13 +2,12 @@ package baidupcs
 
 import (
 	"bytes"
-	"fmt"
+	"github.com/json-iterator/go"
 	"github.com/qjfoidnh/BaiduPCS-Go/baidupcs/netdisksign"
 	"github.com/qjfoidnh/BaiduPCS-Go/baidupcs/pcserror"
 	"github.com/qjfoidnh/BaiduPCS-Go/pcsutil/converter"
 	"github.com/qjfoidnh/BaiduPCS-Go/requester/multipartreader"
 	"github.com/qjfoidnh/baidu-tools/tieba"
-	"github.com/json-iterator/go"
 	"io"
 	"net/http"
 	"net/url"
@@ -34,12 +33,14 @@ func handleRespClose(resp *http.Response) error {
 }
 
 func handleRespStatusError(opreation string, resp *http.Response) pcserror.Error {
-	errInfo := pcserror.NewPCSErrorInfo(opreation)
+	//errInfo := pcserror.NewPCSErrorInfo(opreation)
 	// http 响应错误处理
 	switch resp.StatusCode / 100 {
 	case 4, 5:
+		errInfo := pcserror.DecodePCSJSONError(opreation, resp.Body)
 		resp.Body.Close()
-		errInfo.SetNetError(fmt.Errorf("http 响应错误, %s", resp.Status))
+		errInfo.SetRemoteError()
+		//errInfo.SetNetError(fmt.Errorf("http 响应错误, %s", resp.Status))
 		return errInfo
 	}
 
@@ -275,7 +276,7 @@ func (pcs *BaiduPCS) prepareRapidUpload(targetPath, contentMD5, sliceMD5, crc32 
 		"content-md5":    contentMD5,                    // 待秒传的文件的MD5
 		"slice-md5":      sliceMD5,                      // 待秒传的文件前256kb的MD5
 		"content-crc32":  crc32,                         // 待秒传文件CRC32
-		"ondup":          "overwrite",                   // overwrite: 表示覆盖同名文件; newcopy: 表示生成文件副本并进行重命名，命名规则为“文件名_日期.后缀”
+		"ondup":          "overwrite",                   // overwrite: 表示覆盖同名文件; newcopy: 表示生成文件副本并进行重命名，命名规则为“文件名_日期.后缀”; skip: 表示跳过同名文件; fail: 表示直接报错
 	})
 	baiduPCSVerbose.Infof("%s URL: %s\n", OperationRapidUpload, pcsURL)
 
@@ -371,7 +372,7 @@ func (pcs *BaiduPCS) PrepareLocatePanAPIDownload(fidList ...int64) (dataReadClos
 }
 
 // PrepareUpload 上传单个文件, 只返回服务器响应数据和错误信息
-func (pcs *BaiduPCS) PrepareUpload(targetPath string, uploadFunc UploadFunc) (dataReadCloser io.ReadCloser, pcsError pcserror.Error) {
+func (pcs *BaiduPCS) PrepareUpload(policy string, targetPath string, uploadFunc UploadFunc) (dataReadCloser io.ReadCloser, pcsError pcserror.Error) {
 	pcs.lazyInit()
 	pcsError = pcs.checkIsdir(OperationUpload, targetPath)
 	if pcsError != nil {
@@ -380,7 +381,7 @@ func (pcs *BaiduPCS) PrepareUpload(targetPath string, uploadFunc UploadFunc) (da
 
 	pcsURL := pcs.generatePCSURL("file", "upload", map[string]string{
 		"path":  targetPath,
-		"ondup": "overwrite",
+		"ondup": policy,
 	})
 	baiduPCSVerbose.Infof("%s URL: %s\n", OperationUpload, pcsURL)
 

@@ -29,7 +29,7 @@ type (
 		Load 		  int
 		NoRapidUpload bool
 		NoSplitFile   bool // 禁用分片上传
-		Skip        bool // 同名文件自动跳过
+		Policy        string // 同名文件处理策略
 	}
 )
 
@@ -59,13 +59,13 @@ func RunRapidUpload(targetPath, contentMD5, sliceMD5, crc32 string, length int64
 }
 
 // RunCreateSuperFile 执行分片上传—合并分片文件
-func RunCreateSuperFile(targetPath string, blockList ...string) {
+func RunCreateSuperFile(policy string, targetPath string, blockList ...string) {
 	err := matchPathByShellPatternOnce(&targetPath)
 	if err != nil {
 		fmt.Printf("警告: %s, 获取网盘路径 %s 错误, %s\n", baidupcs.OperationUploadCreateSuperFile, targetPath, err)
 	}
 
-	err = GetBaiduPCS().UploadCreateSuperFile(false, true, targetPath, blockList...)
+	err = GetBaiduPCS().UploadCreateSuperFile(policy, true, targetPath, blockList...)
 	if err != nil {
 		fmt.Printf("%s失败, 消息: %s\n", baidupcs.OperationUploadCreateSuperFile, err)
 		return
@@ -92,6 +92,10 @@ func RunUpload(localPaths []string, savePath string, opt *UploadOptions) {
 
 	if opt.Load <=0 {
 		opt.Load = pcsconfig.Config.MaxUploadLoad
+	}
+
+	if opt.Policy!="fail" && opt.Policy!="newcopy" && opt.Policy!="overwrite" && opt.Policy!="skip" {
+		opt.Policy = pcsconfig.Config.UPolicy
 	}
 
 	err := matchPathByShellPatternOnce(&savePath)
@@ -170,7 +174,7 @@ func RunUpload(localPaths []string, savePath string, opt *UploadOptions) {
 				NoRapidUpload:     opt.NoRapidUpload,
 				NoSplitFile:       opt.NoSplitFile,
 				UploadStatistic:   statistic,
-				Skip:              opt.Skip,
+				Policy:            opt.Policy,
 			}, opt.MaxRetry)
 			if LoadCount >= opt.Load {
 				LoadCount = opt.Load

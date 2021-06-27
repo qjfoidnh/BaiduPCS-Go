@@ -106,6 +106,8 @@ func findPCSErr(errCode int, errMsg string) (int, string) {
 		return errCode, ""
 	case 31045: // user not exists
 		return errCode, "操作失败, 可能百度帐号登录状态过期, 请尝试重新登录, 消息: " + errMsg
+	case 31061: // file already exists
+		return errCode, "文件已存在"
 	case 31066: // file does not exist
 		return errCode, "文件或目录不存在"
 	case 31079: // file md5 not found, you should use upload api to upload the whole file.

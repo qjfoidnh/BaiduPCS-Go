@@ -225,6 +225,11 @@ func (c *PCSConfig) SetNoCheck(nocheck bool) {
 	c.NoCheck = nocheck
 }
 
+// SetUploadPolicy 设置上传文件重名时的处理策略
+func (c *PCSConfig) SetUploadPolicy(upolicy string) {
+	c.UPolicy = upolicy
+}
+
 // SetProxy 设置代理
 func (c *PCSConfig) SetProxy(proxy string) {
 	c.Proxy = proxy
