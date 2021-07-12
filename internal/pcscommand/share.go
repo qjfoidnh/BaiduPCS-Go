@@ -2,13 +2,14 @@ package pcscommand
 
 import (
 	"fmt"
-	"github.com/qjfoidnh/BaiduPCS-Go/baidupcs"
-	"github.com/qjfoidnh/BaiduPCS-Go/pcstable"
 	"os"
 	"path"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/qjfoidnh/BaiduPCS-Go/baidupcs"
+	"github.com/qjfoidnh/BaiduPCS-Go/pcstable"
 )
 
 // RunShareSet 执行分享
@@ -58,7 +59,7 @@ func RunShareList(page int) {
 	}
 
 	tb := pcstable.NewTable(os.Stdout)
-	tb.SetHeader([]string{"#", "ShareID", "分享链接", "提取密码", "特征目录", "特征路径", "过期时间"})
+	tb.SetHeader([]string{"#", "ShareID", "分享链接", "提取密码", "特征目录", "特征路径", "过期时间", "浏览次数"})
 	for k, record := range records {
 		if record.ExpireType == -1 {
 			record.Valid = "已过期" // 已失效分享
@@ -66,7 +67,7 @@ func RunShareList(page int) {
 			if record.ExpireTime == 0 {
 				record.Valid = "永久"
 			} else {
-				tm := time.Unix(time.Now().Unix() + record.ExpireTime, 0)
+				tm := time.Unix(time.Now().Unix()+record.ExpireTime, 0)
 				record.Valid = tm.Format("2006/01/02 15:04:05")
 
 			}
@@ -84,7 +85,7 @@ func RunShareList(page int) {
 			}
 		}
 
-		tb.Append([]string{strconv.Itoa(k), strconv.FormatInt(record.ShareID, 10), record.Shortlink, record.Passwd, path.Clean(path.Dir(record.TypicalPath)), record.TypicalPath, record.Valid})
+		tb.Append([]string{strconv.Itoa(k), strconv.FormatInt(record.ShareID, 10), record.Shortlink, record.Passwd, path.Clean(path.Dir(record.TypicalPath)), record.TypicalPath, record.Valid, strconv.Itoa(record.ViewCount)})
 	}
 	tb.Render()
 }

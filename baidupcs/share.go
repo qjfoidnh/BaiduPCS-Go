@@ -2,8 +2,9 @@ package baidupcs
 
 import (
 	"errors"
-	"github.com/qjfoidnh/BaiduPCS-Go/baidupcs/pcserror"
 	"strings"
+
+	"github.com/qjfoidnh/BaiduPCS-Go/baidupcs/pcserror"
 )
 
 type (
@@ -31,8 +32,9 @@ type (
 		TypicalCategory int     `json:"typicalCategory"` // 文件类型
 		TypicalPath     string  `json:"typicalPath"`     // 路径
 		ExpireType      int     `json:"expiredType"`     // 过期类型
-		ExpireTime      int64     `json:"expiredTime"`     // 过期时间
-		Valid			string							// 是否过期
+		ExpireTime      int64   `json:"expiredTime"`     // 过期时间
+		ViewCount       int     `json:"vCnt"`            // 浏览次数
+		Valid           string  // 是否过期
 	}
 
 	shareSURLInfo struct {
