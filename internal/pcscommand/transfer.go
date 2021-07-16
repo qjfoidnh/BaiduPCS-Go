@@ -36,7 +36,7 @@ func RunShareTransfer(params []string, opt *baidupcs.TransferOption) {
 	if strings.Contains(featurestr, "init?") {
 		featurestr = "1" + strings.Split(featurestr, "=")[1]
 	}
-	if len(featurestr)>23 || featurestr[0:1] != "1" || len(extracode) != 4 {
+	if len(featurestr) > 23 || featurestr[0:1] != "1" || len(extracode) != 4 {
 		fmt.Printf("%s失败: %s\n", baidupcs.OperationShareFileSavetoLocal, "链接地址或提取码非法")
 		return
 	}
@@ -102,7 +102,7 @@ func RunShareTransfer(params []string, opt *baidupcs.TransferOption) {
 	if opt.Download {
 		fmt.Println("即将开始下载")
 		paths := strings.Split(resp["filenames"], ",")
-		paths = paths[0: len(paths)-1]
+		paths = paths[0 : len(paths)-1]
 		RunDownload(paths, nil)
 	}
 }
@@ -132,7 +132,7 @@ func RunRapidTransfer(link string, fix bool) {
 		link = string(decodeBytes)
 	}
 	link = strings.TrimSpace(link)
-	substrs := strings.Split(link, "#")
+	substrs := strings.SplitN(link, "#", 4)
 	if len(substrs) == 4 {
 		md5 := strings.ToUpper(substrs[0])
 		if fix {
