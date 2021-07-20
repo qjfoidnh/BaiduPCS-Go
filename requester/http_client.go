@@ -20,7 +20,7 @@ type HTTPClient struct {
 func NewHTTPClient() *HTTPClient {
 	h := &HTTPClient{
 		Client: http.Client{
-			Timeout: 30 * time.Second,
+			Timeout: 50 * time.Second,
 		},
 		UserAgent: UserAgent,
 	}
@@ -38,12 +38,12 @@ func (h *HTTPClient) lazyInit() {
 			TLSClientConfig: &tls.Config{
 				InsecureSkipVerify: true,
 			},
-			TLSHandshakeTimeout:   10 * time.Second,
+			TLSHandshakeTimeout:   20 * time.Second,
 			DisableKeepAlives:     false,
 			DisableCompression:    false, // gzip
 			MaxIdleConns:          100,
 			IdleConnTimeout:       90 * time.Second,
-			ResponseHeaderTimeout: 10 * time.Second,
+			ResponseHeaderTimeout: 25 * time.Second,
 			ExpectContinueTimeout: 10 * time.Second,
 		}
 		h.Client.Transport = h.transport
