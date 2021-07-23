@@ -104,6 +104,7 @@ touch ./vendor/golang.org/x/sys/windows/windows.s
 
 # OS X / macOS
 Build $name-$version"-darwin-osx-amd64" darwin amd64
+Build $name-$version"-darwin-osx-arm64" darwin arm64
 # Build $name-$version"-darwin-osx-386" darwin 386
 
 # Windows
