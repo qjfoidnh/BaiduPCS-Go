@@ -100,10 +100,10 @@ func (pu *PCSUpload) TmpFile(ctx context.Context, partseq int, partOffset int64,
 
 func (pu *PCSUpload) CreateSuperFile(policy string, checksumList ...string) (err error) {
 	pu.lazyInit()
-
+	//newpath := ""
 	// 先在网盘目标位置, 上传一个空文件
 	// 防止出现file does not exist
-	pcsError := pu.pcs.Upload(policy, pu.targetPath, func(uploadURL string, jar http.CookieJar) (resp *http.Response, err error) {
+	pcsError, newpath := pu.pcs.Upload(policy, pu.targetPath, func(uploadURL string, jar http.CookieJar) (resp *http.Response, err error) {
 		mr := multipartreader.NewMultipartReader()
 		mr.AddFormFile("file", "file", &EmptyReaderLen64{})
 		mr.CloseMultipart()
@@ -118,5 +118,7 @@ func (pu *PCSUpload) CreateSuperFile(policy string, checksumList ...string) (err
 		return pcsError
 	}
 
-	return pu.pcs.UploadCreateSuperFile(policy,false, pu.targetPath, checksumList...)
+	// 此时已到了最后的合并环节，policy只能使用overwrite, newpath而不用pu.targetPath是因为newcopy策略可能导致文件名变化
+	//return pu.pcs.UploadCreateSuperFile("overwrite",false, pu.targetPath, checksumList...)
+	return pu.pcs.UploadCreateSuperFile("overwrite",false, newpath, checksumList...)
 }

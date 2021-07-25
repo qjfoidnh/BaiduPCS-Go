@@ -119,10 +119,10 @@ func (pcs *BaiduPCS) RapidUploadNoCheckDir(targetPath, contentMD5, sliceMD5, crc
 }
 
 // Upload 上传单个文件
-func (pcs *BaiduPCS) Upload(policy, targetPath string, uploadFunc UploadFunc) (pcsError pcserror.Error) {
+func (pcs *BaiduPCS) Upload(policy, targetPath string, uploadFunc UploadFunc) (pcsError pcserror.Error, newpath string) {
 	dataReadCloser, pcsError := pcs.PrepareUpload(policy, targetPath, uploadFunc)
 	if pcsError != nil {
-		return pcsError
+		return pcsError, ""
 	}
 
 	defer dataReadCloser.Close()
@@ -140,12 +140,12 @@ func (pcs *BaiduPCS) Upload(policy, targetPath string, uploadFunc UploadFunc) (p
 	if jsonData.Path == "" {
 		jsonData.PCSErrInfo.ErrType = pcserror.ErrTypeInternalError
 		jsonData.PCSErrInfo.Err = ErrUploadSavePathFound
-		return jsonData.PCSErrInfo
+		return jsonData.PCSErrInfo, ""
 	}
 
 	// 更新缓存
 	pcs.deleteCache([]string{path.Dir(targetPath)})
-	return nil
+	return nil, jsonData.Path
 }
 
 // UploadTmpFile 分片上传—文件分片及上传

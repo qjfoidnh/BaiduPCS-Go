@@ -1293,7 +1293,7 @@ func main() {
 			Description: `
 	block1, block2 ... 为文件分片的md5值
 	上传的文件将会保存到网盘的目标目录.
-	遇到同名文件默认会自动覆盖!
+	遇到同名文件默认覆盖, 可以--policy参数指定, 支持newcopy, skip, overwrite, fail四种模式
 
 	示例:
 

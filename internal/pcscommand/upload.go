@@ -58,7 +58,7 @@ func RunRapidUpload(targetPath, contentMD5, sliceMD5, crc32 string, length int64
 	return
 }
 
-// RunCreateSuperFile 执行分片上传—合并分片文件
+// RunCreateSuperFile 执行分片上传—预上传文件及合并分片文件
 func RunCreateSuperFile(policy string, targetPath string, blockList ...string) {
 	err := matchPathByShellPatternOnce(&targetPath)
 	if err != nil {

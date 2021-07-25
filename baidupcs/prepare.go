@@ -371,7 +371,7 @@ func (pcs *BaiduPCS) PrepareLocatePanAPIDownload(fidList ...int64) (dataReadClos
 	return
 }
 
-// PrepareUpload 上传单个文件, 只返回服务器响应数据和错误信息
+// PrepareUpload 上传单个文件, 只返回服务器响应数据和错误信息（分片上传中的预上传部分）
 func (pcs *BaiduPCS) PrepareUpload(policy string, targetPath string, uploadFunc UploadFunc) (dataReadCloser io.ReadCloser, pcsError pcserror.Error) {
 	pcs.lazyInit()
 	pcsError = pcs.checkIsdir(OperationUpload, targetPath)
