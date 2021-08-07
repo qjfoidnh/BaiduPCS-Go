@@ -18,8 +18,7 @@ type (
 	// ShareOption 分享可选项
 	TransferOption struct {
 		Download bool // 是否直接开始下载
-		Collect bool  // 多文件整合
-		Fix bool // 和谐修复
+		Collect  bool // 多文件整合
 	}
 )
 
@@ -253,6 +252,5 @@ func (pcs *BaiduPCS) SuperTransfer(params map[string]string, limit string) {
 	//	return
 	//}
 	return
-
 
 }

@@ -2,10 +2,14 @@ package baidupcs
 
 import (
 	"errors"
-	"github.com/qjfoidnh/BaiduPCS-Go/baidupcs/pcserror"
-	"github.com/qjfoidnh/BaiduPCS-Go/pcsutil/converter"
+	"math/rand"
 	"net/http"
 	"path"
+	"strings"
+	"time"
+
+	"github.com/qjfoidnh/BaiduPCS-Go/baidupcs/pcserror"
+	"github.com/qjfoidnh/BaiduPCS-Go/pcsutil/converter"
 )
 
 const (
@@ -82,8 +86,45 @@ type (
 	}
 )
 
+func randomifyMD5(md5 string) string {
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	newmd5bytes := []byte(md5)
+	uppermd5 := []byte(strings.ToUpper(md5))
+	for i := range md5 {
+		if r.Float32() > 0.6 {
+			newmd5bytes[i] = uppermd5[i]
+		}
+	}
+	return string(newmd5bytes)
+}
+
 // RapidUpload 秒传文件
 func (pcs *BaiduPCS) RapidUpload(targetPath, contentMD5, sliceMD5, crc32 string, length int64) (pcsError pcserror.Error) {
+	// 尝试全大写
+	pcsError = pcs.rapidUpload(targetPath, strings.ToUpper(contentMD5), strings.ToUpper(sliceMD5), crc32, length)
+	if pcsError == nil || pcsError.GetRemoteErrCode() != 31079 {
+		return
+	}
+
+	// 尝试全小写
+	pcsError = pcs.rapidUpload(targetPath, strings.ToLower(contentMD5), strings.ToLower(sliceMD5), crc32, length)
+	if pcsError == nil || pcsError.GetRemoteErrCode() != 31079 {
+		return
+	}
+
+	// 尝试随机大小写
+	pcsError = pcs.rapidUpload(targetPath, randomifyMD5(contentMD5), randomifyMD5(sliceMD5), crc32, length)
+	if pcsError == nil || pcsError.GetRemoteErrCode() != 31079 {
+		return
+	}
+
+	// TODO: 尝试 xpan 接口
+	// /rest/2.0/xpan/file?method=precreate
+	// /rest/2.0/xpan/file?method=create
+	return
+}
+
+func (pcs *BaiduPCS) rapidUpload(targetPath, contentMD5, sliceMD5, crc32 string, length int64) (pcsError pcserror.Error) {
 	dataReadCloser, pcsError := pcs.PrepareRapidUpload(targetPath, contentMD5, sliceMD5, crc32, length)
 	if pcsError != nil {
 		return
