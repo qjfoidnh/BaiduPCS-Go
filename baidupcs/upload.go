@@ -88,7 +88,7 @@ type (
 
 func randomifyMD5(md5 string) string {
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
-	newmd5bytes := []byte(md5)
+	newmd5bytes := []byte(strings.ToLower(md5))
 	uppermd5 := []byte(strings.ToUpper(md5))
 	for i := range md5 {
 		if r.Float32() > 0.6 {
