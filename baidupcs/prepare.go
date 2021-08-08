@@ -296,17 +296,17 @@ func (pcs *BaiduPCS) PrepareRapidUpload(targetPath, contentMD5, sliceMD5, crc32 
 	return pcs.prepareRapidUpload(targetPath, contentMD5, sliceMD5, crc32, length)
 }
 
-// prepareRapidUploadV2PreCreate 秒传文件, 新接口, step-1 precreate
+// PrepareRapidUploadV2PreCreate 秒传文件, 新接口, step-1 precreate
 func (pcs *BaiduPCS) PrepareRapidUploadV2PreCreate(targetPath, contentMD5 string, length int64) (dataReadCloser io.ReadCloser, pcsError pcserror.Error) {
 	pcs.lazyInit()
 	pcsURL := pcs.generatePCSURL2("xpan/file", "precreate", nil)
 	post := map[string]string{
-		"block_list": mergeStringList(contentMD5),
 		"path":       targetPath,
 		"size":       strconv.FormatInt(length, 10),
-		"mode":       "1",
 		"isdir":      "0",
 		"autoinit":   "1",
+		"rtype":      "0",
+		"block_list": mergeStringList(contentMD5),
 	}
 	baiduPCSVerbose.Infof("%s URL: %s, Post: %v\n", OperationRapidUpload, pcsURL, post)
 
@@ -314,7 +314,7 @@ func (pcs *BaiduPCS) PrepareRapidUploadV2PreCreate(targetPath, contentMD5 string
 	return
 }
 
-// prepareRapidUploadV2PreCreate 秒传文件, 新接口, step-2 create
+// PrepareRapidUploadV2Create 秒传文件, 新接口, step-2 create
 func (pcs *BaiduPCS) PrepareRapidUploadV2Create(targetPath, contentMD5, uploadid string, length int64) (dataReadCloser io.ReadCloser, pcsError pcserror.Error) {
 	pcs.lazyInit()
 	pcsError = pcs.checkIsdir(OperationRapidUpload, targetPath)
@@ -324,16 +324,13 @@ func (pcs *BaiduPCS) PrepareRapidUploadV2Create(targetPath, contentMD5, uploadid
 
 	pcsURL := pcs.generatePCSURL2("xpan/file", "create", nil)
 	post := map[string]string{
-		"block_list": mergeStringList(contentMD5),
-		"uploadid":   uploadid,
 		"path":       targetPath,
 		"size":       strconv.FormatInt(length, 10),
-		"mode":       "1",
 		"isdir":      "0",
 		"rtype":      "0",
-		"a":          "commit",
-		"sequence":   "1",
-		"autoinit":   "1",
+		"uploadid":   uploadid,
+		"block_list": mergeStringList(contentMD5),
+		"mode":       "1",
 	}
 	baiduPCSVerbose.Infof("%s URL: %s, Post: %v\n", OperationRapidUpload, pcsURL, post)
 
