@@ -122,7 +122,7 @@ func (pcs *BaiduPCS) RapidUpload(targetPath, contentMD5, sliceMD5, crc32 string,
 
 	// 尝试 xpan 接口
 	pcsError = pcs.rapidUploadV2(targetPath, strings.ToLower(contentMD5), length)
-	if pcsError == nil {
+	if pcsError != nil {
 		return
 	}
 
