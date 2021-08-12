@@ -102,6 +102,13 @@ func randomifyMD5(md5 string) string {
 
 // RapidUpload 秒传文件
 func (pcs *BaiduPCS) RapidUpload(targetPath, contentMD5, sliceMD5, crc32 string, length int64) (pcsError pcserror.Error) {
+	defer func() {
+		if pcsError == nil {
+			// 更新缓存
+			pcs.deleteCache([]string{path.Dir(targetPath)})
+		}
+	}()
+
 	// 尝试全大写
 	pcsError = pcs.rapidUpload(targetPath, strings.ToUpper(contentMD5), strings.ToUpper(sliceMD5), crc32, length)
 	if pcsError == nil || pcsError.GetRemoteErrCode() != 31079 {
@@ -121,14 +128,7 @@ func (pcs *BaiduPCS) RapidUpload(targetPath, contentMD5, sliceMD5, crc32 string,
 	}
 
 	// 尝试 xpan 接口
-	pcsError = pcs.rapidUploadV2(targetPath, strings.ToLower(contentMD5), length)
-	if pcsError != nil {
-		return
-	}
-
-	// 更新缓存
-	pcs.deleteCache([]string{path.Dir(targetPath)})
-	return nil
+	return pcs.rapidUploadV2(targetPath, strings.ToLower(contentMD5), length)
 }
 
 func (pcs *BaiduPCS) rapidUpload(targetPath, contentMD5, sliceMD5, crc32 string, length int64) (pcsError pcserror.Error) {
