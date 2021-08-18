@@ -2,6 +2,7 @@ package baidupcs
 
 import (
 	"errors"
+	"fmt"
 	"math/rand"
 	"net/http"
 	"path"
@@ -36,6 +37,8 @@ var (
 	ErrUploadSeqNotMatch = errors.New("服务器返回的上传队列不匹配")
 	// ErrUploadMD5Unknown 服务器无匹配文件/秒传未生效
 	ErrUploadMD5Unknown = errors.New("服务器无匹配文件/秒传未生效")
+	// ErrUploadFileExists 文件或目录已存在
+	ErrUploadFileExists = errors.New("文件已存在")
 )
 
 type (
@@ -67,6 +70,12 @@ type (
 		BlockList  []int  `json:"block_list"`
 		*pcserror.PanErrorInfo
 		fdJSON `json:"info"`
+	}
+
+	uploadCreateJSON struct {
+		ErrNo int    `json:"errno"` // 0成功, 2失败
+		Path  string `json:"path"`
+		*pcserror.PanErrorInfo
 	}
 
 	// UploadSeq 分片上传顺序
@@ -141,34 +150,37 @@ func (pcs *BaiduPCS) rapidUpload(targetPath, contentMD5, sliceMD5, crc32 string,
 }
 
 func (pcs *BaiduPCS) rapidUploadV2(targetPath, contentMD5 string, length int64) (pcsError pcserror.Error) {
-	dataReadCloser, pcsError := pcs.PrepareRapidUploadV2PreCreate(targetPath, contentMD5, length)
+	dataReadCloser, pcsError := pcs.PrepareRapidUploadV2(targetPath, contentMD5, length)
 	if pcsError != nil {
 		return
 	}
 	defer dataReadCloser.Close()
 
 	errInfo := pcserror.NewPanErrorInfo(OperationRapidUpload)
-	jsonData := uploadPrecreateJSON{
+	jsonData := uploadCreateJSON{
 		PanErrorInfo: errInfo,
 	}
-
 	pcsError = pcserror.HandleJSONParse(OperationRapidUpload, dataReadCloser, &jsonData)
 	if pcsError != nil {
 		return
 	}
 
-	if jsonData.ReturnType != 1 || len(jsonData.BlockList) != 0 {
+	switch jsonData.ErrNo {
+	case 0:
+		return
+	case 2:
 		errInfo.ErrType = pcserror.ErrTypeOthers
 		errInfo.Err = ErrUploadMD5Unknown
 		return errInfo
+	case -8:
+		errInfo.ErrType = pcserror.ErrTypeOthers
+		errInfo.Err = ErrUploadFileExists
+		return errInfo
+	default:
+		errInfo.ErrType = pcserror.ErrTypeOthers
+		errInfo.Err = fmt.Errorf("errno=%d", jsonData.ErrNo)
+		return errInfo
 	}
-
-	dataReadCloser2, pcsError := pcs.PrepareRapidUploadV2Create(targetPath, contentMD5, jsonData.UploadID, length)
-	if pcsError != nil {
-		return
-	}
-	defer dataReadCloser2.Close()
-	return pcserror.DecodePCSJSONError(OperationRapidUpload, dataReadCloser2)
 }
 
 // RapidUploadNoCheckDir 秒传文件, 不进行目录检查, 会覆盖掉同名的目录!

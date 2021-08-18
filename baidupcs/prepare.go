@@ -296,26 +296,8 @@ func (pcs *BaiduPCS) PrepareRapidUpload(targetPath, contentMD5, sliceMD5, crc32 
 	return pcs.prepareRapidUpload(targetPath, contentMD5, sliceMD5, crc32, length)
 }
 
-// PrepareRapidUploadV2PreCreate 秒传文件, 新接口, step-1 precreate
-func (pcs *BaiduPCS) PrepareRapidUploadV2PreCreate(targetPath, contentMD5 string, length int64) (dataReadCloser io.ReadCloser, pcsError pcserror.Error) {
-	pcs.lazyInit()
-	pcsURL := pcs.generatePCSURL2("xpan/file", "precreate", nil)
-	post := map[string]string{
-		"path":       targetPath,
-		"size":       strconv.FormatInt(length, 10),
-		"isdir":      "0",
-		"autoinit":   "1",
-		"rtype":      "0",
-		"block_list": mergeStringList(contentMD5),
-	}
-	baiduPCSVerbose.Infof("%s URL: %s, Post: %v\n", OperationRapidUpload, pcsURL, post)
-
-	dataReadCloser, pcsError = pcs.sendReqReturnReadCloser(reqTypePan, OperationRapidUpload, http.MethodPost, pcsURL.String(), post, nil)
-	return
-}
-
-// PrepareRapidUploadV2Create 秒传文件, 新接口, step-2 create
-func (pcs *BaiduPCS) PrepareRapidUploadV2Create(targetPath, contentMD5, uploadid string, length int64) (dataReadCloser io.ReadCloser, pcsError pcserror.Error) {
+// PrepareRapidUploadV2 秒传文件, 新接口
+func (pcs *BaiduPCS) PrepareRapidUploadV2(targetPath, contentMD5 string, length int64) (dataReadCloser io.ReadCloser, pcsError pcserror.Error) {
 	pcs.lazyInit()
 	pcsError = pcs.checkIsdir(OperationRapidUpload, targetPath)
 	if pcsError != nil {
@@ -328,7 +310,6 @@ func (pcs *BaiduPCS) PrepareRapidUploadV2Create(targetPath, contentMD5, uploadid
 		"size":       strconv.FormatInt(length, 10),
 		"isdir":      "0",
 		"rtype":      "0",
-		"uploadid":   uploadid,
 		"block_list": mergeStringList(contentMD5),
 		"mode":       "1",
 	}
