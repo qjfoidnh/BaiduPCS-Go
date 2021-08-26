@@ -2,18 +2,19 @@ package baidupcs
 
 import (
 	"bytes"
-	"github.com/json-iterator/go"
-	"github.com/qjfoidnh/BaiduPCS-Go/baidupcs/netdisksign"
-	"github.com/qjfoidnh/BaiduPCS-Go/baidupcs/pcserror"
-	"github.com/qjfoidnh/BaiduPCS-Go/pcsutil/converter"
-	"github.com/qjfoidnh/BaiduPCS-Go/requester/multipartreader"
-	"github.com/qjfoidnh/baidu-tools/tieba"
 	"io"
 	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
 	"unsafe"
+
+	jsoniter "github.com/json-iterator/go"
+	"github.com/qjfoidnh/BaiduPCS-Go/baidupcs/netdisksign"
+	"github.com/qjfoidnh/BaiduPCS-Go/baidupcs/pcserror"
+	"github.com/qjfoidnh/BaiduPCS-Go/pcsutil/converter"
+	"github.com/qjfoidnh/BaiduPCS-Go/requester/multipartreader"
+	"github.com/qjfoidnh/baidu-tools/tieba"
 )
 
 type (
@@ -295,6 +296,29 @@ func (pcs *BaiduPCS) PrepareRapidUpload(targetPath, contentMD5, sliceMD5, crc32 
 	return pcs.prepareRapidUpload(targetPath, contentMD5, sliceMD5, crc32, length)
 }
 
+// PrepareRapidUploadV2 秒传文件, 新接口
+func (pcs *BaiduPCS) PrepareRapidUploadV2(targetPath, contentMD5 string, length int64) (dataReadCloser io.ReadCloser, pcsError pcserror.Error) {
+	pcs.lazyInit()
+	pcsError = pcs.checkIsdir(OperationRapidUpload, targetPath)
+	if pcsError != nil {
+		return nil, pcsError
+	}
+
+	pcsURL := pcs.generatePCSURL2("xpan/file", "create", nil)
+	post := map[string]string{
+		"path":       targetPath,
+		"size":       strconv.FormatInt(length, 10),
+		"isdir":      "0",
+		"rtype":      "0",
+		"block_list": mergeStringList(contentMD5),
+		"mode":       "1",
+	}
+	baiduPCSVerbose.Infof("%s URL: %s, Post: %v\n", OperationRapidUpload, pcsURL, post)
+
+	dataReadCloser, pcsError = pcs.sendReqReturnReadCloser(reqTypePan, OperationRapidUpload, http.MethodPost, pcsURL.String(), post, nil)
+	return
+}
+
 // PrepareLocateDownload 获取下载链接, 只返回服务器响应数据和错误信息
 func (pcs *BaiduPCS) PrepareLocateDownload(pcspath string) (dataReadCloser io.ReadCloser, pcsError pcserror.Error) {
 	pcs.lazyInit()
@@ -338,7 +362,6 @@ func (pcs *BaiduPCS) PrepareLocateDownload(pcspath string) (dataReadCloser io.Re
 			"freeisp": []string{"0"},
 			"queryfree": []string{"0"},
 			"use": []string{"0"},
-
 		}).Encode() + "&" + ns.URLParam(),
 	}
 	baiduPCSVerbose.Infof("%s URL: %s\n", OperationLocateDownload, pcsURL)
@@ -618,8 +641,8 @@ func (pcs *BaiduPCS) PrepareSharePSet(paths []string, pwd string, period int) (d
 		"schannel":     "4",
 		"channel_list": "[]",
 		"period":       strconv.Itoa(period),
-		"pwd": pwd,
-		"share_type": "9",
+		"pwd":          pwd,
+		"share_type":   "9",
 	}, map[string]string{
 		"Content-Type": "application/x-www-form-urlencoded",
 	})

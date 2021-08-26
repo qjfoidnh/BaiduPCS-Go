@@ -2,10 +2,15 @@ package baidupcs
 
 import (
 	"errors"
-	"github.com/qjfoidnh/BaiduPCS-Go/baidupcs/pcserror"
-	"github.com/qjfoidnh/BaiduPCS-Go/pcsutil/converter"
+	"fmt"
+	"math/rand"
 	"net/http"
 	"path"
+	"strings"
+	"time"
+
+	"github.com/qjfoidnh/BaiduPCS-Go/baidupcs/pcserror"
+	"github.com/qjfoidnh/BaiduPCS-Go/pcsutil/converter"
 )
 
 const (
@@ -30,6 +35,10 @@ var (
 	ErrUploadSavePathFound = errors.New("unknown response data, file saved path not found")
 	// ErrUploadSeqNotMatch 服务器返回的上传队列不匹配
 	ErrUploadSeqNotMatch = errors.New("服务器返回的上传队列不匹配")
+	// ErrUploadMD5Unknown 服务器无匹配文件/秒传未生效
+	ErrUploadMD5Unknown = errors.New("服务器无匹配文件/秒传未生效")
+	// ErrUploadFileExists 文件或目录已存在
+	ErrUploadFileExists = errors.New("文件已存在")
 )
 
 type (
@@ -63,6 +72,12 @@ type (
 		fdJSON `json:"info"`
 	}
 
+	uploadCreateJSON struct {
+		ErrNo int    `json:"errno"` // 0成功, 2失败
+		Path  string `json:"path"`
+		*pcserror.PanErrorInfo
+	}
+
 	// UploadSeq 分片上传顺序
 	UploadSeq struct {
 		Seq   int
@@ -82,23 +97,90 @@ type (
 	}
 )
 
+func randomifyMD5(md5 string) string {
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	newmd5bytes := []byte(strings.ToLower(md5))
+	uppermd5 := []byte(strings.ToUpper(md5))
+	for i := range md5 {
+		if r.Float32() > 0.6 {
+			newmd5bytes[i] = uppermd5[i]
+		}
+	}
+	return string(newmd5bytes)
+}
+
 // RapidUpload 秒传文件
 func (pcs *BaiduPCS) RapidUpload(targetPath, contentMD5, sliceMD5, crc32 string, length int64) (pcsError pcserror.Error) {
+	defer func() {
+		if pcsError == nil {
+			// 更新缓存
+			pcs.deleteCache([]string{path.Dir(targetPath)})
+		}
+	}()
+
+	// 尝试全大写
+	pcsError = pcs.rapidUpload(targetPath, strings.ToUpper(contentMD5), strings.ToUpper(sliceMD5), crc32, length)
+	if pcsError == nil || pcsError.GetRemoteErrCode() != 31079 {
+		return
+	}
+
+	// 尝试全小写
+	pcsError = pcs.rapidUpload(targetPath, strings.ToLower(contentMD5), strings.ToLower(sliceMD5), crc32, length)
+	if pcsError == nil || pcsError.GetRemoteErrCode() != 31079 {
+		return
+	}
+
+	// 尝试随机大小写
+	pcsError = pcs.rapidUpload(targetPath, randomifyMD5(contentMD5), randomifyMD5(sliceMD5), crc32, length)
+	if pcsError == nil || pcsError.GetRemoteErrCode() != 31079 {
+		return
+	}
+
+	// 尝试 xpan 接口
+	return pcs.rapidUploadV2(targetPath, strings.ToLower(contentMD5), length)
+}
+
+func (pcs *BaiduPCS) rapidUpload(targetPath, contentMD5, sliceMD5, crc32 string, length int64) (pcsError pcserror.Error) {
 	dataReadCloser, pcsError := pcs.PrepareRapidUpload(targetPath, contentMD5, sliceMD5, crc32, length)
 	if pcsError != nil {
 		return
 	}
+	defer dataReadCloser.Close()
+	return pcserror.DecodePCSJSONError(OperationRapidUpload, dataReadCloser)
+}
 
+func (pcs *BaiduPCS) rapidUploadV2(targetPath, contentMD5 string, length int64) (pcsError pcserror.Error) {
+	dataReadCloser, pcsError := pcs.PrepareRapidUploadV2(targetPath, contentMD5, length)
+	if pcsError != nil {
+		return
+	}
 	defer dataReadCloser.Close()
 
-	pcsError = pcserror.DecodePCSJSONError(OperationRapidUpload, dataReadCloser)
+	errInfo := pcserror.NewPanErrorInfo(OperationRapidUpload)
+	jsonData := uploadCreateJSON{
+		PanErrorInfo: errInfo,
+	}
+	pcsError = pcserror.HandleJSONParse(OperationRapidUpload, dataReadCloser, &jsonData)
 	if pcsError != nil {
 		return
 	}
 
-	// 更新缓存
-	pcs.deleteCache([]string{path.Dir(targetPath)})
-	return nil
+	switch jsonData.ErrNo {
+	case 0:
+		return
+	case 2:
+		errInfo.ErrType = pcserror.ErrTypeOthers
+		errInfo.Err = ErrUploadMD5Unknown
+		return errInfo
+	case -8:
+		errInfo.ErrType = pcserror.ErrTypeOthers
+		errInfo.Err = ErrUploadFileExists
+		return errInfo
+	default:
+		errInfo.ErrType = pcserror.ErrTypeOthers
+		errInfo.Err = fmt.Errorf("errno=%d", jsonData.ErrNo)
+		return errInfo
+	}
 }
 
 // RapidUploadNoCheckDir 秒传文件, 不进行目录检查, 会覆盖掉同名的目录!

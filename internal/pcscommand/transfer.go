@@ -3,12 +3,10 @@ package pcscommand
 import (
 	"encoding/base64"
 	"fmt"
-	"math/rand"
 	"path"
 	"regexp"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/qjfoidnh/BaiduPCS-Go/baidupcs"
 )
@@ -20,7 +18,7 @@ func RunShareTransfer(params []string, opt *baidupcs.TransferOption) {
 	if len(params) == 1 {
 		link = params[0]
 		if strings.Contains(link, "bdlink=") || !strings.Contains(link, "pan.baidu.com/") {
-			RunRapidTransfer(link, opt.Fix)
+			RunRapidTransfer(link)
 			return
 		}
 		extracode = "none"
@@ -107,20 +105,8 @@ func RunShareTransfer(params []string, opt *baidupcs.TransferOption) {
 	}
 }
 
-func randomifyMD5(md5 string) string {
-	r := rand.New(rand.NewSource(time.Now().UnixNano()))
-	newmd5bytes := []byte(md5)
-	uppermd5 := []byte(strings.ToUpper(md5))
-	for i, _ := range md5 {
-		if r.Float32() > 0.6 {
-			newmd5bytes[i] = uppermd5[i]
-		}
-	}
-	return string(newmd5bytes)
-}
-
 // RunRapidTransfer 执行秒传链接解析及保存
-func RunRapidTransfer(link string, fix bool) {
+func RunRapidTransfer(link string) {
 	if strings.Contains(link, "bdlink=") || strings.Contains(link, "bdpan://") {
 		r, _ := regexp.Compile(`(bdlink=|bdpan://)([^\s]+)`)
 		link1 := r.FindStringSubmatch(link)[2]
@@ -134,11 +120,7 @@ func RunRapidTransfer(link string, fix bool) {
 	link = strings.TrimSpace(link)
 	substrs := strings.SplitN(link, "#", 4)
 	if len(substrs) == 4 {
-		md5 := strings.ToUpper(substrs[0])
-		if fix {
-			md5 = randomifyMD5(md5)
-		}
-		slicemd5 := strings.ToUpper(substrs[1])
+		md5, slicemd5 := substrs[0], substrs[1]
 		length, _ := strconv.ParseInt(substrs[2], 10, 64)
 		filename := path.Join(GetActiveUser().Workdir, substrs[3])
 		RunRapidUpload(filename, md5, slicemd5, "", length)
@@ -146,11 +128,7 @@ func RunRapidTransfer(link string, fix bool) {
 	}
 	substrs = strings.Split(link, "|")
 	if len(substrs) == 4 {
-		md5 := strings.ToUpper(substrs[2])
-		if fix {
-			md5 = randomifyMD5(md5)
-		}
-		slicemd5 := strings.ToUpper(substrs[3])
+		md5, slicemd5 := substrs[2], substrs[3]
 		length, _ := strconv.ParseInt(substrs[1], 10, 64)
 		filename := path.Join(GetActiveUser().Workdir, substrs[0])
 		RunRapidUpload(filename, md5, slicemd5, "", length)
