@@ -107,7 +107,7 @@ const (
 	// PanAppID 百度网盘appid
 	PanAppID = "250528"
 	// NetdiskUA 网盘客户端ua
-	NetdiskUA = "netdisk;2.2.51.6;netdisk;10.0.63;PC;android-android"
+	NetdiskUA = "netdisk;P2SP;3.0.0.8;netdisk;11.12.3;ANG-AN00;android-android;10.0;JSbridge4.4.0;jointBridge;1.1.0;"
 	// DotBaiduCom .baidu.com
 	DotBaiduCom = ".baidu.com"
 	// PathSeparator 路径分隔符
