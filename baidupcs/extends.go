@@ -6,6 +6,7 @@ import (
 	"errors"
 	"github.com/qjfoidnh/BaiduPCS-Go/baidupcs/pcserror"
 	"github.com/qjfoidnh/BaiduPCS-Go/pcsutil/cachepool"
+	"github.com/qjfoidnh/BaiduPCS-Go/pcsutil/converter"
 	"github.com/qjfoidnh/BaiduPCS-Go/pcsutil/escaper"
 	"github.com/qjfoidnh/BaiduPCS-Go/requester/downloader"
 	"io"
@@ -102,10 +103,29 @@ func (pcs *BaiduPCS) GetRapidUploadInfoByFileInfo(finfo *FileDirectory) (rinfo *
 	// 只有ContentLength可以比较
 	// finfo记录的ContentMD5不一定是正确的
 	// finfo记录的Filename不一定与获取到的一致
-	return pcs.GetRapidUploadInfoByLink(link, &RapidUploadInfo{
+	rinfo, pcsError = pcs.GetRapidUploadInfoByLink(link, &RapidUploadInfo{
 		ContentLength: finfo.Size,
 	})
+
+	// 如果是没获取到MD5, 可尝试新接口(测试中), 新接口调用频率有限制且文件大小不能超过约3.9G
+	if pcsError != nil && pcsError.GetError() == ErrGetRapidUploadInfoMD5NotFound && finfo.Size < 4 * converter.GB {
+		link, pcsError = pcs.GetDirectDownloadLink(finfo.Path)
+		rinfo, pcsError = pcs.GetRapidUploadInfoByLink(link, &RapidUploadInfo{
+			ContentLength: finfo.Size,
+		})
+	}
+	return rinfo, pcsError
 }
+
+// GetDirectDownloadLink 根据method=download方法获取下载链接, 能获取到新上传文件的信息, 作为常规秒传的备选方案
+func (pcs *BaiduPCS) GetDirectDownloadLink(path string) (link string, pcsError pcserror.Error) {
+	var header = pcs.getPanUAHeader()
+	header["Range"] = "bytes=0-" + strconv.FormatInt(SliceMD5Size-1, 10)
+	RawQuery := map[string] string{"path": path}
+	pcsURL := pcs.generatePCSURL("file", "download", RawQuery)
+	return pcsURL.String(), nil
+}
+
 
 // GetRapidUploadInfoByLink 通过下载链接, 获取文件秒传信息
 func (pcs *BaiduPCS) GetRapidUploadInfoByLink(link string, compareRInfo *RapidUploadInfo) (rinfo *RapidUploadInfo, pcsError pcserror.Error) {

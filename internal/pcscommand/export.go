@@ -196,7 +196,7 @@ func RunExport(pcspaths []string, opt *ExportOptions) {
 			task.handleExportTaskError(l, failedList)
 			continue
 		}
-		var outTemplate string = fmt.Sprintf("BaiduPCS-Go rapidupload -length=%d -md5=%s -slicemd5=%s -crc32=%s \"%s\"\n", rinfo.ContentLength, rinfo.ContentMD5, rinfo.SliceMD5, rinfo.ContentCrc32, changeRootPath(task.rootPath, task.path, opt.RootPath))
+		var outTemplate = fmt.Sprintf("BaiduPCS-Go rapidupload -length=%d -md5=%s -slicemd5=%s -crc32=%s \"%s\"\n", rinfo.ContentLength, rinfo.ContentMD5, rinfo.SliceMD5, rinfo.ContentCrc32, changeRootPath(task.rootPath, task.path, opt.RootPath))
 		if opt.LinkFormat {
 			outTemplate = fmt.Sprintf("%s#%s#%d#%s\n", rinfo.ContentMD5, rinfo.SliceMD5, rinfo.ContentLength, path.Base(task.path))
 		}

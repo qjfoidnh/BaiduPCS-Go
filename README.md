@@ -100,6 +100,12 @@ iikira/BaiduPCS-Go was largely inspired by [GangZhuo/BaiduPCS](https://github.co
 [离线下载](#离线下载), 支持http/https/ftp/电驴/磁力链协议.
 
 # 版本更新
+**2021.8.27** v3.8.3:
+- fix 更换默认panUA解决svip限速
+- fix 移除失效的秒传修复功能 
+- 优化秒传逻辑, 提高成功率
+- 优化秒传导出逻辑, 提高新文件的导出成功率  
+
 **2021.7.20** v3.8.2:
 - fix 读取大量文件信息容易超时
 - fix 秒传链接文件名带"#"时解析错误
