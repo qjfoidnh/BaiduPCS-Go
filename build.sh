@@ -7,7 +7,7 @@ if [ "$1" = "" ]; then
   version=v3.7.1
 fi
 
-output="out/"
+output="out"
 
 old_golang() {
   GOROOT=/usr/local/go
