@@ -217,7 +217,7 @@ go build
 
 # 下载/运行 说明
 
-Go语言程序, 常用几种平台的已编译程序可直接在[蓝奏云](https://ww.lanzous.com/b01berebe)下载使用. 密码:4pix
+Go语言程序, 常用几种平台的已编译程序可直接在[蓝奏云](https://wws.lanzoui.com/b01berebe)下载使用. 密码:4pix
 
 如果程序运行时输出乱码, 请检查下终端的编码方式是否为 `UTF-8`.
 
