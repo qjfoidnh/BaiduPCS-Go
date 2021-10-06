@@ -1,8 +1,8 @@
 package pcsutil
 
 import (
-	"github.com/qjfoidnh/BaiduPCS-Go/pcsverbose"
 	"github.com/kardianos/osext"
+	"github.com/qjfoidnh/BaiduPCS-Go/pcsverbose"
 	"os"
 	"path"
 	"path/filepath"
@@ -112,9 +112,9 @@ func ConvertToUnixPathSeparator(p string) string {
 }
 
 func ChPathLegal(p string) bool {
-	illegal_chars := "<>|:'\"*?,\\"
+	illegal_chars := "<>|:\"*?,\\"
 	if runtime.GOOS == "windows" {
-		illegal_chars = "<>|'\"*?,\\"
+		illegal_chars = "<>|\"*?,\\"
 	}
 
 	if strings.ContainsAny(p, illegal_chars) {
