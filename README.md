@@ -100,6 +100,10 @@ iikira/BaiduPCS-Go was largely inspired by [GangZhuo/BaiduPCS](https://github.co
 [离线下载](#离线下载), 支持http/https/ftp/电驴/磁力链协议.
 
 # 版本更新
+**2021.10.6** v3.8.4:
+- fix 登录时可能出现内存溢出
+- 上传文件名允许包含单引号
+
 **2021.8.27** v3.8.3:
 - fix 更换默认panUA解决svip限速
 - fix 移除失效的秒传修复功能 
@@ -1065,7 +1069,7 @@ cli交互模式下, 运行命令 `config set -h` (注意空格) 查看设置帮�
 
 cli交互模式下, 运行命令 `config set -max_parallel 2` 将下载最大并发量设置为 2
 
-注意：下载最大并发量的值不宜设置过高, 可能会导致百度帐号被限制下载
+注意：普通用户下载最大并发量的值超过1将导致账号被限速; SVIP同样不宜设置过高, 建议10~20
 
 ## 7. 恢复默认配置
 
