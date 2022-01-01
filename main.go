@@ -55,7 +55,7 @@ const (
 
 var (
 	// Version 版本号
-	Version = "v3.8.4-devel"
+	Version = "v3.8.5-devel"
 
 	historyFilePath = filepath.Join(pcsconfig.GetConfigDir(), "pcs_command_history.txt")
 	reloadFn        = func(c *cli.Context) error {
@@ -1065,6 +1065,8 @@ func main() {
 					Load:                 c.Int("l"),
 					MaxRetry:             c.Int("retry"),
 					NoCheck:              c.Bool("nocheck"),
+					LinkPrefer:           c.Int("dindex"),
+					ModifyMTime:          c.Bool("mtime"),
 					FullPath:             c.Bool("fullpath"),
 				}
 
@@ -1118,6 +1120,14 @@ func main() {
 				cli.BoolFlag{
 					Name:  "nocheck",
 					Usage: "下载文件完成后不校验文件",
+				},
+				cli.BoolFlag{
+					Name:  "mtime",
+					Usage: "将本地文件的修改时间设置为服务器上的修改时间",
+				},
+				cli.IntFlag{
+					Name: "dindex",
+					Usage: "使用备选下载链接中的第几个，默认第一个",
 				},
 				cli.BoolFlag{
 					Name:  "fullpath",
@@ -1862,6 +1872,12 @@ func main() {
 						if c.IsSet("enable_https") {
 							pcsconfig.Config.SetEnableHTTPS(c.Bool("enable_https"))
 						}
+						if c.IsSet("ignore_illegal") {
+							pcsconfig.Config.SetIgnoreIllegal(c.Bool("ignore_illegal"))
+						}
+						if c.IsSet("force_login_username") {
+							pcsconfig.Config.SetForceLogin(c.String("force_login_username"))
+						}
 						if c.IsSet("no_check") {
 							pcsconfig.Config.SetNoCheck(c.Bool("no_check"))
 						}
@@ -1978,6 +1994,14 @@ func main() {
 						cli.BoolFlag{
 							Name:  "enable_https",
 							Usage: "启用 https",
+						},
+						cli.BoolFlag{
+							Name:  "ignore_illegal",
+							Usage: "忽略上传时文件名中的非法字符",
+						},
+						cli.StringFlag{
+							Name:  "force_login_username",
+							Usage: "强制登录指定用户名, 只适用于tieba接口失效的情况",
 						},
 						cli.BoolFlag{
 							Name:  "no_check",

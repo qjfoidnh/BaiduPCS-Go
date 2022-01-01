@@ -121,7 +121,10 @@ func (c *PCSConfig) SetupUserByBDUSS(bduss, ptoken, stoken, cookies string) (bai
 		sub := re.FindSubmatch([]byte(cookies))
 		bduss = string(sub[1])
 	}
-	b, err := NewUserInfoByBDUSS(bduss)
+	b, err := NewUserInfoByInput(bduss, c.ForceLogin)
+	if c.ForceLogin == "" {
+		b, err = NewUserInfoByBDUSS(bduss)
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -240,4 +243,14 @@ func (c *PCSConfig) SetProxy(proxy string) {
 func (c *PCSConfig) SetLocalAddrs(localAddrs string) {
 	c.LocalAddrs = localAddrs
 	requester.SetLocalTCPAddrList(strings.Split(localAddrs, ",")...)
+}
+
+// SetIgnoreIllegal 设置忽略上传文件名非法字符
+func (c *PCSConfig) SetIgnoreIllegal(ignore bool) {
+	c.IgnoreIllegal = ignore
+}
+
+// SetForceLogin 设置强制登录
+func (c *PCSConfig) SetForceLogin(username string) {
+	c.ForceLogin = username
 }

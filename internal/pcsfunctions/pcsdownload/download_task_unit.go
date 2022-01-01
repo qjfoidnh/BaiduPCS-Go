@@ -44,6 +44,8 @@ type (
 		IsExecutedPermission bool // 下载成功后是否加上执行权限
 		IsOverwrite          bool // 是否覆盖已存在的文件
 		NoCheck              bool // 不校验文件
+		DlinkPrefer          int  // 使用所有备选下载链接中的第几个链接
+		ModifyMTime          bool // 下载的文件mtime修改为与网盘一致
 
 		DownloadMode DownloadMode // 下载模式
 
@@ -67,6 +69,8 @@ const (
 	StrDownloadGetDlinkFailed = "获取下载链接失败"
 	// StrDownloadChecksumFailed 检测文件有效性失败
 	StrDownloadChecksumFailed = "检测文件有效性失败"
+	// StrDownloadCheckLengthFailed 检测文件大小一致性失败
+	StrDownloadCheckLengthFailed = "检测文件大小一致性失败"
 	// DefaultDownloadMaxRetry 默认下载失败最大重试次数
 	DefaultDownloadMaxRetry = 3
 )
@@ -301,9 +305,12 @@ func (dtu *DownloadTaskUnit) locateDownload(result *taskframework.TaskUnitRunRes
 
 	// 更新链接的协议
 	// 跳过nb.cache这种还没有证书的
-	raw_dlink := rawDlinks[0]
-	if strings.HasPrefix(rawDlinks[0].Host, "nb.cache") && len(rawDlinks) > 1 {
-		raw_dlink = rawDlinks[1]
+	if len(rawDlinks) < dtu.DlinkPrefer + 1 {
+		dtu.DlinkPrefer = len(rawDlinks) - 1
+	}
+	raw_dlink := rawDlinks[dtu.DlinkPrefer]
+	if strings.HasPrefix(raw_dlink.Host, "nb.cache") && len(rawDlinks) > dtu.DlinkPrefer + 1 {
+		raw_dlink = rawDlinks[dtu.DlinkPrefer + 1]
 	}
 	FixHTTPLinkURL(raw_dlink)
 	dlink := raw_dlink.String()
@@ -343,6 +350,15 @@ func (dtu *DownloadTaskUnit) pcsOrStreamingDownload(mode DownloadMode, result *t
 
 //checkFileValid 检测文件有效性
 func (dtu *DownloadTaskUnit) checkFileValid(result *taskframework.TaskUnitRunResult) (ok bool) {
+	fi, err := os.Stat(dtu.SavePath)
+	if err == nil {
+		if fi.Size() != dtu.FileInfo.Size {
+			result.ResultMessage = StrDownloadCheckLengthFailed
+			result.NeedNextdindex = true
+			result.NeedRetry = true
+			return
+		}
+	}
 	if dtu.Cfg.IsTest || dtu.NoCheck {
 		// 不检测文件有效性
 		fmt.Printf("[%s] 跳过文件有效性检验\n", dtu.taskInfo.Id())
@@ -355,7 +371,7 @@ func (dtu *DownloadTaskUnit) checkFileValid(result *taskframework.TaskUnitRunRes
 	}
 
 	// 就在这里处理校验出错
-	err := CheckFileValid(dtu.SavePath, dtu.FileInfo)
+	err = CheckFileValid(dtu.SavePath, dtu.FileInfo)
 	if err != nil {
 		result.ResultMessage = StrDownloadChecksumFailed
 		result.Err = err
@@ -509,8 +525,15 @@ func (dtu *DownloadTaskUnit) Run() (result *taskframework.TaskUnitRunResult) {
 	// 检测文件有效性
 	ok = dtu.checkFileValid(result)
 	if !ok {
+		if result.NeedNextdindex == true {
+			dtu.DlinkPrefer += 1
+		}
 		// 校验不成功, 返回结果
 		return result
+	} else {
+		if dtu.ModifyMTime {
+			os.Chtimes(dtu.SavePath, time.Unix(dtu.FileInfo.Mtime, 0), time.Unix(dtu.FileInfo.Mtime, 0))
+		}
 	}
 	// 统计下载
 	dtu.DownloadStatistic.AddTotalSize(dtu.FileInfo.Size)

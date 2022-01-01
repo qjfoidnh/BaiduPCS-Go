@@ -24,6 +24,7 @@ type (
 	TaskUnitRunResult struct {
 		Succeed       bool        // 是否执行成功
 		NeedRetry     bool        // 是否需要重试
+		NeedNextdindex  bool      // 是否需要切换到备用下载链接
 
 		// 以下是额外的信息
 		Err           error       // 错误信息

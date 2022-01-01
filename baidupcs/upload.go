@@ -273,7 +273,7 @@ func (pcs *BaiduPCS) UploadCreateSuperFile(policy string, checkDir bool, targetP
 		return errInfo
 	}
 
-	// 更新缓存
+	// 更新缓存, targetPath取了dir所以不受重命名策略影响
 	pcs.deleteCache([]string{path.Dir(targetPath)})
 	return nil
 }

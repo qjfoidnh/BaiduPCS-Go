@@ -2,12 +2,12 @@
 package pcsconfig
 
 import (
+	"github.com/json-iterator/go"
 	"github.com/qjfoidnh/BaiduPCS-Go/baidupcs"
 	"github.com/qjfoidnh/BaiduPCS-Go/pcsutil"
 	"github.com/qjfoidnh/BaiduPCS-Go/pcsutil/jsonhelper"
 	"github.com/qjfoidnh/BaiduPCS-Go/pcsverbose"
 	"github.com/qjfoidnh/BaiduPCS-Go/requester"
-	"github.com/json-iterator/go"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -52,9 +52,11 @@ type PCSConfig struct {
 	PanUA       string `json:"pan_ua"`       // PAN浏览器标识
 	SaveDir     string `json:"savedir"`      // 下载储存路径
 	EnableHTTPS bool   `json:"enable_https"` // 启用https
+	ForceLogin  string `json:"force_login_username"` // 强制登录
 	Proxy       string `json:"proxy"`        // 代理
 	LocalAddrs  string `json:"local_addrs"`  // 本地网卡地址
 	NoCheck     bool   `json:"no_check"`     // 禁用下载md5校验
+	IgnoreIllegal bool `json:"ignore_illegal"` // 禁用上传文件名非法字符检查
 	UPolicy     string `json:"u_policy"`     // 上传重名文件处理策略
 
 	configFilePath string

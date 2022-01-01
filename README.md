@@ -100,6 +100,14 @@ iikira/BaiduPCS-Go was largely inspired by [GangZhuo/BaiduPCS](https://github.co
 [离线下载](#离线下载), 支持http/https/ftp/电驴/磁力链协议.
 
 # 版本更新
+**2022.1.1** v3.8.5:
+- 2022新年好, 本次更新增加较多特性, 欢迎测试
+- fix #146, 提前fail和skip上传策略中重名文件的检测环节
+- fix #158, config可配置关闭文件名合法性检测
+- fix #141, download增加--mtime选项可保持文件修改时间
+- fix #130, config可配置force_login_username, 强制登录指定用户名
+- 首条下载链接不可用时自动切换, 增加下载成功率
+
 **2021.10.6** v3.8.4:
 - fix 登录时可能出现内存溢出
 - 上传文件名允许包含单引号

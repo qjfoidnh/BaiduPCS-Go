@@ -2,8 +2,8 @@ package taskframework
 
 import (
 	"github.com/GeertJohan/go.incremental"
-	"github.com/qjfoidnh/BaiduPCS-Go/pcsutil/waitgroup"
 	"github.com/oleiade/lane"
+	"github.com/qjfoidnh/BaiduPCS-Go/pcsutil/waitgroup"
 	"strconv"
 	"time"
 )
@@ -118,7 +118,6 @@ func (te *TaskExecutor) Execute() {
 						task.Unit.OnComplete(result)
 						return
 					}
-
 					task.Info.retry++         // 增加重试次数
 					task.Unit.OnRetry(result) // 调用重试
 					task.Unit.OnComplete(result)
@@ -130,7 +129,7 @@ func (te *TaskExecutor) Execute() {
 
 				// 执行失败
 				task.Unit.OnFailed(result)
-				if te.IsFailedDeque {
+				if te.IsFailedDeque && result.Extra != "skip" {
 					// 加入失败队列
 					te.failedDeque.Append(task)
 				}

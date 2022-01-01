@@ -37,7 +37,7 @@ func (werl *workerList) Readed() int64 {
 }
 
 func (muer *MultiUploader) upload() (uperr error) {
-	err := muer.multiUpload.Precreate()
+	err := muer.multiUpload.Precreate(muer.config.Policy)
 	if err != nil {
 		return err
 	}

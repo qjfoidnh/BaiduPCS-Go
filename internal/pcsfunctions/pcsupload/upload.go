@@ -47,9 +47,13 @@ func (pu *PCSUpload) lazyInit() {
 	}
 }
 
-// Precreate do nothing
-func (pu *PCSUpload) Precreate() (err error) {
-	return nil
+// Precreate 检查网盘的目标路径是否已存在同名文件
+func (pu *PCSUpload) Precreate(policy string) (err error) {
+	err = pu.CreateSuperFile("fail")
+	if policy != "fail" && policy != "skip" {
+		return nil
+	}
+	return
 }
 
 func (pu *PCSUpload) TmpFile(ctx context.Context, partseq int, partOffset int64, r rio.ReaderLen64) (checksum string, uperr error) {

@@ -8,11 +8,11 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/olekukonko/tablewriter"
 	"github.com/qjfoidnh/BaiduPCS-Go/baidupcs"
 	"github.com/qjfoidnh/BaiduPCS-Go/pcstable"
 	"github.com/qjfoidnh/BaiduPCS-Go/pcsutil/converter"
 	"github.com/qjfoidnh/baidu-tools/tieba"
-	"github.com/olekukonko/tablewriter"
 )
 
 var (
@@ -97,6 +97,21 @@ func NewUserInfoByBDUSS(bduss string) (b *Baidu, err error) {
 		},
 		Sex:     t.Baidu.Sex,
 		Age:     t.Baidu.Age,
+		BDUSS:   bduss,
+		Workdir: "/",
+	}
+	return b, nil
+}
+
+// NewUserInfoByInput 不检测BDUSS有效性, 手动设置百度详细信息 (只适用tieba.baidu.com用户信息接口不可用的情况)
+func NewUserInfoByInput(bduss, name string) (b *Baidu, err error) {
+	b = &Baidu{
+		BaiduBase: BaiduBase{
+			UID:  24,
+			Name: name,
+		},
+		Sex:     "default",
+		Age:     24,
 		BDUSS:   bduss,
 		Workdir: "/",
 	}

@@ -30,7 +30,9 @@ type (
 		Load                 int
 		MaxRetry             int
 		NoCheck              bool
+		ModifyMTime          bool
 		FullPath             bool
+		LinkPrefer           int
 	}
 
 	// LocateDownloadOption 获取下载链接可选参数
@@ -151,7 +153,9 @@ func RunDownload(paths []string, options *DownloadOptions) {
 			IsExecutedPermission: options.IsExecutedPermission,
 			IsOverwrite:          options.IsOverwrite,
 			NoCheck:              options.NoCheck,
+			DlinkPrefer:          options.LinkPrefer,
 			DownloadMode:         options.DownloadMode,
+			ModifyMTime:          options.ModifyMTime,
 			PcsPath:              v.Path,
 			FileInfo:             v,
 		}

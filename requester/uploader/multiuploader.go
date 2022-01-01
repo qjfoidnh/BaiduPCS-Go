@@ -14,7 +14,7 @@ import (
 type (
 	// MultiUpload 支持多线程的上传, 可用于断点续传
 	MultiUpload interface {
-		Precreate() (perr error)
+		Precreate(policy string) (perr error)
 		TmpFile(ctx context.Context, partseq int, partOffset int64, readerlen64 rio.ReaderLen64) (checksum string, terr error)
 		CreateSuperFile(policy string, checksumList ...string) (cerr error)
 	}

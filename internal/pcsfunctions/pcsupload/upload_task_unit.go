@@ -261,6 +261,11 @@ func (utu *UploadTaskUnit) upload() (result *taskframework.TaskUnitRunResult) {
 				// 已存在重名文件, 不重试
 				result.ResultMessage = StrUploadFailed
 				result.Err = pcsError
+				if utu.Policy == "skip" {
+					result.Extra = "skip"
+					result.Err = nil
+					result.ResultMessage = fmt.Sprintf("%s 目标已存在, 跳过", utu.SavePath)
+				}
 				result.NeedRetry = false
 				return
 			default:
