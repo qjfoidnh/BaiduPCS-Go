@@ -101,8 +101,9 @@ iikira/BaiduPCS-Go was largely inspired by [GangZhuo/BaiduPCS](https://github.co
 
 # 版本更新
 **2022.1.1** v3.8.5:
+#### 该版本存在已知问题将导致上传文件失败及出现空文件，建议跳过更新
 - 2022新年好, 本次更新增加较多特性, 欢迎测试
-- fix #146, 提前fail和skip上传策略中重名文件的检测环节
+- fix #146, 提前fail和skip上传策略中重名文件的检测环节（存在问题）
 - fix #158, config可配置关闭文件名合法性检测
 - fix #141, download增加--mtime选项可保持文件修改时间
 - fix #130, config可配置force_login_username, 强制登录指定用户名
