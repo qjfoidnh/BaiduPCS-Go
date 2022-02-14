@@ -201,8 +201,8 @@ func (pcs *BaiduPCS) RapidUploadNoCheckDir(targetPath, contentMD5, sliceMD5, crc
 }
 
 // Upload 上传单个文件
-func (pcs *BaiduPCS) Upload(policy, targetPath string, uploadFunc UploadFunc) (pcsError pcserror.Error, newpath string) {
-	dataReadCloser, pcsError := pcs.PrepareUpload(policy, targetPath, uploadFunc)
+func (pcs *BaiduPCS) Upload(fileSize int64, policy, targetPath string, uploadFunc UploadFunc) (pcsError pcserror.Error, newpath string) {
+	dataReadCloser, pcsError := pcs.PrepareUpload(fileSize, policy, targetPath, uploadFunc)
 	if pcsError != nil {
 		return pcsError, ""
 	}

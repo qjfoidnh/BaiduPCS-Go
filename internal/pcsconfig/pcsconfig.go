@@ -319,7 +319,7 @@ func (c *PCSConfig) fix() {
 	if c.MaxUploadLoad < 1 {
 		c.MaxUploadLoad = 1
 	}
-	if c.UPolicy != "fail" && c.UPolicy != "newcopy" && c.UPolicy != "overwrite" && c.UPolicy != "skip" {
+	if c.UPolicy != "fail" && c.UPolicy != "newcopy" && c.UPolicy != "overwrite" && c.UPolicy != "skip" && c.UPolicy != "rsync" {
 		c.UPolicy = "fail"
 	}
 }

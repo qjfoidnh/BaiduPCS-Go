@@ -249,6 +249,24 @@ func (utu *UploadTaskUnit) upload() (result *taskframework.TaskUnitRunResult) {
 		case pcserror.ErrTypeRemoteError:
 			// 远程百度服务器的错误
 			switch pcsError.GetRemoteErrCode() {
+			case 114514:
+				// 自定义错误码, 仅在fail和skip策略下出现
+				result.ResultMessage = StrUploadFailed
+				result.Err = pcsError
+				if utu.Policy == "skip" {
+					result.Extra = "skip"
+					result.Err = nil
+					result.ResultMessage = fmt.Sprintf("%s 目标已存在, 跳过", utu.SavePath)
+				}
+				result.NeedRetry = false
+				return
+			case 1919810:
+				// 自定义错误码, 仅在rsync策略下出现
+				result.Extra = "skip"
+				result.Err = nil
+				result.ResultMessage = fmt.Sprintf("%s 目标大小未发生改变, 跳过", utu.SavePath)
+				result.NeedRetry = false
+				return
 			case 31363:
 				// block miss in superfile2, 上传状态过期
 				// 需要重试的

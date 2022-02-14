@@ -37,11 +37,6 @@ func (werl *workerList) Readed() int64 {
 }
 
 func (muer *MultiUploader) upload() (uperr error) {
-	err := muer.multiUpload.Precreate(muer.config.Policy)
-	if err != nil {
-		return err
-	}
-
 	var (
 		uploadDeque = lane.NewDeque()
 	)
@@ -125,7 +120,7 @@ func (muer *MultiUploader) upload() (uperr error) {
 	default:
 	}
 
-	cerr := muer.multiUpload.CreateSuperFile(muer.config.Policy, muer.workers.CheckSumList()...)
+	cerr := muer.multiUpload.CreateSuperFile(muer.file.Len(), muer.config.Policy, muer.workers.CheckSumList()...)
 	if cerr != nil {
 		return cerr
 	}

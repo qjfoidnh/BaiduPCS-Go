@@ -14,23 +14,23 @@ import (
 )
 
 // Isdir 检查路径在网盘中是否为目录
-func (pcs *BaiduPCS) Isdir(pcspath string) (isdir bool, pcsError pcserror.Error) {
+func (pcs *BaiduPCS) Isdir(pcspath string) (fileSize int64, isdir bool, pcsError pcserror.Error) {
 	if path.Clean(pcspath) == PathSeparator {
-		return true, nil
+		return 0, true, nil
 	}
 
 	f, pcsError := pcs.FilesDirectoriesMeta(pcspath)
 	if pcsError != nil {
-		return false, pcsError
+		return 0, false, pcsError
 	}
 
-	return f.Isdir, nil
+	return f.Size, f.Isdir, nil
 }
 
-func (pcs *BaiduPCS) checkIsdir(op string, targetPath string) pcserror.Error {
+func (pcs *BaiduPCS) checkIsdir(op string, targetPath string, policy string, fileSize int64) pcserror.Error {
 	// 检测文件是否存在于网盘路径
 	// 很重要, 如果文件存在会直接覆盖!!! 即使是根目录!
-	isdir, pcsError := pcs.Isdir(targetPath)
+	onlineSize, isdir, pcsError := pcs.Isdir(targetPath)
 	if pcsError != nil {
 		// 忽略远程服务端返回的错误
 		if pcsError.GetErrType() != pcserror.ErrTypeRemoteError {
@@ -43,6 +43,30 @@ func (pcs *BaiduPCS) checkIsdir(op string, targetPath string) pcserror.Error {
 		errInfo.ErrType = pcserror.ErrTypeOthers
 		errInfo.Err = errors.New("保存路径不可以覆盖目录")
 		return errInfo
+	}
+	// 如果存在文件, 则根据upload策略选择返回的错误码
+	if pcsError == nil {
+		switch policy {
+		case "fail":
+			errInfo.ErrCode = 114514
+			errInfo.ErrType = pcserror.ErrTypeRemoteError
+			errInfo.ErrMsg = "目标位置存在同名文件"
+			return errInfo
+		case "skip":
+			errInfo.ErrCode = 114514
+			errInfo.ErrMsg = "目标位置存在同名文件"
+			errInfo.ErrType = pcserror.ErrTypeRemoteError
+			return errInfo
+		case "rsync":
+			if onlineSize == fileSize {
+				errInfo.ErrCode = 1919810
+				errInfo.ErrMsg = "目标位置文件大小与源文件一致"
+				errInfo.ErrType = pcserror.ErrTypeRemoteError
+				return errInfo
+			}
+		default:
+			return nil
+		}
 	}
 	return nil
 }

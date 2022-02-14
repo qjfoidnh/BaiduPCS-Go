@@ -14,9 +14,9 @@ import (
 type (
 	// MultiUpload 支持多线程的上传, 可用于断点续传
 	MultiUpload interface {
-		Precreate(policy string) (perr error)
+		Precreate() (err error)
 		TmpFile(ctx context.Context, partseq int, partOffset int64, readerlen64 rio.ReaderLen64) (checksum string, terr error)
-		CreateSuperFile(policy string, checksumList ...string) (cerr error)
+		CreateSuperFile(fileSize int64, policy string, checksumList ...string) (cerr error)
 	}
 
 	// MultiUploader 多线程上传
@@ -104,7 +104,6 @@ func (muer *MultiUploader) check() {
 func (muer *MultiUploader) Execute() {
 	muer.check()
 	muer.lazyInit()
-
 	// 初始化限速
 	if muer.config.MaxRate > 0 {
 		muer.rateLimit = speeds.NewRateLimit(muer.config.MaxRate)

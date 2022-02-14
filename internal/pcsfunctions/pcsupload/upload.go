@@ -48,12 +48,8 @@ func (pu *PCSUpload) lazyInit() {
 }
 
 // Precreate 检查网盘的目标路径是否已存在同名文件
-func (pu *PCSUpload) Precreate(policy string) (err error) {
-	err = pu.CreateSuperFile("fail")
-	if policy != "fail" && policy != "skip" {
-		return nil
-	}
-	return
+func (pu *PCSUpload) Precreate() (err error) {
+	return nil
 }
 
 func (pu *PCSUpload) TmpFile(ctx context.Context, partseq int, partOffset int64, r rio.ReaderLen64) (checksum string, uperr error) {
@@ -102,12 +98,12 @@ func (pu *PCSUpload) TmpFile(ctx context.Context, partseq int, partOffset int64,
 	return checksum, pcsError
 }
 
-func (pu *PCSUpload) CreateSuperFile(policy string, checksumList ...string) (err error) {
+func (pu *PCSUpload) CreateSuperFile(fileSize int64, policy string, checksumList ...string) (err error) {
 	pu.lazyInit()
 	//newpath := ""
 	// 先在网盘目标位置, 上传一个空文件
 	// 防止出现file does not exist
-	pcsError, newpath := pu.pcs.Upload(policy, pu.targetPath, func(uploadURL string, jar http.CookieJar) (resp *http.Response, err error) {
+	pcsError, newpath := pu.pcs.Upload(fileSize, policy, pu.targetPath, func(uploadURL string, jar http.CookieJar) (resp *http.Response, err error) {
 		mr := multipartreader.NewMultipartReader()
 		mr.AddFormFile("file", "file", &EmptyReaderLen64{})
 		mr.CloseMultipart()

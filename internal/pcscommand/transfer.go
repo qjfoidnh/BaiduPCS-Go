@@ -22,6 +22,10 @@ func RunShareTransfer(params []string, opt *baidupcs.TransferOption) {
 			return
 		}
 		extracode = "none"
+		if strings.Contains(link, "?pwd=") {
+			extracode = strings.Split(link, "?pwd=")[1]
+			link = strings.Split(link, "?pwd=")[0]
+		}
 	} else if len(params) == 2 {
 		link = params[0]
 		extracode = params[1]
