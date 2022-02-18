@@ -27,7 +27,7 @@ func (pcs *BaiduPCS) Isdir(pcspath string) (fileSize int64, isdir bool, pcsError
 	return f.Size, f.Isdir, nil
 }
 
-func (pcs *BaiduPCS) checkIsdir(op string, targetPath string, policy string, fileSize int64) pcserror.Error {
+func (pcs *BaiduPCS) CheckIsdir(op string, targetPath string, policy string, fileSize int64) pcserror.Error {
 	// 检测文件是否存在于网盘路径
 	// 很重要, 如果文件存在会直接覆盖!!! 即使是根目录!
 	onlineSize, isdir, pcsError := pcs.Isdir(targetPath)

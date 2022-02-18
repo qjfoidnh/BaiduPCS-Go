@@ -288,7 +288,7 @@ func (pcs *BaiduPCS) prepareRapidUpload(targetPath, contentMD5, sliceMD5, crc32 
 // PrepareRapidUpload 秒传文件, 只返回服务器响应数据和错误信息
 func (pcs *BaiduPCS) PrepareRapidUpload(targetPath, contentMD5, sliceMD5, crc32 string, length int64) (dataReadCloser io.ReadCloser, pcsError pcserror.Error) {
 	pcs.lazyInit()
-	pcsError = pcs.checkIsdir(OperationRapidUpload, targetPath, "", length)
+	pcsError = pcs.CheckIsdir(OperationRapidUpload, targetPath, "", length)
 	if pcsError != nil {
 		return nil, pcsError
 	}
@@ -299,7 +299,7 @@ func (pcs *BaiduPCS) PrepareRapidUpload(targetPath, contentMD5, sliceMD5, crc32 
 // PrepareRapidUploadV2 秒传文件, 新接口
 func (pcs *BaiduPCS) PrepareRapidUploadV2(targetPath, contentMD5 string, length int64) (dataReadCloser io.ReadCloser, pcsError pcserror.Error) {
 	pcs.lazyInit()
-	pcsError = pcs.checkIsdir(OperationRapidUpload, targetPath, "", length)
+	pcsError = pcs.CheckIsdir(OperationRapidUpload, targetPath, "", length)
 	if pcsError != nil {
 		return nil, pcsError
 	}
@@ -399,12 +399,12 @@ func (pcs *BaiduPCS) PrepareLocatePanAPIDownload(fidList ...int64) (dataReadClos
 }
 
 // PrepareUpload 上传单个文件, 只返回服务器响应数据和错误信息（分片上传中的预上传部分）
-func (pcs *BaiduPCS) PrepareUpload(fileSize int64, policy string, targetPath string, uploadFunc UploadFunc) (dataReadCloser io.ReadCloser, pcsError pcserror.Error) {
+func (pcs *BaiduPCS) PrepareUpload(policy string, targetPath string, uploadFunc UploadFunc) (dataReadCloser io.ReadCloser, pcsError pcserror.Error) {
 	pcs.lazyInit()
-	pcsError = pcs.checkIsdir(OperationUpload, targetPath, policy, fileSize)
-	if pcsError != nil {
-		return nil, pcsError
-	}
+	//pcsError = pcs.checkIsdir(OperationUpload, targetPath, policy)
+	//if pcsError != nil {
+	//	return nil, pcsError
+	//}
 
 	pcsURL := pcs.generatePCSURL("file", "upload", map[string]string{
 		"path":  targetPath,
@@ -462,7 +462,7 @@ func (pcs *BaiduPCS) PrepareUploadCreateSuperFile(policy string, checkDir bool, 
 
 	if checkDir {
 		// 检查是否为目录
-		pcsError = pcs.checkIsdir(OperationUploadCreateSuperFile, targetPath, "", 0)
+		pcsError = pcs.CheckIsdir(OperationUploadCreateSuperFile, targetPath, "", 0)
 		if pcsError != nil {
 			return nil, pcsError
 		}
