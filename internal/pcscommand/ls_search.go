@@ -1,12 +1,13 @@
 package pcscommand
 
 import (
+	"encoding/json"
 	"fmt"
+	"github.com/olekukonko/tablewriter"
 	"github.com/qjfoidnh/BaiduPCS-Go/baidupcs"
 	"github.com/qjfoidnh/BaiduPCS-Go/pcstable"
 	"github.com/qjfoidnh/BaiduPCS-Go/pcsutil/converter"
 	"github.com/qjfoidnh/BaiduPCS-Go/pcsutil/pcstime"
-	"github.com/olekukonko/tablewriter"
 	"os"
 	"strconv"
 )
@@ -22,6 +23,10 @@ type (
 		Total   bool
 		Recurse bool
 	}
+
+	OutputFormatOptions struct {
+		JsonFormat bool
+	}
 )
 
 const (
@@ -29,27 +34,57 @@ const (
 	opSearch
 )
 
+type ListJsonObject struct {
+	err  *string
+	data *baidupcs.FileDirectoryList
+}
+
 // RunLs 执行列目录
-func RunLs(pcspath string, lsOptions *LsOptions, orderOptions *baidupcs.OrderOptions) {
+func RunLs(pcspath string, lsOptions *LsOptions, orderOptions *baidupcs.OrderOptions, format *OutputFormatOptions) {
 	err := matchPathByShellPatternOnce(&pcspath)
+	result := ListJsonObject{}
 	if err != nil {
-		fmt.Println(err)
+		errorString := err.Error()
+		if format != nil && format.JsonFormat {
+			result.err = &errorString
+			jsonByte, _ := json.Marshal(result)
+			errorString = string(jsonByte)
+		}
+		fmt.Println(errorString)
 		return
 	}
 
 	files, err := GetBaiduPCS().FilesDirectoriesList(pcspath, orderOptions)
 	if err != nil {
-		fmt.Println(err)
+		errorString := err.Error()
+		if format != nil && format.JsonFormat {
+			result.err = &errorString
+			jsonByte, _ := json.Marshal(result)
+			errorString = string(jsonByte)
+		}
+		fmt.Println(errorString)
 		return
 	}
+	if format != nil && format.JsonFormat {
+		text, err := json.Marshal(files)
+		if err != nil {
+			errorString := err.Error()
+			result.err = &errorString
+			jsonByte, _ := json.Marshal(result)
+			errorString = string(jsonByte)
+			fmt.Println(errorString)
+		} else {
+			fmt.Println(string(text))
+		}
+	} else {
+		fmt.Printf("\n当前目录: %s\n----\n", pcspath)
 
-	fmt.Printf("\n当前目录: %s\n----\n", pcspath)
+		if lsOptions == nil {
+			lsOptions = &LsOptions{}
+		}
 
-	if lsOptions == nil {
-		lsOptions = &LsOptions{}
+		renderTable(opLs, lsOptions.Total, pcspath, files)
 	}
-
-	renderTable(opLs, lsOptions.Total, pcspath, files)
 	return
 }
 

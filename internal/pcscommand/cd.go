@@ -32,6 +32,6 @@ func RunChangeDirectory(targetPath string, isList bool) {
 	fmt.Printf("改变工作目录: %s\n", targetPath)
 
 	if isList {
-		RunLs(".", nil, baidupcs.DefaultOrderOptions)
+		RunLs(".", nil, baidupcs.DefaultOrderOptions, nil)
 	}
 }

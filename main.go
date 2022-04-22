@@ -689,6 +689,9 @@ func main() {
 
 	按文件大小降序排序
 	BaiduPCS-Go ls -size -desc 我的资源
+	
+	使用 json 输出
+	BaiduPCS-Go ls -json -size -desc 我的资源
 
 	使用通配符
 	BaiduPCS-Go ls /我的*
@@ -717,9 +720,10 @@ func main() {
 					orderOptions.By = baidupcs.OrderByName
 				}
 
+				jsonFormat := c.IsSet("json")
 				pcscommand.RunLs(c.Args().Get(0), &pcscommand.LsOptions{
 					Total: c.Bool("l") || c.Parent().Args().Get(0) == "ll",
-				}, orderOptions)
+				}, orderOptions, &pcscommand.OutputFormatOptions{JsonFormat: jsonFormat})
 
 				return nil
 			},
@@ -1126,7 +1130,7 @@ func main() {
 					Usage: "将本地文件的修改时间设置为服务器上的修改时间",
 				},
 				cli.IntFlag{
-					Name: "dindex",
+					Name:  "dindex",
 					Usage: "使用备选下载链接中的第几个，默认第一个",
 				},
 				cli.BoolFlag{
