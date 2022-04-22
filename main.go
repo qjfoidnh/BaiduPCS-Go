@@ -752,6 +752,10 @@ func main() {
 					Name:  "size",
 					Usage: "根据大小排序",
 				},
+				cli.BoolFlag{
+					Name:  "json",
+					Usage: "使用json输出结果",
+				},
 			},
 		},
 		{
