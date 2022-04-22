@@ -34,7 +34,7 @@ func RunGetMeta(jsonOutput bool, targetPaths ...string) {
 			if printErrorAndReturn(jsonOutput, err) {
 				return
 			}
-			println(string(byteStr))
+			fmt.Println(string(byteStr))
 		}
 	}
 }
