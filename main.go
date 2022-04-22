@@ -720,10 +720,9 @@ func main() {
 					orderOptions.By = baidupcs.OrderByName
 				}
 
-				jsonFormat := c.IsSet("json")
 				pcscommand.RunLs(c.Args().Get(0), &pcscommand.LsOptions{
 					Total: c.Bool("l") || c.Parent().Args().Get(0) == "ll",
-				}, orderOptions, &pcscommand.OutputFormatOptions{JsonFormat: jsonFormat})
+				}, orderOptions, c.IsSet("json"))
 
 				return nil
 			},
@@ -868,6 +867,12 @@ func main() {
 			Description: "默认获取工作目录元信息",
 			Category:    "百度网盘",
 			Before:      reloadFn,
+			Flags: []cli.Flag{
+				cli.BoolFlag{
+					Name:  "json",
+					Usage: "使用json输出结果",
+				},
+			},
 			Action: func(c *cli.Context) error {
 				var (
 					ca = c.Args()
@@ -879,7 +884,7 @@ func main() {
 					as = ca
 				}
 
-				pcscommand.RunGetMeta(as...)
+				pcscommand.RunGetMeta(c.IsSet("json"), as...)
 				return nil
 			},
 		},

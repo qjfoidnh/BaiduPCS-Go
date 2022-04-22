@@ -40,39 +40,21 @@ type ListJsonObject struct {
 }
 
 // RunLs 执行列目录
-func RunLs(pcspath string, lsOptions *LsOptions, orderOptions *baidupcs.OrderOptions, format *OutputFormatOptions) {
+func RunLs(pcspath string, lsOptions *LsOptions, orderOptions *baidupcs.OrderOptions, jsonFormat bool) {
 	err := matchPathByShellPatternOnce(&pcspath)
 	result := ListJsonObject{}
-	if err != nil {
-		errorString := err.Error()
-		if format != nil && format.JsonFormat {
-			result.err = &errorString
-			jsonByte, _ := json.Marshal(result)
-			errorString = string(jsonByte)
-		}
-		fmt.Println(errorString)
+	if printErrorAndReturn(jsonFormat, err) {
 		return
 	}
 
 	files, err := GetBaiduPCS().FilesDirectoriesList(pcspath, orderOptions)
-	if err != nil {
-		errorString := err.Error()
-		if format != nil && format.JsonFormat {
-			result.err = &errorString
-			jsonByte, _ := json.Marshal(result)
-			errorString = string(jsonByte)
-		}
-		fmt.Println(errorString)
+	if printErrorAndReturn(jsonFormat, err) {
 		return
 	}
-	if format != nil && format.JsonFormat {
+	if jsonFormat {
 		text, err := json.Marshal(files)
-		if err != nil {
-			errorString := err.Error()
-			result.err = &errorString
-			jsonByte, _ := json.Marshal(result)
-			errorString = string(jsonByte)
-			fmt.Println(errorString)
+		if printErrorAndReturn(jsonFormat, err) {
+			return
 		} else {
 			fmt.Println(string(text))
 		}
