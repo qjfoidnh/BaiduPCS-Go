@@ -42,7 +42,7 @@ type ListJsonObject struct {
 // RunLs 执行列目录
 func RunLs(pcspath string, lsOptions *LsOptions, orderOptions *baidupcs.OrderOptions, jsonFormat bool) {
 	err := matchPathByShellPatternOnce(&pcspath)
-	result := ListJsonObject{}
+	//result := ListJsonObject{}
 	if printErrorAndReturn(jsonFormat, err) {
 		return
 	}
