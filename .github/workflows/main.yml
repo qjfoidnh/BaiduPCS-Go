@@ -44,8 +44,8 @@ jobs:
           GOARCH: ${{ matrix.goarch }}
           IS_PR: ${{ !!github.head_ref }}
         run: |
-          if [ $GOOS = "windows" ]; then export BINARY_SUFFIX="$BINARY_SUFFIX.exe"; fi
-          if [ "$GOOS" = "android" ]; then declare -A goarch2cc=( ["arm64"]="aarch64-linux-android32-clang" ["arm"]="armv7a-linux-androideabi32-clang" ["amd64"]="x86_64-linux-android32-clang" ["386"]="i686-linux-android32-clang"); export CC="$ANDROID_NDK_LATEST_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/${goarch2cc[$GOARCH]}"; fi
+          if [ $GOOS == "windows" ]; then export BINARY_SUFFIX="$BINARY_SUFFIX.exe"; fi
+          if [ "$GOOS" == "android" ]; then declare -A goarch2cc=( ["arm64"]="aarch64-linux-android32-clang" ["arm"]="armv7a-linux-androideabi32-clang" ["amd64"]="x86_64-linux-android32-clang" ["386"]="i686-linux-android32-clang"); export CC="$ANDROID_NDK_LATEST_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/${goarch2cc[$GOARCH]}"; fi
           if $IS_PR ; then echo $PR_PROMPT; fi
           export BINARY_NAME="$BINARY_PREFIX$GOOS_$GOARCH$BINARY_SUFFIX"
           export CGO_ENABLED=$( [ "$GOOS" == "android" ] && echo 1 || echo 0 )
