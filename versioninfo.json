@@ -2,13 +2,13 @@
     "FixedFileInfo": {
         "FileVersion": {
             "Major": 3,
-            "Minor": 7,
+            "Minor": 8,
             "Patch": 8,
             "Build": 0
         },
         "ProductVersion": {
             "Major": 3,
-            "Minor": 7,
+            "Minor": 8,
             "Patch": 8,
             "Build": 0
         },
@@ -22,14 +22,14 @@
         "Comments": "",
         "CompanyName": "qjfoidnh",
         "FileDescription": "百度网盘客户端(加强版)",
-        "FileVersion": "v3.7.8",
+        "FileVersion": "v3.8.8",
         "InternalName": "",
         "LegalCopyright": "© 2016-2020 iikira.",
         "LegalTrademarks": "",
         "OriginalFilename": "",
         "PrivateBuild": "",
         "ProductName": "BaiduPCS-Go",
-        "ProductVersion": "v3.7.8",
+        "ProductVersion": "v3.8.8",
         "SpecialBuild": ""
     },
     "VarFileInfo": {

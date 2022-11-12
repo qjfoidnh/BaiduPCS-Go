@@ -50,25 +50,29 @@ func RunShareTransfer(params []string, opt *baidupcs.TransferOption) {
 	}
 	// pcs.UpdatePCSCookies(true)
 	var vefiryurl string
+	var randsk string
 	featuremap := make(map[string]string)
-	featuremap["surl"] = featurestr[1:]
-	featuremap["bdstoken"] = tokens["bdstoken"]
+	featuremap["shareid"] = tokens["shareid"]
+	featuremap["uk"] = tokens["share_uk"]
 	if extracode != "none" {
 
 		vefiryurl = pcs.GenerateShareQueryURL("verify", featuremap).String()
-		res := pcs.PostShareQuery(vefiryurl, featurestr[1:], map[string]string{
+		res := pcs.PostShareQuery(vefiryurl, map[string]string{
 			"pwd":       extracode,
 			"vcode":     "",
-			"vcode_str": "",
+			"vcode_str": "null",
+			"bdstoken": tokens["bdstoken"],
 		})
 		if res["ErrMsg"] != "0" {
 			fmt.Printf("%s失败: %s\n", baidupcs.OperationShareFileSavetoLocal, res["ErrMsg"])
 			return
 		}
+		randsk = res["randsk"]
 	}
 	pcs.UpdatePCSCookies(true)
 
 	tokens = pcs.AccessSharePage(featurestr, false)
+	tokens["randsk"] = randsk
 	if tokens["ErrMsg"] != "0" {
 		fmt.Printf("%s失败: %s\n", baidupcs.OperationShareFileSavetoLocal, tokens["ErrMsg"])
 		return
@@ -93,7 +97,7 @@ func RunShareTransfer(params []string, opt *baidupcs.TransferOption) {
 		fmt.Printf("%s失败: %s\n", baidupcs.OperationShareFileSavetoLocal, resp["ErrMsg"])
 		if resp["ErrNo"] == "4" {
 			trans_metas["shorturl"] = featurestr
-			pcs.SuperTransfer(trans_metas, resp["limit"]) // 试验性功能
+			pcs.SuperTransfer(trans_metas, resp["limit"]) // 试验性功能, 当前未启用
 		}
 		return
 	}
