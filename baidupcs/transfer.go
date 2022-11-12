@@ -99,8 +99,8 @@ func (pcs *BaiduPCS) PostShareQuery(url string, data map[string]string) (res map
 	}
 	defer dataReadCloser.Close()
 	body, _ := ioutil.ReadAll(dataReadCloser)
-	errno := gjson.Get(string(body), `errno`).String()
-	if errno != "0" {
+	errno := gjson.Get(string(body), `errno`).Int()
+	if errno != 0 {
 		res["ErrMsg"] = fmt.Sprintf("未知错误, 错误码%d", errno)
 		return
 	}
