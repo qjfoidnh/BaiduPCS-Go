@@ -12,6 +12,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type (
@@ -32,7 +33,7 @@ func (pcs *BaiduPCS) GenerateShareQueryURL(subPath string, params map[string]str
 	uv := shareURL.Query()
 	uv.Set("apn_id", "1_0")
 	uv.Set("channel", "android_7.0_VTR-AL00_bd-netdisk_1026250y")
-	uv.Set("time", strconv.Itoa(int(ns.Time)))
+	uv.Set("time", strconv.Itoa(int(time.Now().UnixMilli())))
 	uv.Set("cuid", ns.DevUID)
 	uv.Set("devuid", ns.DevUID)
 	uv.Set("clienttype", "1")
