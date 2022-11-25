@@ -2,7 +2,7 @@ package baidupcs
 
 import (
 	"fmt"
-	"github.com/qjfoidnh/BaiduPCS-Go/baidupcs/netdisksign"
+	"github.com/qjfoidnh/BaiduPCS-Go/requester"
 	"github.com/tidwall/gjson"
 	"io/ioutil"
 	"net/http"
@@ -29,14 +29,12 @@ func (pcs *BaiduPCS) GenerateShareQueryURL(subPath string, params map[string]str
 		Host:   PanBaiduCom,
 		Path:   "/share/" + subPath,
 	}
-	ns := netdisksign.NewLocateDownloadSign(pcs.uid, pcs.GetBDUSS())
 	uv := shareURL.Query()
-	uv.Set("apn_id", "1_0")
-	uv.Set("channel", "android_7.0_VTR-AL00_bd-netdisk_1026250y")
-	uv.Set("time", strconv.Itoa(int(time.Now().UnixMilli())))
-	uv.Set("cuid", ns.DevUID)
-	uv.Set("devuid", ns.DevUID)
-	uv.Set("clienttype", "1")
+	uv.Set("app_id", PanAppID)
+	uv.Set("channel", "chunlei")
+	uv.Set("t", strconv.Itoa(int(time.Now().UnixMilli())))
+	uv.Set("web", "1")
+	uv.Set("clienttype", "0")
 	for key, value := range params {
 		uv.Set(key, value)
 	}
@@ -87,10 +85,11 @@ func (pcs *BaiduPCS) ExtractShareInfo(metajsonstr string) (res map[string]string
 	return
 }
 
-func (pcs *BaiduPCS) PostShareQuery(url string, data map[string]string) (res map[string]string) {
+func (pcs *BaiduPCS) PostShareQuery(url string, referer string, data map[string]string) (res map[string]string) {
 	dataReadCloser, panError := pcs.sendReqReturnReadCloser(reqTypePan, OperationShareFileSavetoLocal, http.MethodPost, url, data, map[string]string{
-		"User-Agent":   pcs.panUA,
-		"Content-Type": "application/x-www-form-urlencoded",
+		"User-Agent":   requester.UserAgent,
+		"Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+		"Referer": referer,
 	})
 	res = make(map[string]string)
 	if panError != nil {
