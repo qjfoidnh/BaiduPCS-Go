@@ -1,6 +1,6 @@
 module github.com/qjfoidnh/BaiduPCS-Go
 
-go 1.17
+go 1.18
 
 require (
 	github.com/GeertJohan/go.incremental v1.0.0
@@ -27,7 +27,7 @@ require (
 	github.com/bitly/go-simplejson v0.5.0 // indirect
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.0-20190314233015-f79a8a8ca69d // indirect
-	github.com/daaku/go.zipexe v1.0.0 // indirect
+	github.com/daaku/go.zipexe v1.0.2 // indirect
 	github.com/mattn/go-colorable v0.1.8 // indirect
 	github.com/mattn/go-isatty v0.0.12 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect

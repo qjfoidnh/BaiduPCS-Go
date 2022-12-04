@@ -101,6 +101,9 @@ func (pcs *BaiduPCS) PostShareQuery(url string, referer string, data map[string]
 	errno := gjson.Get(string(body), `errno`).Int()
 	if errno != 0 {
 		res["ErrMsg"] = fmt.Sprintf("未知错误, 错误码%d", errno)
+		if errno == -9 {
+			res["ErrMsg"] = "提取码错误"
+		}
 		return
 	}
 	res["ErrMsg"] = "0"
