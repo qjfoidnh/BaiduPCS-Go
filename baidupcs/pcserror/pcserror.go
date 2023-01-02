@@ -64,6 +64,12 @@ func DecodePanJSONError(opreation string, data io.Reader) Error {
 	return HandleJSONParse(opreation, data, errInfo)
 }
 
+// DecodeXPanJSONError 解析XPan JSON的错误
+func DecodeXPanJSONError(opreation string, data io.Reader) Error {
+	errInfo := NewXPanErrorInfo(opreation)
+	return HandleJSONParse(opreation, data, errInfo)
+}
+
 // HandleJSONParse 处理解析json
 func HandleJSONParse(op string, data io.Reader, info interface{}) (pcsError Error) {
 	var (

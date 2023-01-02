@@ -158,7 +158,7 @@ func (pcs *BaiduPCS) rapidUploadV2(targetPath, contentMD5 string, length int64) 
 		return
 	}
 	defer dataReadCloser.Close()
-	return pcserror.DecodePCSJSONError(OperationRapidUpload, dataReadCloser)
+	return pcserror.DecodeXPanJSONError(OperationRapidUpload, dataReadCloser)
 
 	//errInfo := pcserror.NewPanErrorInfo(OperationRapidUpload)
 	//jsonData := uploadCreateJSON{
