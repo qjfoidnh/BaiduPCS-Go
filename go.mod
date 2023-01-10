@@ -18,7 +18,7 @@ require (
 	github.com/tidwall/gjson v1.6.4
 	github.com/urfave/cli v1.22.5
 	golang.org/x/crypto v0.0.0-20191011191535-87dc89f01550
-	golang.org/x/sys v0.0.0-20200615200032-f1bc736245b1
+	golang.org/x/sys v0.3.0
 )
 
 require (
