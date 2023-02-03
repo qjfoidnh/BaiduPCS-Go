@@ -18,6 +18,10 @@ import (
 const (
 	// OperationGetUK 获取UK
 	OperationGetUK = "获取UK"
+	// OperationGetBDSToken
+	OperationGetBDSToken = "获取bdstoken"
+	// OperationGetCursorDiff
+	OperationGetCursorDiff = "获取cursor后文件列表diff信息"
 	// OperationQuotaInfo 获取当前用户空间配额信息
 	OperationQuotaInfo = "获取当前用户空间配额信息"
 	// OperationFilesDirectoriesMeta 获取文件/目录的元信息
@@ -148,6 +152,13 @@ type (
 		Records []struct {
 			Uk int64 `json:"uk"`
 		} `json:"records"`
+	}
+
+	userVarJSON struct {
+		*pcserror.PanErrorInfo
+		Result struct {
+			BDSToken string `json:"bdstoken"`
+		} `json:"result"`
 	}
 )
 
@@ -450,4 +461,31 @@ func (pcs *BaiduPCS) UK() (uk int64, pcsError pcserror.Error) {
 	}
 
 	return jsonData.Records[0].Uk, nil
+}
+
+func (pcs *BaiduPCS) BDSToken() (bdstoken string, pcsError pcserror.Error) {
+	dataReadCloser, pcsError := pcs.PrepareBDStoken()
+	if pcsError != nil {
+		return
+	}
+
+	defer dataReadCloser.Close()
+
+	errInfo := pcserror.NewPanErrorInfo(OperationGetBDSToken)
+	jsonData := userVarJSON{
+		PanErrorInfo: errInfo,
+	}
+
+	pcsError = pcserror.HandleJSONParse(OperationGetBDSToken, dataReadCloser, &jsonData)
+	if pcsError != nil {
+		return
+	}
+
+	if jsonData.Result.BDSToken == "" {
+		errInfo.ErrType = pcserror.ErrTypeOthers
+		errInfo.Err = errors.New("Unknown remote data")
+		return "", errInfo
+	}
+
+	return jsonData.Result.BDSToken, nil
 }

@@ -2,7 +2,6 @@ package baidupcs
 
 import (
 	"errors"
-	"fmt"
 	"math/rand"
 	"net/http"
 	"path"
@@ -118,26 +117,30 @@ func (pcs *BaiduPCS) RapidUpload(targetPath, contentMD5, sliceMD5, crc32 string,
 		}
 	}()
 
-	// 尝试全大写
-	pcsError = pcs.rapidUpload(targetPath, strings.ToUpper(contentMD5), strings.ToUpper(sliceMD5), crc32, length)
-	if pcsError == nil || pcsError.GetRemoteErrCode() != 31079 {
-		return
-	}
-
-	// 尝试全小写
-	pcsError = pcs.rapidUpload(targetPath, strings.ToLower(contentMD5), strings.ToLower(sliceMD5), crc32, length)
-	if pcsError == nil || pcsError.GetRemoteErrCode() != 31079 {
-		return
-	}
-
-	// 尝试随机大小写
-	pcsError = pcs.rapidUpload(targetPath, randomifyMD5(contentMD5), randomifyMD5(sliceMD5), crc32, length)
-	if pcsError == nil || pcsError.GetRemoteErrCode() != 31079 {
-		return
-	}
-
-	// 尝试 xpan 接口
 	return pcs.rapidUploadV2(targetPath, strings.ToLower(contentMD5), length)
+
+	//// 尝试全大写
+	//pcsError = pcs.rapidUpload(targetPath, strings.ToUpper(contentMD5), strings.ToUpper(sliceMD5), crc32, length)
+	//if pcsError == nil || pcsError.GetRemoteErrCode() != 31079 {
+	//	return
+	//}
+	//
+	//// 尝试全小写
+	//pcsError = pcs.rapidUpload(targetPath, strings.ToLower(contentMD5), strings.ToLower(sliceMD5), crc32, length)
+	//if pcsError == nil || pcsError.GetRemoteErrCode() != 31079 {
+	//	return
+	//}
+	//
+	//// 尝试随机大小写
+	//pcsError = pcs.rapidUpload(targetPath, randomifyMD5(contentMD5), randomifyMD5(sliceMD5), crc32, length)
+	//if pcsError == nil || pcsError.GetRemoteErrCode() != 31079 {
+	//	return
+	//}
+	//
+	//return
+
+	//// 尝试 xpan 接口
+	//return pcs.rapidUploadV2(targetPath, strings.ToLower(contentMD5), length)
 }
 
 func (pcs *BaiduPCS) rapidUpload(targetPath, contentMD5, sliceMD5, crc32 string, length int64) (pcsError pcserror.Error) {
@@ -155,32 +158,31 @@ func (pcs *BaiduPCS) rapidUploadV2(targetPath, contentMD5 string, length int64) 
 		return
 	}
 	defer dataReadCloser.Close()
+	return pcserror.DecodeXPanJSONError(OperationRapidUpload, dataReadCloser)
 
-	errInfo := pcserror.NewPanErrorInfo(OperationRapidUpload)
-	jsonData := uploadCreateJSON{
-		PanErrorInfo: errInfo,
-	}
-	pcsError = pcserror.HandleJSONParse(OperationRapidUpload, dataReadCloser, &jsonData)
-	if pcsError != nil {
-		return
-	}
-
-	switch jsonData.ErrNo {
-	case 0:
-		return
-	case 2:
-		errInfo.ErrType = pcserror.ErrTypeOthers
-		errInfo.Err = ErrUploadMD5Unknown
-		return errInfo
-	case -8:
-		errInfo.ErrType = pcserror.ErrTypeOthers
-		errInfo.Err = ErrUploadFileExists
-		return errInfo
-	default:
-		errInfo.ErrType = pcserror.ErrTypeOthers
-		errInfo.Err = fmt.Errorf("errno=%d", jsonData.ErrNo)
-		return errInfo
-	}
+	//errInfo := pcserror.NewPanErrorInfo(OperationRapidUpload)
+	//jsonData := uploadCreateJSON{
+	//	PanErrorInfo: errInfo,
+	//}
+	//pcsError = pcserror.HandleJSONParse(OperationRapidUpload, dataReadCloser, &jsonData)
+	//if pcsError != nil {
+	//	return
+	//}
+	//fmt.Println(jsonData)
+	//switch jsonData.ErrNo {
+	//case 0:
+	//	return
+	//case 2:
+	//	errInfo.SetRemoteError()
+	//	errInfo.Err = ErrUploadMD5Unknown
+	//	return errInfo
+	//case -8:
+	//	return nil
+	//default:
+	//	errInfo.ErrType = pcserror.ErrTypeOthers
+	//	errInfo.Err = fmt.Errorf("errno=%d", jsonData.ErrNo)
+	//	return errInfo
+	//}
 }
 
 // RapidUploadNoCheckDir 秒传文件, 不进行目录检查, 会覆盖掉同名的目录!

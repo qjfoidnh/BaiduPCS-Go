@@ -166,6 +166,37 @@ func (pcs *BaiduPCS) PrepareFilesDirectoriesList(path string, options *OrderOpti
 	return
 }
 
+func (pcs *BaiduPCS) PrepareFilesDirectoriesDiff(cursor string) (dataReadCloser io.ReadCloser, pcsError pcserror.Error) {
+	pcs.lazyInit()
+	//bdstoken, pcsError := pcs.BDSToken()
+	//if pcsError != nil {
+	//	return
+	//}
+	if cursor == "" {
+		cursor = "null"
+	}
+	ns := netdisksign.NewLocateDownloadSign(pcs.uid, pcs.GetBDUSS())
+	pcsURL := pcs.generatePanURL("batch/filediff", map[string]string{
+		"cursor": cursor,
+		//"bdstoken": bdstoken,
+		"clienttype": "1",
+	})
+	paramsURL := ns.URLParam()
+	dataReadCloser, pcsError = pcs.sendReqReturnReadCloser(reqTypePCS, OperationGetCursorDiff, http.MethodGet, pcsURL.String() + "&"+ paramsURL, nil, nil)
+	return
+}
+
+func (pcs *BaiduPCS) PrepareBDStoken() (dataReadCloser io.ReadCloser, pcsError pcserror.Error) {
+	pcs.lazyInit()
+	pcsURL := pcs.generatePanURL("gettemplatevariable", map[string]string{
+		"clienttype": "0",
+		"app_id": string(pcs.appID),
+		"fields":     `["bdstoken"]`,
+	})
+	dataReadCloser, pcsError = pcs.sendReqReturnReadCloser(reqTypePCS, OperationGetBDSToken, http.MethodGet, pcsURL.String(), nil, nil)
+	return
+}
+
 // PrepareSearch 按文件名搜索文件, 只返回服务器响应数据和错误信息
 func (pcs *BaiduPCS) PrepareSearch(targetPath, keyword string, recursive bool) (dataReadCloser io.ReadCloser, pcsError pcserror.Error) {
 	pcs.lazyInit()
