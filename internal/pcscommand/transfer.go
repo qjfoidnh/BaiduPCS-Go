@@ -136,8 +136,7 @@ func RunRapidTransfer(link string) {
 		md5 := substrs[0]
 		length, _ := strconv.ParseInt(substrs[1], 10, 64)
 		filename := path.Join(GetActiveUser().Workdir, substrs[2])
-		slicemd5 := ""
-		RunRapidUpload(filename, md5, slicemd5, "", length)
+		RunRapidUpload(filename, md5, "", "", length)
 		return
 	}
 	substrs = strings.Split(link, "|")

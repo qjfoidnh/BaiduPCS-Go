@@ -100,6 +100,9 @@ iikira/BaiduPCS-Go was largely inspired by [GangZhuo/BaiduPCS](https://github.co
 [离线下载](#离线下载), 支持http/https/ftp/电驴/磁力链协议.
 
 # 版本更新
+**2023.03.19** v3.9.1
+- 修复秒传转存返回错误码9019
+
 **2022.12.04** v3.9.0:
 - 优化转存错误提示
 - fix #239

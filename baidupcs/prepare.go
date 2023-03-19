@@ -335,7 +335,7 @@ func (pcs *BaiduPCS) PrepareRapidUploadV2(targetPath, contentMD5 string, length 
 		return nil, pcsError
 	}
 
-	pcsURL := pcs.generatePCSURL2("xpan/file", "create", nil)
+	pcsURL := pcs.generatePanURL("create", nil)
 	post := map[string]string{
 		"path":       targetPath,
 		"size":       strconv.FormatInt(length, 10),

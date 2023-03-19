@@ -93,7 +93,7 @@ func (pane *XPanErrorInfo) Error() string {
 
 		return fmt.Sprintf("%s, 遇到错误, %s", pane.Operation, pane.Err)
 	default:
-		panic("panerrorinfo: unknown ErrType")
+		panic("xpanerrorinfo: unknown ErrType")
 	}
 }
 
@@ -103,9 +103,13 @@ func FindXPanErr(errno int) (errmsg string) {
 	case 0:
 		return StrSuccess
 	case 2:
-		return "md5不存在"
+		return "文件长度异常"
 	case -8:
 		return "同名文件冲突"
+	case 31190:
+		return "MD5不存在"
+	case 31079:
+		return "文件已被屏蔽"
 	default:
 		return "未知错误"
 	}
