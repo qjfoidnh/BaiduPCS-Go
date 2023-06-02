@@ -328,25 +328,33 @@ func (pcs *BaiduPCS) PrepareRapidUpload(targetPath, contentMD5, sliceMD5, crc32 
 }
 
 // PrepareRapidUploadV2 秒传文件, 新接口
-func (pcs *BaiduPCS) PrepareRapidUploadV2(targetPath, contentMD5 string, length int64) (dataReadCloser io.ReadCloser, pcsError pcserror.Error) {
+func (pcs *BaiduPCS) PrepareRapidUploadV2(targetPath, contentMD5, sliceMD5 string, length int64) (dataReadCloser io.ReadCloser, pcsError pcserror.Error) {
 	pcs.lazyInit()
 	pcsError = pcs.CheckIsdir(OperationRapidUpload, targetPath, "", length)
 	if pcsError != nil {
 		return nil, pcsError
 	}
 
-	pcsURL := pcs.generatePanURL("create", nil)
+	pcsURL := pcs.generatePanURL("precreate", nil)
 	post := map[string]string{
 		"path":       targetPath,
 		"size":       strconv.FormatInt(length, 10),
 		"isdir":      "0",
-		"rtype":      "0",
+		"rtype":      "2",
+		"checkexist": "0",
+		"autoinit":   "1",
+		"content-md5": contentMD5,
+		"slice-md5": sliceMD5,
 		"block_list": mergeStringList(contentMD5),
 		"mode":       "1",
 	}
 	baiduPCSVerbose.Infof("%s URL: %s, Post: %v\n", OperationRapidUpload, pcsURL, post)
 
-	dataReadCloser, pcsError = pcs.sendReqReturnReadCloser(reqTypePan, OperationRapidUpload, http.MethodPost, pcsURL.String(), post, nil)
+	dataReadCloser, pcsError = pcs.sendReqReturnReadCloser(reqTypePan, OperationRapidUpload, http.MethodPost, pcsURL.String(), post, map[string]string{
+		"Content-Type": "application/x-www-form-urlencoded",
+		"Accept": "*/*",
+		"Connection": "keep-alive",
+	})
 	return
 }
 

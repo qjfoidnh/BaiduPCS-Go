@@ -11,6 +11,7 @@ type (
 		ErrType   ErrType
 		Err       error
 		ErrNo     int `json:"errno"`
+		ReturnType int `json:"return_type"`
 	}
 )
 
@@ -56,7 +57,7 @@ func (pane *XPanErrorInfo) GetRemoteErrCode() int {
 
 // GetRemoteErrMsg 获取远端服务器错误消息
 func (pane *XPanErrorInfo) GetRemoteErrMsg() string {
-	return FindPanErr(pane.ErrNo)
+	return FindXPanErr(pane.ErrNo, pane.ReturnType)
 }
 
 // GetError 获取原始错误
@@ -80,11 +81,11 @@ func (pane *XPanErrorInfo) Error() string {
 	case ErrTypeNetError:
 		return fmt.Sprintf("%s: %s, %s", pane.Operation, StrNetError, pane.Err)
 	case ErrTypeRemoteError:
-		if pane.ErrNo == 0 {
+		if pane.ErrNo == 0 && pane.ReturnType == 2 {
 			return fmt.Sprintf("%s: %s", pane.Operation, StrSuccess)
 		}
 
-		errmsg := FindXPanErr(pane.ErrNo)
+		errmsg := FindXPanErr(pane.ErrNo, pane.ReturnType)
 		return fmt.Sprintf("%s: 遇到错误, %s, 代码: %d, 消息: %s", pane.Operation, StrRemoteError, pane.ErrNo, errmsg)
 	case ErrTypeOthers:
 		if pane.Err == nil {
@@ -98,18 +99,13 @@ func (pane *XPanErrorInfo) Error() string {
 }
 
 // FindPanErr 根据 ErrNo, 解析网盘错误信息
-func FindXPanErr(errno int) (errmsg string) {
+func FindXPanErr(errno, returnType int) (errmsg string) {
 	switch errno {
 	case 0:
+		if returnType != 2 {
+			return "未匹配到符合文件"
+		}
 		return StrSuccess
-	case 2:
-		return "文件长度异常"
-	case -8:
-		return "同名文件冲突"
-	case 31190:
-		return "MD5不存在"
-	case 31079:
-		return "文件已被屏蔽"
 	default:
 		return "未知错误"
 	}

@@ -117,7 +117,7 @@ func (pcs *BaiduPCS) RapidUpload(targetPath, contentMD5, sliceMD5, crc32 string,
 		}
 	}()
 
-	return pcs.rapidUploadV2(targetPath, strings.ToLower(contentMD5), length)
+	return pcs.rapidUploadV2(targetPath, strings.ToLower(contentMD5), strings.ToLower(sliceMD5), length)
 }
 
 func (pcs *BaiduPCS) rapidUpload(targetPath, contentMD5, sliceMD5, crc32 string, length int64) (pcsError pcserror.Error) {
@@ -129,8 +129,8 @@ func (pcs *BaiduPCS) rapidUpload(targetPath, contentMD5, sliceMD5, crc32 string,
 	return pcserror.DecodePCSJSONError(OperationRapidUpload, dataReadCloser)
 }
 
-func (pcs *BaiduPCS) rapidUploadV2(targetPath, contentMD5 string, length int64) (pcsError pcserror.Error) {
-	dataReadCloser, pcsError := pcs.PrepareRapidUploadV2(targetPath, contentMD5, length)
+func (pcs *BaiduPCS) rapidUploadV2(targetPath, contentMD5, sliceMD5 string, length int64) (pcsError pcserror.Error) {
+	dataReadCloser, pcsError := pcs.PrepareRapidUploadV2(targetPath, contentMD5, sliceMD5, length)
 	if pcsError != nil {
 		return
 	}

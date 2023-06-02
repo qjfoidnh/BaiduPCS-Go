@@ -132,12 +132,6 @@ func RunRapidTransfer(link string) {
 		filename := path.Join(GetActiveUser().Workdir, substrs[3])
 		RunRapidUpload(filename, md5, slicemd5, "", length)
 		return
-	} else if len(substrs) == 3 {
-		md5 := substrs[0]
-		length, _ := strconv.ParseInt(substrs[1], 10, 64)
-		filename := path.Join(GetActiveUser().Workdir, substrs[2])
-		RunRapidUpload(filename, md5, "", "", length)
-		return
 	}
 	substrs = strings.Split(link, "|")
 	if len(substrs) == 4 {
