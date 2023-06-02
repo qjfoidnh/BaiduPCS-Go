@@ -87,7 +87,7 @@ func HandleJSONParse(op string, data io.Reader, info interface{}) (pcsError Erro
 	}
 
 	// 设置出错类型为远程错误
-	if errInfo.GetRemoteErrMsg() != StrSuccess {
+	if errInfo.GetRemoteErrCode() != 0 {
 		errInfo.SetRemoteError()
 		return errInfo
 	}

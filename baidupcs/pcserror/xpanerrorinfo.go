@@ -52,7 +52,7 @@ func (pane *XPanErrorInfo) GetErrType() ErrType {
 
 // GetRemoteErrCode 获取远端服务器错误代码
 func (pane *XPanErrorInfo) GetRemoteErrCode() int {
-	return pane.ErrNo
+	return pane.ErrNo + pane.ReturnType - 2
 }
 
 // GetRemoteErrMsg 获取远端服务器错误消息
