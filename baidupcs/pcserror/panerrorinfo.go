@@ -11,7 +11,6 @@ type (
 		ErrType   ErrType
 		Err       error
 		ErrNo     int `json:"errno"`
-		// ErrMsg    string `json:"err_msg"`
 	}
 )
 

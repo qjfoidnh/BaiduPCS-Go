@@ -301,22 +301,47 @@ func (pcs *BaiduPCS) PrepareMove(cpmvJSON ...*CpMvJSON) (dataReadCloser io.ReadC
 
 // prepareRapidUpload 秒传文件, 不进行文件夹检查
 func (pcs *BaiduPCS) prepareRapidUpload(targetPath, contentMD5, sliceMD5, crc32 string, length int64) (dataReadCloser io.ReadCloser, pcsError pcserror.Error) {
-	pcs.lazyInit()
-	pcsURL := pcs.generatePCSURL("file", "rapidupload", map[string]string{
-		"path":           targetPath,                    // 上传文件的全路径名
-		"content-length": strconv.FormatInt(length, 10), // 待秒传的文件长度
-		"content-md5":    contentMD5,                    // 待秒传的文件的MD5
-		"slice-md5":      sliceMD5,                      // 待秒传的文件前256kb的MD5
-		"content-crc32":  crc32,                         // 待秒传文件CRC32
-		"ondup":          "overwrite",                   // overwrite: 表示覆盖同名文件; newcopy: 表示生成文件副本并进行重命名，命名规则为“文件名_日期.后缀”; skip: 表示跳过同名文件; fail: 表示直接报错
-	})
+	pcsURL := pcs.generatePanURL("rapidupload", nil)
 	baiduPCSVerbose.Infof("%s URL: %s\n", OperationRapidUpload, pcsURL)
+	post := map[string]string{
+		"rtype": "0",
+		"path": targetPath,
+		"content-md5": contentMD5,
+		"slice-md5": sliceMD5,
+		"content-length": strconv.FormatInt(length, 10),
+	}
+	baiduPCSVerbose.Infof("%s URL: %s, Post: %v\n", OperationRapidUpload, pcsURL, post)
 
-	dataReadCloser, pcsError = pcs.sendReqReturnReadCloser(reqTypePCS, OperationRapidUpload, http.MethodGet, pcsURL.String(), nil, nil)
+	dataReadCloser, pcsError = pcs.sendReqReturnReadCloser(reqTypePan, OperationRapidUpload, http.MethodPost, pcsURL.String(), post, nil)
 	return
 }
 
-// PrepareRapidUpload 秒传文件, 只返回服务器响应数据和错误信息
+// prepareRapidUploadV2 秒传文件接口2, 不进行文件夹检查
+func (pcs *BaiduPCS) prepareRapidUploadV2(targetPath, contentMD5, sliceMD5, crc32 string, length int64) (dataReadCloser io.ReadCloser, pcsError pcserror.Error) {
+	pcsURL := pcs.generatePanURL("precreate", nil)
+	post := map[string]string{
+		"path":       targetPath,
+		"size":       strconv.FormatInt(length, 10),
+		"isdir":      "0",
+		"rtype":      "2",
+		"checkexist": "0",
+		"autoinit":   "1",
+		"content-md5": contentMD5,
+		"slice-md5": sliceMD5,
+		"block_list": mergeStringList(contentMD5),
+		"mode":       "1",
+	}
+	baiduPCSVerbose.Infof("%s URL: %s, Post: %v\n", OperationRapidUpload, pcsURL, post)
+
+	dataReadCloser, pcsError = pcs.sendReqReturnReadCloser(reqTypePan, OperationRapidUpload, http.MethodPost, pcsURL.String(), post, map[string]string{
+		"Content-Type": "application/x-www-form-urlencoded",
+		"Accept": "*/*",
+		"Connection": "keep-alive",
+	})
+	return
+}
+
+// PrepareRapidUpload 秒传文件旧接口, 只返回服务器响应数据和错误信息
 func (pcs *BaiduPCS) PrepareRapidUpload(targetPath, contentMD5, sliceMD5, crc32 string, length int64) (dataReadCloser io.ReadCloser, pcsError pcserror.Error) {
 	pcs.lazyInit()
 	pcsError = pcs.CheckIsdir(OperationRapidUpload, targetPath, "", length)
@@ -327,27 +352,14 @@ func (pcs *BaiduPCS) PrepareRapidUpload(targetPath, contentMD5, sliceMD5, crc32 
 	return pcs.prepareRapidUpload(targetPath, contentMD5, sliceMD5, crc32, length)
 }
 
-// PrepareRapidUploadV2 秒传文件, 新接口
-func (pcs *BaiduPCS) PrepareRapidUploadV2(targetPath, contentMD5 string, length int64) (dataReadCloser io.ReadCloser, pcsError pcserror.Error) {
+// PrepareRapidUploadV2 秒传文件新接口, 只返回服务器响应数据和错误信息
+func (pcs *BaiduPCS) PrepareRapidUploadV2(targetPath, contentMD5, sliceMD5 string, length int64) (dataReadCloser io.ReadCloser, pcsError pcserror.Error) {
 	pcs.lazyInit()
 	pcsError = pcs.CheckIsdir(OperationRapidUpload, targetPath, "", length)
 	if pcsError != nil {
 		return nil, pcsError
 	}
-
-	pcsURL := pcs.generatePCSURL2("xpan/file", "create", nil)
-	post := map[string]string{
-		"path":       targetPath,
-		"size":       strconv.FormatInt(length, 10),
-		"isdir":      "0",
-		"rtype":      "0",
-		"block_list": mergeStringList(contentMD5),
-		"mode":       "1",
-	}
-	baiduPCSVerbose.Infof("%s URL: %s, Post: %v\n", OperationRapidUpload, pcsURL, post)
-
-	dataReadCloser, pcsError = pcs.sendReqReturnReadCloser(reqTypePan, OperationRapidUpload, http.MethodPost, pcsURL.String(), post, nil)
-	return
+	return pcs.prepareRapidUploadV2(targetPath, contentMD5, sliceMD5, "", length)
 }
 
 // PrepareLocateDownload 获取下载链接, 只返回服务器响应数据和错误信息

@@ -311,6 +311,7 @@ func (f *FileDirectory) String() string {
 func (fl FileDirectoryList) fixMD5() {
 	for _, v := range fl {
 		v.fixMD5()
+		v.MD5 = DecryptMD5(v.MD5)
 	}
 }
 

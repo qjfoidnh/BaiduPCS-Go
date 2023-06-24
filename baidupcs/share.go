@@ -12,6 +12,7 @@ type (
 	ShareOption struct {
 		Password string // 密码
 		Period   int    // 有效期
+		IsCombined bool // 是否将密码输出到分享链接
 	}
 
 	// Shared 分享信息
@@ -70,7 +71,7 @@ var (
 // ShareSet 分享文件
 func (pcs *BaiduPCS) ShareSet(paths []string, option *ShareOption) (s *Shared, pcsError pcserror.Error) {
 	if option.Password == "" || len(option.Password) != 4 {
-		option = &ShareOption{CreatePasswd(), option.Period}
+		option = &ShareOption{CreatePasswd(), option.Period, option.IsCombined}
 	}
 
 	dataReadCloser, pcsError := pcs.PrepareSharePSet(paths, option.Password, option.Period)

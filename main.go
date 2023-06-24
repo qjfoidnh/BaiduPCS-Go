@@ -55,7 +55,7 @@ const (
 
 var (
 	// Version 版本号
-	Version = "v3.9.0-devel"
+	Version = "v3.9.2-devel"
 
 	historyFilePath = filepath.Join(pcsconfig.GetConfigDir(), "pcs_command_history.txt")
 	reloadFn        = func(c *cli.Context) error {
@@ -1482,6 +1482,7 @@ func main() {
 						opt := &baidupcs.ShareOption{
 							Password: c.String("p"),
 							Period:   c.Int("period"),
+							IsCombined: c.Bool("f"),
 						}
 						pcscommand.RunShareSet(c.Args(), opt)
 						return nil
@@ -1496,6 +1497,10 @@ func main() {
 							Name:  "period",
 							Usage: "有效天数, 0为永久",
 							Value: 0,
+						},
+						cli.BoolFlag{
+							Name: "f",
+							Usage: "输出带密码的完整链接格式",
 						},
 					},
 				},

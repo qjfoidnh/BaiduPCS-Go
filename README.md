@@ -100,6 +100,15 @@ iikira/BaiduPCS-Go was largely inspired by [GangZhuo/BaiduPCS](https://github.co
 [离线下载](#离线下载), 支持http/https/ftp/电驴/磁力链协议.
 
 # 版本更新
+**2023.06.03** v3.9.2
+- 修复秒传链接无法转存, 因官方接口变动秒传已不再支持短链接格式
+- 修复上传文件无法使用秒传
+- fix #254 支持-f参数输出带密码分享链接
+- fix #251 根据mengzonefire同志提供函数增加md5解密
+
+**2023.03.19** v3.9.1
+- 修复秒传转存返回错误码9019
+
 **2022.12.04** v3.9.0:
 - 优化转存错误提示
 - fix #239
