@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"path"
 	"strconv"
 	"strings"
 	"unsafe"
@@ -317,17 +318,24 @@ func (pcs *BaiduPCS) prepareRapidUpload(targetPath, contentMD5, sliceMD5, crc32 
 }
 
 // prepareRapidUploadV2 秒传文件接口2, 不进行文件夹检查
-func (pcs *BaiduPCS) prepareRapidUploadV2(targetPath, contentMD5, sliceMD5, crc32 string, length int64) (dataReadCloser io.ReadCloser, pcsError pcserror.Error) {
+func (pcs *BaiduPCS) prepareRapidUploadV2(targetPath, contentMD5, sliceMD5, dataContent, crc32 string, offset, length, totalSize, dataTime int64) (dataReadCloser io.ReadCloser, pcsError pcserror.Error) {
 	pcsURL := pcs.generatePanURL("precreate", nil)
 	post := map[string]string{
 		"path":       targetPath,
-		"size":       strconv.FormatInt(length, 10),
+		"target_path": path.Dir(targetPath) + "/",
+		"size":       strconv.FormatInt(totalSize, 10),
+		"data_offset": strconv.FormatInt(offset, 10),
 		"isdir":      "0",
+		"local_mtime": strconv.FormatInt(dataTime, 10),
+		"local_ctime": strconv.FormatInt(dataTime, 10),
 		"rtype":      "2",
 		"checkexist": "0",
 		"autoinit":   "1",
 		"content-md5": contentMD5,
 		"slice-md5": sliceMD5,
+		"data_time": strconv.FormatInt(dataTime, 10),
+		"data_length": strconv.FormatInt(length, 10),
+		"data_content": dataContent,
 		"block_list": mergeStringList(contentMD5),
 		"mode":       "1",
 	}
@@ -353,13 +361,13 @@ func (pcs *BaiduPCS) PrepareRapidUpload(targetPath, contentMD5, sliceMD5, crc32 
 }
 
 // PrepareRapidUploadV2 秒传文件新接口, 只返回服务器响应数据和错误信息
-func (pcs *BaiduPCS) PrepareRapidUploadV2(targetPath, contentMD5, sliceMD5 string, length int64) (dataReadCloser io.ReadCloser, pcsError pcserror.Error) {
+func (pcs *BaiduPCS) PrepareRapidUploadV2(targetPath, contentMD5, sliceMD5, dataContent, crc32 string, offset, length, totalSize, dataTime int64) (dataReadCloser io.ReadCloser, pcsError pcserror.Error) {
 	pcs.lazyInit()
-	pcsError = pcs.CheckIsdir(OperationRapidUpload, targetPath, "", length)
+	pcsError = pcs.CheckIsdir(OperationRapidUpload, targetPath, "", totalSize)
 	if pcsError != nil {
 		return nil, pcsError
 	}
-	return pcs.prepareRapidUploadV2(targetPath, contentMD5, sliceMD5, "", length)
+	return pcs.prepareRapidUploadV2(targetPath, contentMD5, sliceMD5, dataContent, crc32, offset, length, totalSize, dataTime)
 }
 
 // PrepareLocateDownload 获取下载链接, 只返回服务器响应数据和错误信息

@@ -120,6 +120,17 @@ func (lfc *LocalFileChecksum) writeChecksum(data []byte, wus ...*ChecksumWriteUn
 	return nil
 }
 
+func (lfc *LocalFileChecksum) GetSliceDataContent(offset, length int64) (dataContent []byte, readLength int64, err error) {
+	dataContent = make([]byte, length)
+	ret, err := lfc.file.ReadAt(dataContent, offset)
+	if err != nil && err != io.EOF {
+		return
+	}
+	readLength = int64(ret)
+	dataContent = dataContent[:ret]
+	return dataContent, readLength, nil
+}
+
 func (lfc *LocalFileChecksum) repeatRead(wus ...*ChecksumWriteUnit) (err error) {
 	if lfc.file == nil {
 		return ErrFileIsNil

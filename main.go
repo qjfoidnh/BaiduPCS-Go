@@ -55,7 +55,7 @@ const (
 
 var (
 	// Version 版本号
-	Version = "v3.9.2-devel"
+	Version = "v3.9.3-devel"
 
 	historyFilePath = filepath.Join(pcsconfig.GetConfigDir(), "pcs_command_history.txt")
 	reloadFn        = func(c *cli.Context) error {
@@ -154,7 +154,7 @@ func main() {
 				lineArgs                   = args.Parse(line)
 				numArgs                    = len(lineArgs)
 				acceptCompleteFileCommands = []string{
-					"cd", "cp", "download", "export", "fixmd5", "locate", "ls", "meta", "mkdir", "mv", "rapidupload", "rm", "share", "transfer", "tree", "upload",
+					"cd", "cp", "download", "export", "fixmd5", "locate", "ls", "meta", "mkdir", "mv", "rm", "share", "transfer", "tree", "upload",
 				}
 				closed = strings.LastIndex(line, " ") == len(line)-1
 			)
@@ -1248,53 +1248,53 @@ func main() {
 				},
 			},
 		},
-		{
-			Name:      "rapidupload",
-			Aliases:   []string{"ru"},
-			Usage:     "手动秒传文件",
-			UsageText: app.Name + " rapidupload -length=<文件的大小> -md5=<文件的md5值> -slicemd5=<文件前256KB切片的md5值(可选)> -crc32=<文件的crc32值(可选)> <保存的网盘路径, 需包含文件名>",
-			Description: `
-	使用此功能秒传文件, 前提是知道文件的大小, md5, 前256KB切片的 md5 (可选), crc32 (可选), 且百度网盘中存在一模一样的文件.
-	上传的文件将会保存到网盘的目标目录.
-	遇到同名文件将会自动覆盖! 
-
-	可能无法秒传 20GB 以上的文件!!
-
-	示例:
-
-	1. 如果秒传成功, 则保存到网盘路径 /test
-	BaiduPCS-Go rapidupload -length=56276137 -md5=fbe082d80e90f90f0fb1f94adbbcfa7f -slicemd5=38c6a75b0ec4499271d4ea38a667ab61 -crc32=314332359 /test
-`,
-			Category: "百度网盘",
-			Before:   reloadFn,
-			Action: func(c *cli.Context) error {
-				if c.NArg() <= 0 || !c.IsSet("md5") || !c.IsSet("length") || !c.IsSet("slicemd5") {
-					cli.ShowCommandHelp(c, c.Command.Name)
-					return nil
-				}
-
-				pcscommand.RunRapidUpload(c.Args().Get(0), c.String("md5"), c.String("slicemd5"), c.String("crc32"), c.Int64("length"))
-				return nil
-			},
-			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:  "md5",
-					Usage: "文件的 md5 值",
-				},
-				cli.StringFlag{
-					Name:  "slicemd5",
-					Usage: "文件前 256KB 切片的 md5 值",
-				},
-				cli.StringFlag{
-					Name:  "crc32",
-					Usage: "文件的 crc32 值 (可选)",
-				},
-				cli.Int64Flag{
-					Name:  "length",
-					Usage: "文件的大小",
-				},
-			},
-		},
+//		{
+//			Name:      "rapidupload",
+//			Aliases:   []string{"ru"},
+//			Usage:     "手动秒传文件",
+//			UsageText: app.Name + " rapidupload -length=<文件的大小> -md5=<文件的md5值> -slicemd5=<文件前256KB切片的md5值(可选)> -crc32=<文件的crc32值(可选)> <保存的网盘路径, 需包含文件名>",
+//			Description: `
+//	使用此功能秒传文件, 前提是知道文件的大小, md5, 前256KB切片的 md5 (可选), crc32 (可选), 且百度网盘中存在一模一样的文件.
+//	上传的文件将会保存到网盘的目标目录.
+//	遇到同名文件将会自动覆盖!
+//
+//	可能无法秒传 20GB 以上的文件!!
+//
+//	示例:
+//
+//	1. 如果秒传成功, 则保存到网盘路径 /test
+//	BaiduPCS-Go rapidupload -length=56276137 -md5=fbe082d80e90f90f0fb1f94adbbcfa7f -slicemd5=38c6a75b0ec4499271d4ea38a667ab61 -crc32=314332359 /test
+//`,
+//			Category: "百度网盘",
+//			Before:   reloadFn,
+//			Action: func(c *cli.Context) error {
+//				if c.NArg() <= 0 || !c.IsSet("md5") || !c.IsSet("length") || !c.IsSet("slicemd5") {
+//					cli.ShowCommandHelp(c, c.Command.Name)
+//					return nil
+//				}
+//
+//				pcscommand.RunRapidUpload(c.Args().Get(0), c.String("md5"), c.String("slicemd5"), c.String("datacontent"), "", c.Int64("offset"), c.Int64("length"))
+//				return nil
+//			},
+//			Flags: []cli.Flag{
+//				cli.StringFlag{
+//					Name:  "md5",
+//					Usage: "文件的 md5 值",
+//				},
+//				cli.StringFlag{
+//					Name:  "slicemd5",
+//					Usage: "文件前 256KB 切片的 md5 值",
+//				},
+//				cli.StringFlag{
+//					Name:  "crc32",
+//					Usage: "文件的 crc32 值 (可选)",
+//				},
+//				cli.Int64Flag{
+//					Name:  "length",
+//					Usage: "文件的大小",
+//				},
+//			},
+//		},
 		{
 			Name:      "createsuperfile",
 			Aliases:   []string{"csf"},
@@ -1369,10 +1369,10 @@ func main() {
 		{
 			Name:      "sumfile",
 			Aliases:   []string{"sf"},
-			Usage:     "获取本地文件的秒传信息",
+			Usage:     "获取本地文件的秒传信息(目前秒传功能已失效)",
 			UsageText: app.Name + " sumfile <本地文件的路径1> <本地文件的路径2> ...",
 			Description: `
-	获取本地文件的大小, md5, 前256KB切片的md5, crc32, 可用于秒传文件.
+	获取本地文件的大小, md5, 前256KB切片的md5, crc32, 曾经可用于秒传文件.
 
 	示例:
 
@@ -1425,14 +1425,14 @@ func main() {
 			Before:    reloadFn,
 			Description: `
 			转存文件/目录
-	如果没有提取码，则第二个位置留空；只能转存到当前网盘目录下，
-	分享链接支持常规百度云链接及常见秒传链接（不支持游侠格式）
+	如果没有提取码或为整合式链接，则第二个位置留空；只能转存到当前网盘目录下，
+	分享链接支持只常规百度云链接, 不再支持秒传
 	
 	实例：
 	BaiduPCS-Go transfer pan.baidu.com/s/1VYzSl7465sdrQXe8GT5RdQ 704e
-	BaiduPCS-Go transfer A5AAE70207FFD51AB839D60B39FD0FD5#EE3289A6F0473AC34F83483E80A29B42#8554286#测试.7z
-	BaiduPCS-Go transfer bdpan://xxxxx|yyyyyy|zzzz|oooo
-	BaiduPCS-Go transfer bdlink=MDMzMjkxQzNFNkQ4RDdEMzI2Q
+	BaiduPCS-Go transfer https://pan.baidu.com/s/1VYzSl7465sdrQXe8GT5RdQ 704e
+	BaiduPCS-Go transfer https://pan.baidu.com/s/1VYzSl7465sdrQXe8GT5RdQ?pwd=704e
+
 	`,
 			Action: func(c *cli.Context) error {
 				if c.NArg() < 1 || c.NArg() > 2 {
@@ -1453,7 +1453,7 @@ func main() {
 				},
 				cli.BoolFlag{
 					Name:  "collect",
-					Usage: "多文件整合到一个文件夹中",
+					Usage: "多文件整合到一个文件夹中转存",
 				},
 			},
 		},
@@ -1547,6 +1547,7 @@ func main() {
 	导出网盘内的文件或目录, 原理为秒传文件, 此操作会生成导出文件或目录的命令.
 
 	注意!!! :
+	由于秒传已经失效, 导出信息已无法用做公开分享
 	无法导出 20GB 以上的文件!!
 	无法导出文件的版本历史等数据!!
 	并不是所有的文件都能导出成功, 程序会列出无法导出的文件列表.
