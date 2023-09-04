@@ -157,8 +157,10 @@ func (utu *UploadTaskUnit) rapidUpload() (isContinue bool, result *taskframework
 
 	uk, err := utu.PCS.UK()
 	if err != nil {
-		result.ResultMessage = "获取用户uk错误"
+		result.ResultMessage = "获取用户uk错误, 请确保登录信息包含了STOKEN"
 		result.Err = err
+		fmt.Printf("[%s] 秒传失败, 开始上传文件...\n\n", utu.taskInfo.Id())
+		isContinue = true
 		return
 	}
 	currentTime := time.Now().Unix()
@@ -196,7 +198,6 @@ func (utu *UploadTaskUnit) rapidUpload() (isContinue bool, result *taskframework
 			return
 		}
 	}
-
 	fmt.Printf("[%s] 秒传失败, 开始上传文件...\n\n", utu.taskInfo.Id())
 
 	// 保存秒传信息

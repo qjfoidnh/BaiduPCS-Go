@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -22,6 +23,7 @@ type (
 
 	// UploadingDatabase 未完成上传的数据库
 	UploadingDatabase struct {
+		lock sync.RWMutex
 		UploadingList []*Uploading `json:"upload_state"`
 		Timestamp     int64        `json:"timestamp"`
 
@@ -94,7 +96,8 @@ func (ud *UploadingDatabase) UpdateUploading(meta *checksum.LocalFileMeta, state
 	if meta == nil {
 		return
 	}
-
+	ud.lock.RLock()
+	defer ud.lock.RUnlock()
 	meta.CompleteAbsPath()
 	for k, uploading := range ud.UploadingList {
 		if uploading.LocalFileMeta == nil {
@@ -123,6 +126,8 @@ func (ud *UploadingDatabase) Delete(meta *checksum.LocalFileMeta) bool {
 	}
 
 	meta.CompleteAbsPath()
+	ud.lock.Lock()
+	defer ud.lock.Unlock()
 	for k, uploading := range ud.UploadingList {
 		if uploading.LocalFileMeta == nil {
 			continue
@@ -168,6 +173,8 @@ func (ud *UploadingDatabase) Search(meta *checksum.LocalFileMeta) *uploader.Inst
 }
 
 func (ud *UploadingDatabase) clearModTimeChange() {
+	ud.lock.Lock()
+	defer ud.lock.Unlock()
 	for i := 0; i < len(ud.UploadingList); i++ {
 		uploading := ud.UploadingList[i]
 		if uploading.LocalFileMeta == nil {
