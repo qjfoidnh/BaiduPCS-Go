@@ -163,7 +163,6 @@ func (ud *UploadingDatabase) Search(meta *checksum.LocalFileMeta) *uploader.Inst
 				return nil
 			}
 
-			// 覆盖数据
 			meta.MD5 = uploading.LocalFileMeta.MD5
 			meta.SliceMD5 = uploading.LocalFileMeta.SliceMD5
 			return uploading.State
