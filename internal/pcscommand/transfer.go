@@ -3,7 +3,6 @@ package pcscommand
 import (
 	"encoding/base64"
 	"fmt"
-	"github.com/qjfoidnh/BaiduPCS-Go/pcsutil/converter"
 	"path"
 	"regexp"
 	"strconv"
@@ -19,8 +18,8 @@ func RunShareTransfer(params []string, opt *baidupcs.TransferOption) {
 	if len(params) == 1 {
 		link = params[0]
 		if strings.Contains(link, "bdlink=") || !strings.Contains(link, "pan.baidu.com/") {
-			//RunRapidTransfer(link)
-			fmt.Printf("%s失败: %s\n", baidupcs.OperationShareFileSavetoLocal, "秒传已不再被支持")
+			RunRapidTransfer(link)
+			//fmt.Printf("%s失败: %s\n", baidupcs.OperationShareFileSavetoLocal, "秒传已不再被支持")
 			return
 		}
 		extracode = "none"
@@ -127,19 +126,17 @@ func RunRapidTransfer(link string) {
 		link = string(decodeBytes)
 	}
 	link = strings.TrimSpace(link)
-	substrs := strings.SplitN(link, "#", 7)
-	if len(substrs) == 7 {
+	substrs := strings.SplitN(link, "#", 4)
+	if len(substrs) == 4 {
 		md5, slicemd5 := substrs[0], substrs[1]
-		dataContent := substrs[3]
-		dataOffset, err := strconv.ParseInt(substrs[2], 10, 64)
-		totalSize, err := strconv.ParseInt(substrs[4], 10, 64)
-		dataTime, err := strconv.ParseInt(substrs[5], 10, 64)
-		if err != nil {
-			fmt.Printf("%s失败: %s\n", baidupcs.OperationRapidLinkSavetoLocal, "秒传链接格式错误")
-			return
-		}
-		filename := path.Join(GetActiveUser().Workdir, substrs[6])
-		RunRapidUpload(filename, md5, slicemd5, dataContent, "", dataOffset, totalSize, 4 * converter.KB, dataTime)
+		size, _ := strconv.ParseInt(substrs[2], 10, 64)
+		filename := path.Join(GetActiveUser().Workdir, substrs[3])
+		RunRapidUpload(filename, md5, slicemd5, size)
+	} else if len(substrs) == 3 {
+		md5 := substrs[0]
+		size, _ := strconv.ParseInt(substrs[1], 10, 64)
+		filename := path.Join(GetActiveUser().Workdir, substrs[2])
+		RunRapidUpload(filename, md5, "", size)
 	} else {
 		fmt.Printf("%s失败: %s\n", baidupcs.OperationRapidLinkSavetoLocal, "秒传链接格式错误")
 	}

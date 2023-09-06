@@ -2,6 +2,7 @@ package baidupcs
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"net/http"
 	"net/url"
@@ -302,15 +303,16 @@ func (pcs *BaiduPCS) PrepareMove(cpmvJSON ...*CpMvJSON) (dataReadCloser io.ReadC
 
 // prepareRapidUpload 秒传文件, 不进行文件夹检查
 func (pcs *BaiduPCS) prepareRapidUpload(targetPath, contentMD5, sliceMD5, crc32 string, length int64) (dataReadCloser io.ReadCloser, pcsError pcserror.Error) {
-	pcsURL := pcs.generatePanURL("rapidupload", nil)
-	baiduPCSVerbose.Infof("%s URL: %s\n", OperationRapidUpload, pcsURL)
-	post := map[string]string{
-		"rtype": "0",
-		"path": targetPath,
-		"content-md5": contentMD5,
-		"slice-md5": sliceMD5,
-		"content-length": strconv.FormatInt(length, 10),
+	bdstoken, pcsError := pcs.BDSToken()
+	if pcsError != nil {
+		return
 	}
+	pcsURL := pcs.generatePCSURL2("xpan/file", "create", map[string]string{
+		"access_token": pcs.accessToken,
+		"bdstoken": bdstoken,
+	})
+	baiduPCSVerbose.Infof("%s URL: %s\n", OperationRapidUpload, pcsURL)
+	post := fmt.Sprintf("&block_list=[\"%s\"]&path=%s&size=%d&isdir=0&rtype=0", contentMD5, targetPath, length)
 	baiduPCSVerbose.Infof("%s URL: %s, Post: %v\n", OperationRapidUpload, pcsURL, post)
 
 	dataReadCloser, pcsError = pcs.sendReqReturnReadCloser(reqTypePan, OperationRapidUpload, http.MethodPost, pcsURL.String(), post, nil)

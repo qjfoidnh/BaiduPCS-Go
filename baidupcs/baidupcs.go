@@ -135,16 +135,17 @@ var (
 type (
 	// BaiduPCS 百度 PCS API 详情
 	BaiduPCS struct {
-		appID      int                   // app_id
-		isHTTPS    bool                  // 是否启用https
-		uid        uint64                // 百度uid
-		client     *requester.HTTPClient // http 客户端
-		pcsUA      string
-		pcsAddr    string
-		panUA      string
-		isSetPanUA bool
-		ph         *panhome.PanHome
-		cacheOpMap cachemap.CacheOpMap
+		appID       int                   // app_id
+		isHTTPS     bool                  // 是否启用https
+		uid         uint64                // 百度uid
+		client      *requester.HTTPClient // http 客户端
+		accessToken string                // accessToken
+		pcsUA       string
+		pcsAddr     string
+		panUA       string
+		isSetPanUA  bool
+		ph          *panhome.PanHome
+		cacheOpMap  cachemap.CacheOpMap
 	}
 
 	userInfoJSON struct {
@@ -308,6 +309,11 @@ func (pcs *BaiduPCS) SetAPPID(appID int) {
 // 只有locatedownload才需要设置此项
 func (pcs *BaiduPCS) SetUID(uid uint64) {
 	pcs.uid = uid
+}
+
+// SetaccessToken 设置秒传转存用的accesstoken
+func (pcs *BaiduPCS) SetaccessToken(accessToken string) {
+	pcs.accessToken = accessToken
 }
 
 // SetStoken 设置stoken

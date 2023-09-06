@@ -55,7 +55,8 @@ const (
 
 var (
 	// Version 版本号
-	Version = "v3.9.4-devel"
+	//Version = "v3.9.4-devel"
+	Version = "v3.9.5-beta"
 
 	historyFilePath = filepath.Join(pcsconfig.GetConfigDir(), "pcs_command_history.txt")
 	reloadFn        = func(c *cli.Context) error {
@@ -154,7 +155,7 @@ func main() {
 				lineArgs                   = args.Parse(line)
 				numArgs                    = len(lineArgs)
 				acceptCompleteFileCommands = []string{
-					"cd", "cp", "download", "export", "fixmd5", "locate", "ls", "meta", "mkdir", "mv", "rm", "share", "transfer", "tree", "upload",
+					"cd", "cp", "download", "export", "fixmd5", "locate", "ls", "meta", "mkdir", "mv", "rapidupload", "rm", "setastoken", "share", "transfer", "tree", "upload",
 				}
 				closed = strings.LastIndex(line, " ") == len(line)-1
 			)
@@ -599,6 +600,41 @@ func main() {
 			Before:      reloadFn,
 			Action: func(c *cli.Context) error {
 				fmt.Println(pcsconfig.Config.BaiduUserList.String())
+				return nil
+			},
+		},
+		{
+			Name:        "setastoken",
+			Usage:       "设定当前账号的accessToken",
+			Description: `
+	设定当前登录帐号的accessToken:
+	若不使用秒传链接转存, 可不设定; accessToken获取网址如下:
+	https://openapi.baidu.com/oauth/2.0/authorize?response_type=token&client_id=L6g70tBRRIXLsY0Z3HwKqlRE&redirect_uri=oob&scope=netdisk
+	请在浏览器登录当前网盘账户后打开上述链接, 如果出现授权确认界面请确认授权, 然后复制跳转到的页面url, 找到access_token=xxxxxxx&这段, xxxxxxx即为accessToken
+	注意accessToken的有效期为一个月, 过期后请重复上述步骤更新token
+
+	示例:
+	BaiduPCS-Go accessToken 156.182v9052tgf1006c89891bsfb2401974.YmKOAwBD9yGaG2s4p5NNkX4CXeIbJxx4hAxotfS.PyuHEs
+`,
+			Category:    "百度帐号",
+			Before:      reloadFn,
+			After:       saveFunc,
+			Action: func(c *cli.Context) error {
+				activeUser := pcsconfig.Config.ActiveUser()
+				if activeUser.UID == 0 {
+					fmt.Println("请先登录")
+					return nil
+				}
+				if c.NArg() >= 2 {
+					cli.ShowCommandHelp(c, c.Command.Name)
+					return nil
+				} else if c.NArg() == 0 {
+					cli.ShowCommandHelp(c, c.Command.Name)
+					return nil
+				}
+				activeUser.AccessToken = c.Args().Get(0)
+				pcsconfig.Config.ActiveUserBaiduPCS().SetaccessToken(c.Args().Get(0))
+				fmt.Printf("当前用户名: %s 成功设置accessToken: %s\n", activeUser.Name, activeUser.AccessToken)
 				return nil
 			},
 		},
@@ -1248,53 +1284,52 @@ func main() {
 				},
 			},
 		},
-//		{
-//			Name:      "rapidupload",
-//			Aliases:   []string{"ru"},
-//			Usage:     "手动秒传文件",
-//			UsageText: app.Name + " rapidupload -length=<文件的大小> -md5=<文件的md5值> -slicemd5=<文件前256KB切片的md5值(可选)> -crc32=<文件的crc32值(可选)> <保存的网盘路径, 需包含文件名>",
-//			Description: `
-//	使用此功能秒传文件, 前提是知道文件的大小, md5, 前256KB切片的 md5 (可选), crc32 (可选), 且百度网盘中存在一模一样的文件.
-//	上传的文件将会保存到网盘的目标目录.
-//	遇到同名文件将会自动覆盖!
-//
-//	可能无法秒传 20GB 以上的文件!!
-//
-//	示例:
-//
-//	1. 如果秒传成功, 则保存到网盘路径 /test
-//	BaiduPCS-Go rapidupload -length=56276137 -md5=fbe082d80e90f90f0fb1f94adbbcfa7f -slicemd5=38c6a75b0ec4499271d4ea38a667ab61 -crc32=314332359 /test
-//`,
-//			Category: "百度网盘",
-//			Before:   reloadFn,
-//			Action: func(c *cli.Context) error {
-//				if c.NArg() <= 0 || !c.IsSet("md5") || !c.IsSet("length") || !c.IsSet("slicemd5") {
-//					cli.ShowCommandHelp(c, c.Command.Name)
-//					return nil
-//				}
-//
-//				pcscommand.RunRapidUpload(c.Args().Get(0), c.String("md5"), c.String("slicemd5"), c.String("datacontent"), "", c.Int64("offset"), c.Int64("length"))
-//				return nil
-//			},
-//			Flags: []cli.Flag{
-//				cli.StringFlag{
-//					Name:  "md5",
-//					Usage: "文件的 md5 值",
-//				},
-//				cli.StringFlag{
-//					Name:  "slicemd5",
-//					Usage: "文件前 256KB 切片的 md5 值",
-//				},
-//				cli.StringFlag{
-//					Name:  "crc32",
-//					Usage: "文件的 crc32 值 (可选)",
-//				},
-//				cli.Int64Flag{
-//					Name:  "length",
-//					Usage: "文件的大小",
-//				},
-//			},
-//		},
+		{
+			Name:      "rapidupload",
+			Aliases:   []string{"ru"},
+			Usage:     "手动秒传文件",
+			UsageText: app.Name + " rapidupload -length=<文件的大小> -md5=<文件的md5值> -slicemd5=<文件前256KB切片的md5值(可选)> -crc32=<文件的crc32值(可选)> <保存的网盘路径, 需包含文件名>",
+			Description: `
+	使用此功能秒传文件, 前提是知道文件的大小, md5, 前256KB切片的 md5 (可选), crc32 (可选), 且百度网盘中存在一模一样的文件.
+	上传的文件将会保存到网盘的目标目录.
+	遇到同名文件将会自动覆盖!
+
+	可能无法秒传 20GB 以上的文件!!
+
+	示例:
+
+	1. 如果秒传成功, 则保存到网盘路径 /test
+	BaiduPCS-Go rapidupload -length=56276137 -md5=fbe082d80e90f90f0fb1f94adbbcfa7f -slicemd5=38c6a75b0ec4499271d4ea38a667ab61 -crc32=314332359 /test
+`,
+			Category: "百度网盘",
+			Before:   reloadFn,
+			Action: func(c *cli.Context) error {
+				if c.NArg() <= 0 || !c.IsSet("md5") || !c.IsSet("length") || !c.IsSet("slicemd5") {
+					cli.ShowCommandHelp(c, c.Command.Name)
+					return nil
+				}
+				pcscommand.RunRapidUpload(c.Args().Get(0), c.String("md5"), c.String("slicemd5"), c.Int64("length"))
+				return nil
+			},
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "md5",
+					Usage: "文件的 md5 值",
+				},
+				cli.StringFlag{
+					Name:  "slicemd5",
+					Usage: "文件前 256KB 切片的 md5 值 (可选)",
+				},
+				cli.StringFlag{
+					Name:  "crc32",
+					Usage: "文件的 crc32 值 (可选)",
+				},
+				cli.Int64Flag{
+					Name:  "length",
+					Usage: "文件的大小",
+				},
+			},
+		},
 		{
 			Name:      "createsuperfile",
 			Aliases:   []string{"csf"},
@@ -1426,7 +1461,7 @@ func main() {
 			Description: `
 			转存文件/目录
 	如果没有提取码或为整合式链接，则第二个位置留空；只能转存到当前网盘目录下，
-	分享链接支持只常规百度云链接, 不再支持秒传
+	分享链接支持常规百度云链接, 支持长短秒传链接
 	
 	实例：
 	BaiduPCS-Go transfer pan.baidu.com/s/1VYzSl7465sdrQXe8GT5RdQ 704e

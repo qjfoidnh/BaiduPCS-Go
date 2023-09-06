@@ -120,6 +120,18 @@ func (pcs *BaiduPCS) RapidUpload(targetPath, contentMD5, sliceMD5, dataContent, 
 	return
 }
 
+// APIRapidUpload openapi秒传文件
+func (pcs *BaiduPCS) APIRapidUpload(targetPath, contentMD5, sliceMD5, crc32 string, length int64) (pcsError pcserror.Error) {
+	defer func() {
+		if pcsError == nil {
+			// 更新缓存
+			pcs.deleteCache([]string{path.Dir(targetPath)})
+		}
+	}()
+	pcsError = pcs.rapidUpload(targetPath, strings.ToLower(contentMD5), strings.ToLower(sliceMD5), "", length)
+	return
+}
+
 func (pcs *BaiduPCS) rapidUpload(targetPath, contentMD5, sliceMD5, crc32 string, length int64) (pcsError pcserror.Error) {
 	dataReadCloser, pcsError := pcs.PrepareRapidUpload(targetPath, contentMD5, sliceMD5, crc32, length)
 	if pcsError != nil {

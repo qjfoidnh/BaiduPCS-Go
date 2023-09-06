@@ -97,6 +97,10 @@ iikira/BaiduPCS-Go was largely inspired by [GangZhuo/BaiduPCS](https://github.co
 [离线下载](#离线下载), 支持http/https/ftp/电驴/磁力链协议.
 
 # 版本更新
+**2023.09.06** v3.9.5-beta
+- 恢复了秒传转存(支持长短链), 感谢油猴脚本开发者tousakarin的贡献
+- 新秒传接口需要开发者授权, 稳定性未知, 该测试版本仅供有秒传强需求的用户试用, 请谨慎更新
+
 **2023.09.05** v3.9.4
 - fix #244, 修复断点上传时偶发崩溃
 - 优化本地上传秒传失败时的处理逻辑
