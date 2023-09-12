@@ -614,7 +614,7 @@ func main() {
 	注意accessToken的有效期为一个月, 过期后请重复上述步骤更新token
 
 	示例:
-	BaiduPCS-Go accessToken 156.182v9052tgf1006c89891bsfb2401974.YmKOAwBD9yGaG2s4p5NNkX4CXeIbJxx4hAxotfS.PyuHEs
+	BaiduPCS-Go setastoken 156.182v9052tgf1006c89891bsfb2401974.YmKOAwBD9yGaG2s4p5NNkX4CXeIbJxx4hAxotfS.PyuHEs
 `,
 			Category:    "百度帐号",
 			Before:      reloadFn,

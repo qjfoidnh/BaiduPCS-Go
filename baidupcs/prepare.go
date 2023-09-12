@@ -2,7 +2,6 @@ package baidupcs
 
 import (
 	"bytes"
-	"fmt"
 	"io"
 	"net/http"
 	"net/url"
@@ -312,7 +311,13 @@ func (pcs *BaiduPCS) prepareRapidUpload(targetPath, contentMD5, sliceMD5, crc32 
 		"bdstoken": bdstoken,
 	})
 	baiduPCSVerbose.Infof("%s URL: %s\n", OperationRapidUpload, pcsURL)
-	post := fmt.Sprintf("&block_list=[\"%s\"]&path=%s&size=%d&isdir=0&rtype=0", contentMD5, targetPath, length)
+	post := map[string]string{
+		"block_list": mergeStringList(contentMD5),
+		"path": targetPath,
+		"size": strconv.FormatInt(length, 10),
+		"isdir": "0",
+		"rtype": "3",
+	}
 	baiduPCSVerbose.Infof("%s URL: %s, Post: %v\n", OperationRapidUpload, pcsURL, post)
 
 	dataReadCloser, pcsError = pcs.sendReqReturnReadCloser(reqTypePan, OperationRapidUpload, http.MethodPost, pcsURL.String(), post, nil)

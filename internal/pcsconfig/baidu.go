@@ -37,6 +37,7 @@ type Baidu struct {
 	BDUSS   string `json:"bduss"`
 	PTOKEN  string `json:"ptoken"`
 	STOKEN  string `json:"stoken"`
+	BAIDUID string `json:"baiduid"`
 	SBOXTKN string `json:"sboxtkn"`
 	COOKIES string `json:"cookies"`
 
