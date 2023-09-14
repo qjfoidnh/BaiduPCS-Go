@@ -1,0 +1,453 @@
+{
+	"info": {
+		"_postman_id": "4741ca6e-b5ce-484d-a851-2a8d75c316cf",
+		"name": "baidupcs-api",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "recycle",
+			"item": [
+				{
+					"name": "list",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BaseUrl}}/api/recycle/list",
+							"host": [
+								"{{BaseUrl}}"
+							],
+							"path": [
+								"api",
+								"recycle",
+								"list"
+							],
+							"query": [
+								{
+									"key": "all",
+									"value": "true",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "delete",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"fid_list\":[\r\n        998800326865403,\r\n        9327788010989,\r\n        611478304476257\r\n    ]\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BaseUrl}}/api/recycle/delete",
+							"host": [
+								"{{BaseUrl}}"
+							],
+							"path": [
+								"api",
+								"recycle",
+								"delete"
+							],
+							"query": [
+								{
+									"key": "all",
+									"value": "true",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "restore",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"fid_list\": [\r\n        9327788010989,\r\n        998800326865403\r\n    ]\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BaseUrl}}/api/recycle/restore",
+							"host": [
+								"{{BaseUrl}}"
+							],
+							"path": [
+								"api",
+								"recycle",
+								"restore"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "ls",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "pcspath",
+							"value": "/",
+							"type": "default"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{BaseUrl}}/api/ls",
+					"host": [
+						"{{BaseUrl}}"
+					],
+					"path": [
+						"api",
+						"ls"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "download",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"paths\":[\r\n        \"/我的资源/20216.22武科大学位照/IMG_6858.JPG\"\r\n    ],\r\n    \"save\" : true\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{BaseUrl}}/api/download",
+					"host": [
+						"{{BaseUrl}}"
+					],
+					"path": [
+						"api",
+						"download"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "dl_listen",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"paths\":[\r\n        \"/我的资源/20216.22武科大学位照/IMG_6858.JPG\"\r\n    ],\r\n    \"save\" : true\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{BaseUrl}}/api/dl_listen",
+					"host": [
+						"{{BaseUrl}}"
+					],
+					"path": [
+						"api",
+						"dl_listen"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "search",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "pcspath",
+							"value": "/我的资源/",
+							"type": "default"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{BaseUrl}}/api/search?keyword=*asml*&recurse=true&path=/我的资源",
+					"host": [
+						"{{BaseUrl}}"
+					],
+					"path": [
+						"api",
+						"search"
+					],
+					"query": [
+						{
+							"key": "keyword",
+							"value": "*asml*"
+						},
+						{
+							"key": "recurse",
+							"value": "true"
+						},
+						{
+							"key": "path",
+							"value": "/我的资源"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "pwd",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": []
+				},
+				"url": {
+					"raw": "{{BaseUrl}}/api/pwd",
+					"host": [
+						"{{BaseUrl}}"
+					],
+					"path": [
+						"api",
+						"pwd"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "cd",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "target_path",
+							"value": "/我的资源/downloads/asml",
+							"type": "default"
+						},
+						{
+							"key": "is_list",
+							"value": "true",
+							"type": "default"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{BaseUrl}}/api/cd",
+					"host": [
+						"{{BaseUrl}}"
+					],
+					"path": [
+						"api",
+						"cd"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "meta",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"target_paths\": [\r\n        \"/我的资源\",\r\n        \"/我的资源/11F【BT+字幕】\",\r\n        \"/我的资源/20216.22武科大学位照\",\r\n        \"/我的资源/2021武汉理工大学计算机软件工程专业复试资料包\",\r\n        \"/我的资源/downloads\"\r\n    ]\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{BaseUrl}}/api/meta",
+					"host": [
+						"{{BaseUrl}}"
+					],
+					"path": [
+						"api",
+						"meta"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "rm",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"target_paths\": [\r\n        \"/test\"\r\n    ]\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{BaseUrl}}/api/rm",
+					"host": [
+						"{{BaseUrl}}"
+					],
+					"path": [
+						"api",
+						"rm"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "mkdir",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"target_path\": \"/test\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{BaseUrl}}/api/mkdir",
+					"host": [
+						"{{BaseUrl}}"
+					],
+					"path": [
+						"api",
+						"mkdir"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "cp",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"from_paths\": [\r\n        \"/Factorio.v1.1.59\",\r\n        \"/Boost程序库完全开发指南.pdf\"\r\n    ],\r\n    \"to_path\": \"/apps\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{BaseUrl}}/api/cp",
+					"host": [
+						"{{BaseUrl}}"
+					],
+					"path": [
+						"api",
+						"cp"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "mv",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"from_paths\": [\r\n        \"/apps/Factorio.v1.1.59\",\r\n        \"/apps/Boost程序库完全开发指南.pdf\"\r\n    ],\r\n    \"to_path\": \"/\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{BaseUrl}}/api/mv",
+					"host": [
+						"{{BaseUrl}}"
+					],
+					"path": [
+						"api",
+						"mv"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "BaseUrl",
+			"value": "http://localhost:8080",
+			"type": "default"
+		}
+	]
+}
