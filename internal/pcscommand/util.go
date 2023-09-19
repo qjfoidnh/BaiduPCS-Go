@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/rand"
 	"path"
+	"time"
 )
 
 const letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -73,6 +74,7 @@ func randReplaceStr(s string, rname bool) string {
 	if !rname {
 		return s
 	}
+	rand.Seed(time.Now().UnixNano())
 	filenameAll := path.Base(s)
 	fileSuffix := path.Ext(s)
 	filePrefix := filenameAll[0:len(filenameAll) - len(fileSuffix)]
