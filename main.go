@@ -1477,6 +1477,7 @@ func main() {
 				opt := &baidupcs.TransferOption{
 					Download: c.Bool("download"),
 					Collect:  c.Bool("collect"),
+					Rname:    c.Bool("rname"),
 				}
 				pcscommand.RunShareTransfer(c.Args(), opt)
 				return nil
@@ -1489,6 +1490,10 @@ func main() {
 				cli.BoolFlag{
 					Name:  "collect",
 					Usage: "多文件整合到一个文件夹中转存",
+				},
+				cli.BoolFlag{
+					Name:  "rname",
+					Usage: "秒传随机替换4位文件名提高成功率",
 				},
 			},
 		},

@@ -3,7 +3,11 @@ package pcscommand
 import (
 	"errors"
 	"fmt"
+	"math/rand"
+	"path"
 )
+
+const letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 var (
 	// ErrShellPatternMultiRes 多条通配符匹配结果
@@ -61,4 +65,24 @@ func matchPathByShellPattern(patterns ...string) (pcspaths []string, err error) 
 		pcspaths = append(pcspaths, ps...)
 	}
 	return pcspaths, nil
+}
+
+
+
+func randReplaceStr(s string, rname bool) string {
+	if !rname {
+		return s
+	}
+	filenameAll := path.Base(s)
+	fileSuffix := path.Ext(s)
+	filePrefix := filenameAll[0:len(filenameAll) - len(fileSuffix)]
+	runes := []rune(filePrefix)
+
+	for i := 0; i< len(filePrefix); i++ {
+		runes[i] = rune(letters[rand.Int63()%int64(len(letters))])
+		if i == 3 {
+			break
+		}
+	}
+	return path.Join(path.Dir(s), string(runes) + fileSuffix)
 }
