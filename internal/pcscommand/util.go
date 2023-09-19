@@ -24,6 +24,10 @@ type ListTask struct {
 	retry    int // 任务失败的重试次数
 }
 
+func init() {
+	rand.Seed(time.Now().UnixNano())
+}
+
 // RunTestShellPattern 执行测试通配符
 func RunTestShellPattern(pattern string) {
 	pcs := GetBaiduPCS()
@@ -74,7 +78,6 @@ func randReplaceStr(s string, rname bool) string {
 	if !rname {
 		return s
 	}
-	rand.Seed(time.Now().UnixNano())
 	filenameAll := path.Base(s)
 	fileSuffix := path.Ext(s)
 	filePrefix := filenameAll[0:len(filenameAll) - len(fileSuffix)]

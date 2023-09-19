@@ -302,13 +302,13 @@ func (pcs *BaiduPCS) PrepareMove(cpmvJSON ...*CpMvJSON) (dataReadCloser io.ReadC
 
 // prepareRapidUpload 秒传文件, 不进行文件夹检查
 func (pcs *BaiduPCS) prepareRapidUpload(targetPath, contentMD5, sliceMD5, crc32 string, length int64) (dataReadCloser io.ReadCloser, pcsError pcserror.Error) {
-	bdstoken, pcsError := pcs.BDSToken()
-	if pcsError != nil {
-		return
-	}
+	//bdstoken, pcsError := pcs.BDSToken()
+	//if pcsError != nil {
+	//	return
+	//}
 	pcsURL := pcs.generatePCSURL2("xpan/file", "create", map[string]string{
 		"access_token": pcs.accessToken,
-		"bdstoken": bdstoken,
+		//"bdstoken": bdstoken,
 	})
 	baiduPCSVerbose.Infof("%s URL: %s\n", OperationRapidUpload, pcsURL)
 	post := map[string]string{
