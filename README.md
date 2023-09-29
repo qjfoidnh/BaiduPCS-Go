@@ -90,13 +90,19 @@ iikira/BaiduPCS-Go was largely inspired by [GangZhuo/BaiduPCS](https://github.co
 
 [上传](#上传文件目录)本地文件, 支持上传大文件(>2GB), 支持多个文件或目录上传;
 
-[转存](#转存文件目录)其他用户分享的文件, 支持带密码的分享链接;
+[转存](#转存文件目录)其他用户分享的文件, 支持带密码的分享链接; 
 
-[comment]: <> ([导出]&#40;#导出文件目录&#41;网盘内的文件秒传链接, 可选导出BaiduPCS-Go原生格式或通用格式;)
+[导出](#导出文件目录)网盘内的文件秒传链接, 可选导出BaiduPCS-Go原生格式或通用格式;
 
 [离线下载](#离线下载), 支持http/https/ftp/电驴/磁力链协议.
 
 # 版本更新
+**2023.09.29** v3.9.5
+- 恢复秒传转存功能, 使用前需设置accessToken, 参见setastoken --help
+- 本地文件上传用秒传无须accessToken
+- fix #301
+- fix #302
+
 **2023.09.06** v3.9.5-beta
 - 恢复了秒传转存(支持长短链), 感谢油猴脚本开发者tousakarin的贡献
 - 新秒传接口需要开发者授权, 稳定性未知, 该测试版本仅供有秒传强需求的用户试用, 请谨慎更新
@@ -655,71 +661,71 @@ BaiduPCS-Go fixmd5 <文件1> <文件2> <文件3> ...
 BaiduPCS-Go fixmd5 /我的资源/1.mp4
 ```
 
-[comment]: <> (## 获取本地文件的秒传信息)
+## 获取本地文件的秒传信息
 
-[comment]: <> (```)
+```
 
-[comment]: <> (BaiduPCS-Go sumfile <本地文件的路径>)
+BaiduPCS-Go sumfile <本地文件的路径>
 
-[comment]: <> (BaiduPCS-Go sf <本地文件的路径>)
+BaiduPCS-Go sf <本地文件的路径>
 
-[comment]: <> (```)
+```
 
-[comment]: <> (获取本地文件的大小, md5, 前256KB切片的 md5, crc32, 可用于秒传文件.)
+获取本地文件的大小, md5, 前256KB切片的 md5, crc32, 可用于秒传文件.
 
-[comment]: <> (#### 例子:)
+#### 例子:
 
-[comment]: <> (```)
+```
 
-[comment]: <> (# 获取 C:\Users\Administrator\Desktop\1.mp4 的秒传信息)
+# 获取 C:\Users\Administrator\Desktop\1.mp4 的秒传信息
 
-[comment]: <> (BaiduPCS-Go sumfile C:/Users/Administrator/Desktop/1.mp4)
+BaiduPCS-Go sumfile C:/Users/Administrator/Desktop/1.mp4
 
-[comment]: <> (```)
+```
 
-[comment]: <> (## 导出文件/目录)
+## 导出文件/目录
 
-[comment]: <> (```)
+```
 
-[comment]: <> (BaiduPCS-Go export <文件/目录1> <文件/目录2> ...)
+BaiduPCS-Go export <文件/目录1> <文件/目录2> ...
 
-[comment]: <> (BaiduPCS-Go ep <文件/目录1> <文件/目录2> ...)
+BaiduPCS-Go ep <文件/目录1> <文件/目录2> ...
 
-[comment]: <> (```)
+```
 
-[comment]: <> (导出网盘内的文件或目录, 原理为秒传文件, 此操作会生成导出文件或目录的命令.)
+导出网盘内的文件或目录, 原理为秒传文件, 此操作会生成导出文件或目录的命令.
 
-[comment]: <> (#### 注意)
+#### 注意
 
-[comment]: <> (**无法导出 20GB 以上的文件!!**)
+**无法导出 20GB 以上的文件!!**
 
-[comment]: <> (**无法导出文件的版本历史等数据!!**)
+**无法导出文件的版本历史等数据!!**
 
-[comment]: <> (**以通用秒传格式导出会丢失文件路径信息!!**)
+**以通用秒传格式导出会丢失文件路径信息!!**
 
-[comment]: <> (并不是所有的文件都能导出成功, 程序会列出无法导出的文件列表)
+并不是所有的文件都能导出成功, 程序会列出无法导出的文件列表
 
-[comment]: <> (#### 例子:)
+#### 例子:
 
-[comment]: <> (```)
+```
 
-[comment]: <> (# 导出当前工作目录:)
+# 导出当前工作目录:
 
-[comment]: <> (BaiduPCS-Go export)
+BaiduPCS-Go export
 
-[comment]: <> (# 导出所有文件和目录, 并设置新的根目录为 /root)
+# 导出所有文件和目录, 并设置新的根目录为 /root
 
-[comment]: <> (BaiduPCS-Go export -root=/root /)
+BaiduPCS-Go export -root=/root /
 
-[comment]: <> (# 导出 /我的资源)
+# 导出 /我的资源
 
-[comment]: <> (BaiduPCS-Go export /我的资源)
+BaiduPCS-Go export /我的资源
 
-[comment]: <> (# 导出 /我的资源 格式为通用秒传链接格式)
+# 导出 /我的资源 格式为通用秒传链接格式
 
-[comment]: <> (BaiduPCS-Go export /我的资源 --link)
+BaiduPCS-Go export /我的资源 --link
 
-[comment]: <> (```)
+```
 
 ## 创建目录
 ```
@@ -795,6 +801,7 @@ BaiduPCS-Go mv /我的资源/1.mp4 /我的资源/3.mp4
 ```
 # 转存分享链接里的文件到当前目录:
 BaiduPCS-Go transfer <分享链接> <提取码>
+BaiduPCS-Go transfer <秒传链接>
 ```
 
 注意: 转存文件保存到当前工作目录下, 不支持指定.

@@ -56,7 +56,7 @@ const (
 var (
 	// Version 版本号
 	//Version = "v3.9.4-devel"
-	Version = "v3.9.5-beta"
+	Version = "v3.9.5-devel"
 
 	historyFilePath = filepath.Join(pcsconfig.GetConfigDir(), "pcs_command_history.txt")
 	reloadFn        = func(c *cli.Context) error {
@@ -608,10 +608,9 @@ func main() {
 			Usage:       "设定当前账号的accessToken",
 			Description: `
 	设定当前登录帐号的accessToken:
-	若不使用秒传链接转存, 可不设定; accessToken获取网址如下:
-	https://openapi.baidu.com/oauth/2.0/authorize?response_type=token&client_id=L6g70tBRRIXLsY0Z3HwKqlRE&redirect_uri=oob&scope=netdisk
-	请在浏览器登录当前网盘账户后打开上述链接, 如果出现授权确认界面请确认授权, 然后复制跳转到的页面url, 找到access_token=xxxxxxx&这段, xxxxxxx即为accessToken
-	注意accessToken的有效期为一个月, 过期后请重复上述步骤更新token
+	若不使用秒传链接转存, 可不设定; accessToken申请及获取教程:
+	https://github.com/qjfoidnh/BaiduPCS-Go/wiki/accessToken%E8%8E%B7%E5%8F%96%E6%95%99%E7%A8%8B
+	注意accessToken的有效期为一个月, 过期后请按教程指导更新token
 
 	示例:
 	BaiduPCS-Go setastoken 156.182v9052tgf1006c89891bsfb2401974.YmKOAwBD9yGaG2s4p5NNkX4CXeIbJxx4hAxotfS.PyuHEs

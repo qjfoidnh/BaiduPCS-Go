@@ -93,11 +93,11 @@ func (ud *UploadingDatabase) Save() error {
 
 // UpdateUploading 更新正在上传
 func (ud *UploadingDatabase) UpdateUploading(meta *checksum.LocalFileMeta, state *uploader.InstanceState) {
+	ud.lock.RLock()
+	defer ud.lock.RUnlock()
 	if meta == nil {
 		return
 	}
-	ud.lock.RLock()
-	defer ud.lock.RUnlock()
 	meta.CompleteAbsPath()
 	for k, uploading := range ud.UploadingList {
 		if uploading.LocalFileMeta == nil {
@@ -121,13 +121,12 @@ func (ud *UploadingDatabase) deleteIndex(k int) {
 
 // Delete 删除
 func (ud *UploadingDatabase) Delete(meta *checksum.LocalFileMeta) bool {
+	ud.lock.Lock()
+	defer ud.lock.Unlock()
 	if meta == nil {
 		return false
 	}
-
 	meta.CompleteAbsPath()
-	ud.lock.Lock()
-	defer ud.lock.Unlock()
 	for k, uploading := range ud.UploadingList {
 		if uploading.LocalFileMeta == nil {
 			continue
