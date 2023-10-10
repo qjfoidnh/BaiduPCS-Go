@@ -321,9 +321,9 @@ func (ci *CloudDlTaskInfo) ParseText() {
 func (cl CloudDlTaskList) String() string {
 	builder := &strings.Builder{}
 	tb := pcstable.NewTable(builder)
-	tb.SetHeader([]string{"#", "任务ID", "任务名称", "创建日期", "保存路径", "资源地址", "状态"})
+	tb.SetHeader([]string{"#", "任务ID", "任务名称", "文件大小", "创建日期", "保存路径", "资源地址", "状态"})
 	for k, v := range cl {
-		tb.Append([]string{strconv.Itoa(k), strconv.FormatInt(v.TaskID, 10), v.TaskName, pcstime.FormatTime(v.CreateTime), path.Clean(v.SavePath), v.SourceURL, v.StatusText})
+		tb.Append([]string{strconv.Itoa(k), strconv.FormatInt(v.TaskID, 10), v.TaskName, converter.ConvertFileSize(v.FileSize), pcstime.FormatTime(v.CreateTime), path.Clean(v.SavePath), v.SourceURL, v.StatusText})
 	}
 	tb.Render()
 	return builder.String()
