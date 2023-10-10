@@ -403,19 +403,12 @@ func (pcs *BaiduPCS) PrepareLocateDownload(pcspath string) (dataReadCloser io.Re
 			"check_blue": []string{"1"},
 			"es": []string{"1"},
 			"esl": []string{"1"},
-			//"dtype": []string{"1"},
-			//"err_ver": []string{"1.0"},
-			//"ehps": []string{"1"},
-			//"eck": []string{"1"},
 			"app_id": []string{PanAppID},
 			"method": []string{"locatedownload"},
 			"path":   []string{pcspath},
 			"ver":    []string{"4.0"},
-			//"vip":    []string{"2"},
 			"clienttype": []string{"17"},
-			//"version": []string{"2.2.91.26"},
 			"channel": []string{"0"},
-			//"version_app": []string{"11.6.3"},
 			"apn_id": []string{"1_0"},
 			"freeisp": []string{"0"},
 			"queryfree": []string{"0"},
@@ -459,10 +452,6 @@ func (pcs *BaiduPCS) PrepareLocatePanAPIDownload(fidList ...int64) (dataReadClos
 // PrepareUpload 上传单个文件, 只返回服务器响应数据和错误信息（分片上传中的预上传部分）
 func (pcs *BaiduPCS) PrepareUpload(policy string, targetPath string, uploadFunc UploadFunc) (dataReadCloser io.ReadCloser, pcsError pcserror.Error) {
 	pcs.lazyInit()
-	//pcsError = pcs.checkIsdir(OperationUpload, targetPath, policy)
-	//if pcsError != nil {
-	//	return nil, pcsError
-	//}
 
 	pcsURL := pcs.generatePCSURL("file", "upload", map[string]string{
 		"path":  targetPath,
@@ -610,9 +599,11 @@ func (pcs *BaiduPCS) PrepareUploadSuperfile2(uploadid, targetPath string, partse
 func (pcs *BaiduPCS) PrepareCloudDlAddTask(sourceURL, savePath string) (dataReadCloser io.ReadCloser, pcsError pcserror.Error) {
 	pcs.lazyInit()
 	pcsURL2 := pcs.generatePCSURL2("services/cloud_dl", "add_task", map[string]string{
+		"app_id": PanAppID,
+		"task_from": "0",
+		"selected_idx": "1",
 		"save_path":  savePath,
 		"source_url": sourceURL,
-		"timeout":    "2147483647",
 	})
 	baiduPCSVerbose.Infof("%s URL: %s\n", OperationCloudDlAddTask, pcsURL2)
 
@@ -625,16 +616,13 @@ func (pcs *BaiduPCS) PrepareCloudDlAddTask(sourceURL, savePath string) (dataRead
 func (pcs *BaiduPCS) PrepareCloudDlQueryTask(taskIDs string) (dataReadCloser io.ReadCloser, pcsError pcserror.Error) {
 	pcs.lazyInit()
 	pcsURL2 := pcs.generatePCSURL2("services/cloud_dl", "query_task", map[string]string{
+		"app_id": PanAppID,
 		"op_type": "1",
+		"task_ids": taskIDs,
 	})
 	baiduPCSVerbose.Infof("%s URL: %s\n", OperationCloudDlQueryTask, pcsURL2)
 
-	// 表单上传
-	mr := multipartreader.NewMultipartReader()
-	mr.AddFormFeild("task_ids", strings.NewReader(taskIDs))
-	mr.CloseMultipart()
-
-	dataReadCloser, pcsError = pcs.sendReqReturnReadCloser(reqTypePCS, OperationCloudDlQueryTask, http.MethodPost, pcsURL2.String(), mr, nil)
+	dataReadCloser, pcsError = pcs.sendReqReturnReadCloser(reqTypePCS, OperationCloudDlQueryTask, http.MethodGet, pcsURL2.String(), nil, nil)
 	return
 }
 
@@ -646,6 +634,7 @@ func (pcs *BaiduPCS) PrepareCloudDlListTask() (dataReadCloser io.ReadCloser, pcs
 		"status":         "255",
 		"start":          "0",
 		"limit":          "1000",
+		"app_id":         PanAppID,
 	})
 	baiduPCSVerbose.Infof("%s URL: %s\n", OperationCloudDlListTask, pcsURL2)
 
@@ -656,6 +645,7 @@ func (pcs *BaiduPCS) PrepareCloudDlListTask() (dataReadCloser io.ReadCloser, pcs
 func (pcs *BaiduPCS) prepareCloudDlCDTask(opreation, method string, taskID int64) (dataReadCloser io.ReadCloser, pcsError pcserror.Error) {
 	pcs.lazyInit()
 	pcsURL2 := pcs.generatePCSURL2("services/cloud_dl", method, map[string]string{
+		"app_id":  PanAppID,
 		"task_id": strconv.FormatInt(taskID, 10),
 	})
 	baiduPCSVerbose.Infof("%s URL: %s\n", opreation, pcsURL2)

@@ -412,7 +412,6 @@ func (pcs *BaiduPCS) generatePCSURL2(subPath, method string, param ...map[string
 	}
 
 	uv := pcsURL2.Query()
-	uv.Set("app_id", PanAppID)
 	uv.Set("method", method)
 	for k := range param {
 		for k2 := range param[k] {
