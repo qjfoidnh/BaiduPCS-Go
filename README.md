@@ -40,10 +40,7 @@ iikira/BaiduPCS-Go was largely inspired by [GangZhuo/BaiduPCS](https://github.co
   * [下载文件/目录](#下载文件目录)
   * [上传文件/目录](#上传文件目录)
   * [获取下载直链](#获取下载直链)
-  * [手动秒传文件](#手动秒传文件)
   * [修复文件MD5](#修复文件MD5)
-  * [获取本地文件的秒传信息](#获取本地文件的秒传信息)
-  * [导出文件/目录](#导出文件目录)
   * [创建目录](#创建目录)
   * [删除文件/目录](#删除文件目录)
   * [拷贝文件/目录](#拷贝文件目录)
@@ -93,13 +90,32 @@ iikira/BaiduPCS-Go was largely inspired by [GangZhuo/BaiduPCS](https://github.co
 
 [上传](#上传文件目录)本地文件, 支持上传大文件(>2GB), 支持多个文件或目录上传;
 
-[转存](#转存文件目录)其他用户分享的文件, 支持公开、带密码的分享链接, 支持常见的几种秒传链接;
+[转存](#转存文件目录)其他用户分享的文件, 支持带密码的分享链接; 
 
 [导出](#导出文件目录)网盘内的文件秒传链接, 可选导出BaiduPCS-Go原生格式或通用格式;
 
 [离线下载](#离线下载), 支持http/https/ftp/电驴/磁力链协议.
 
 # 版本更新
+**2023.09.30** v3.9.5
+- 恢复秒传转存功能, 使用前需设置accessToken, 参见setastoken --help
+- 本地文件上传用秒传无须accessToken
+- fix #301
+- fix #302
+
+**2023.09.06** v3.9.5-beta
+- 恢复了秒传转存(支持长短链), 感谢油猴脚本开发者tousakarin的贡献
+- 新秒传接口需要开发者授权, 稳定性未知, 该测试版本仅供有秒传强需求的用户试用, 请谨慎更新
+
+**2023.09.05** v3.9.4
+- fix #244, 修复断点上传时偶发崩溃
+- 优化本地上传秒传失败时的处理逻辑
+
+**2023.08.26** v3.9.3
+- 因官方接口从原理层面封禁秒传, 取消秒传转存功能
+- 更新部分使用说明
+- 建议使用文件上传功能的用户更新此版本
+
 **2023.06.03** v3.9.2
 - 修复秒传链接无法转存, 因官方接口变动秒传已不再支持短链接格式
 - 修复上传文件无法使用秒传
@@ -269,11 +285,6 @@ cli交互模式下, 光标所在行的前缀应为 `BaiduPCS-Go >`, 如果登录
 
 ## 安装
 
-[Homebrew](https://brew.sh/) 用户可以用下面的命令行安装应用：
-
-```sh
-brew install baidupcs-go
-```
 
 ## Windows
 
@@ -321,6 +332,7 @@ BaiduPCS-Go update
 ### 常规登录百度帐号
 
 支持在线验证绑定的手机号或邮箱,
+注: 此方式已长期不维护, 建议使用其他登录方式
 ```
 BaiduPCS-Go login
 ```
@@ -555,14 +567,6 @@ BaiduPCS-Go d <网盘文件或目录的路径1> <文件或目录2> <文件或目
 自动跳过下载重名的文件!
 
 
-#### 下载模式说明
-
-* pcs: 通过百度网盘的 PCS API 下载(不建议使用)
-
-* stream: 通过百度网盘的 PCS API, 以流式文件的方式下载, 效果同 pcs(不建议使用)
-
-* locate: 默认的下载模式。从百度网盘 Android 客户端, 获取下载链接的方式来下载
-
 #### 例子
 ```
 # 设置保存目录, 保存到 D:\Downloads
@@ -631,26 +635,6 @@ BaiduPCS-Go locate <文件1> <文件2> ...
 BaiduPCS-Go config set -user_agent "netdisk;2.2.51.6;netdisk;10.0.63;PC;android-android"
 ```
 
-## 手动秒传文件
-```
-BaiduPCS-Go rapidupload -length=<文件的大小> -md5=<文件的md5值> -slicemd5=<文件前256KB切片的md5值(可选)> -crc32=<文件的crc32值(可选)> <保存的网盘路径, 需包含文件名>
-BaiduPCS-Go ru -length=<文件的大小> -md5=<文件的md5值> -slicemd5=<文件前256KB切片的md5值(可选)> -crc32=<文件的crc32值(可选)> <保存的网盘路径, 需包含文件名>
-```
-
-注意: 使用此功能秒传文件, 前提是知道文件的大小, md5, 前256KB切片的 md5 (可选), crc32 (可选), 且百度网盘中存在一模一样的文件.
-
-上传的文件将会保存到网盘的目标目录.
-
-遇到同名文件将会自动覆盖!
-
-可能无法秒传 20GB 以上的文件!!
-
-#### 例子:
-```
-# 如果秒传成功, 则保存到网盘路径 /test
-BaiduPCS-Go rapidupload -length=56276137 -md5=fbe082d80e90f90f0fb1f94adbbcfa7f -slicemd5=38c6a75b0ec4499271d4ea38a667ab61 -crc32=314332359 /test
-```
-
 
 ## 修复文件MD5
 ```
@@ -678,23 +662,35 @@ BaiduPCS-Go fixmd5 /我的资源/1.mp4
 ```
 
 ## 获取本地文件的秒传信息
+
 ```
+
 BaiduPCS-Go sumfile <本地文件的路径>
+
 BaiduPCS-Go sf <本地文件的路径>
+
 ```
 
 获取本地文件的大小, md5, 前256KB切片的 md5, crc32, 可用于秒传文件.
 
 #### 例子:
+
 ```
+
 # 获取 C:\Users\Administrator\Desktop\1.mp4 的秒传信息
+
 BaiduPCS-Go sumfile C:/Users/Administrator/Desktop/1.mp4
+
 ```
 
 ## 导出文件/目录
+
 ```
+
 BaiduPCS-Go export <文件/目录1> <文件/目录2> ...
+
 BaiduPCS-Go ep <文件/目录1> <文件/目录2> ...
+
 ```
 
 导出网盘内的文件或目录, 原理为秒传文件, 此操作会生成导出文件或目录的命令.
@@ -710,18 +706,25 @@ BaiduPCS-Go ep <文件/目录1> <文件/目录2> ...
 并不是所有的文件都能导出成功, 程序会列出无法导出的文件列表
 
 #### 例子:
+
 ```
+
 # 导出当前工作目录:
+
 BaiduPCS-Go export
 
 # 导出所有文件和目录, 并设置新的根目录为 /root
+
 BaiduPCS-Go export -root=/root /
 
 # 导出 /我的资源
+
 BaiduPCS-Go export /我的资源
 
 # 导出 /我的资源 格式为通用秒传链接格式
+
 BaiduPCS-Go export /我的资源 --link
+
 ```
 
 ## 创建目录
@@ -798,21 +801,16 @@ BaiduPCS-Go mv /我的资源/1.mp4 /我的资源/3.mp4
 ```
 # 转存分享链接里的文件到当前目录:
 BaiduPCS-Go transfer <分享链接> <提取码>
-# 转存通用秒传链接里的文件到当前目录:
 BaiduPCS-Go transfer <秒传链接>
 ```
 
-注意: 公开分享链接不需输入提取码, 支持多个文件/目录; 只支持包含单个文件的秒传链接.
-
-转存文件保存到当前工作目录下, 不支持指定.
+注意: 转存文件保存到当前工作目录下, 不支持指定.
 
 #### 例子
 ```
 # 将 https://pan.baidu.com/s/12L_ZZVNxz5f_2CccoyyVrW (提取码edv4) 转存到当前目录
 BaiduPCS-Go transfer https://pan.baidu.com/s/12L_ZZVNxz5f_2CccoyyVrW edv4
-
-# 将 E7E7B8613854379642F70230B179F37A#FA690D0AB7C8BC6A62WD1B6B3FC5248F#128859362#test.7z 转存到当前目录
-BaiduPCS-Go transfer E7E7B8613854379642F70230B179F37A#FA690D0AB7C8BC6A62WD1B6B3FC5248F#128859362#test.7z
+BaiduPCS-Go transfer https://pan.baidu.com/s/12L_ZZVNxz5f_2CccoyyVrW?pwd=edv4
 ```
 
 ## 分享文件/目录
@@ -998,8 +996,8 @@ BaiduPCS-Go config set -h
 # 设置下载文件的储存目录
 BaiduPCS-Go config set -savedir D:/Downloads
 
-# 设置下载最大并发量为 150
-BaiduPCS-Go config set -max_parallel 150
+# 设置下载最大并发量为 15
+BaiduPCS-Go config set -max_parallel 15
 
 # 组合设置
 BaiduPCS-Go config set -max_parallel 150 -savedir D:/Downloads

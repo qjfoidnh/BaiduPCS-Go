@@ -18,7 +18,8 @@ func RunShareTransfer(params []string, opt *baidupcs.TransferOption) {
 	if len(params) == 1 {
 		link = params[0]
 		if strings.Contains(link, "bdlink=") || !strings.Contains(link, "pan.baidu.com/") {
-			RunRapidTransfer(link)
+			RunRapidTransfer(link, opt.Rname)
+			//fmt.Printf("%s失败: %s\n", baidupcs.OperationShareFileSavetoLocal, "秒传已不再被支持")
 			return
 		}
 		extracode = "none"
@@ -113,7 +114,7 @@ func RunShareTransfer(params []string, opt *baidupcs.TransferOption) {
 }
 
 // RunRapidTransfer 执行秒传链接解析及保存
-func RunRapidTransfer(link string) {
+func RunRapidTransfer(link string, rnameOpt ...bool) {
 	if strings.Contains(link, "bdlink=") || strings.Contains(link, "bdpan://") {
 		r, _ := regexp.Compile(`(bdlink=|bdpan://)([^\s]+)`)
 		link1 := r.FindStringSubmatch(link)[2]
@@ -124,22 +125,24 @@ func RunRapidTransfer(link string) {
 		}
 		link = string(decodeBytes)
 	}
+	rname := false
+	if len(rnameOpt) > 0 {
+		rname = rnameOpt[0]
+	}
 	link = strings.TrimSpace(link)
 	substrs := strings.SplitN(link, "#", 4)
 	if len(substrs) == 4 {
 		md5, slicemd5 := substrs[0], substrs[1]
-		length, _ := strconv.ParseInt(substrs[2], 10, 64)
-		filename := path.Join(GetActiveUser().Workdir, substrs[3])
-		RunRapidUpload(filename, md5, slicemd5, "", length)
-		return
+		size, _ := strconv.ParseInt(substrs[2], 10, 64)
+		filename := path.Join(GetActiveUser().Workdir, randReplaceStr(substrs[3], rname))
+		RunRapidUpload(filename, md5, slicemd5, size)
+	} else if len(substrs) == 3 {
+		md5 := substrs[0]
+		size, _ := strconv.ParseInt(substrs[1], 10, 64)
+		filename := path.Join(GetActiveUser().Workdir, randReplaceStr(substrs[2], rname))
+		RunRapidUpload(filename, md5, "", size)
+	} else {
+		fmt.Printf("%s失败: %s\n", baidupcs.OperationRapidLinkSavetoLocal, "秒传链接格式错误")
 	}
-	substrs = strings.Split(link, "|")
-	if len(substrs) == 4 {
-		md5, slicemd5 := substrs[2], substrs[3]
-		length, _ := strconv.ParseInt(substrs[1], 10, 64)
-		filename := path.Join(GetActiveUser().Workdir, substrs[0])
-		RunRapidUpload(filename, md5, slicemd5, "", length)
-		return
-	}
-	fmt.Printf("%s失败: %s\n", baidupcs.OperationRapidLinkSavetoLocal, "秒传链接格式错误")
+	return
 }

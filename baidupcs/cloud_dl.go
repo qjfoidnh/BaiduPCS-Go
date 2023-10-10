@@ -43,6 +43,7 @@ type (
 	// cloudDlTaskInfo 用于解析远程返回的JSON
 	cloudDlTaskInfo struct {
 		Status       string `json:"status"`
+		TaskID       string `json:"task_id"`
 		FileSize     string `json:"file_size"`
 		FinishedSize string `json:"finished_size"`
 		CreateTime   string `json:"create_time"`
@@ -57,10 +58,6 @@ type (
 			FileSize string `json:"file_size"`
 		} `json:"file_list"`
 		Result int `json:"result"`
-	}
-
-	taskIDJSON struct {
-		TaskID string `json:"task_id"`
 	}
 
 	taskIDInt64JSON struct {
@@ -78,7 +75,7 @@ type (
 	}
 
 	cloudDlListTaskJSON struct {
-		TaskInfo []*taskIDJSON `json:"task_info"`
+		TaskInfo []*cloudDlTaskInfo `json:"task_info"`
 		*pcserror.PCSErrInfo
 	}
 
@@ -225,24 +222,20 @@ func (pcs *BaiduPCS) CloudDlListTask() (cl CloudDlTaskList, pcsError pcserror.Er
 	if len(taskInfo.TaskInfo) <= 0 {
 		return CloudDlTaskList{}, nil
 	}
-
-	var (
-		taskID  int64
-		taskIDs = make([]int64, 0, len(taskInfo.TaskInfo))
-	)
+	cl = make([]*CloudDlTaskInfo, 0, len(taskInfo.TaskInfo))
+	var v2 *CloudDlTaskInfo
 	for _, v := range taskInfo.TaskInfo {
+		var err error
 		if v == nil {
 			continue
 		}
-		var err error
-		if taskID, err = strconv.ParseInt(v.TaskID, 10, 64); err == nil {
-			taskIDs = append(taskIDs, taskID)
+		v2 = v.convert()
+		v2.TaskID, err = strconv.ParseInt(v.TaskID, 10, 64)
+		if err != nil {
+			continue
 		}
-	}
-
-	cl, pcsError = pcs.cloudDlQueryTask(OperationCloudDlListTask, taskIDs)
-	if pcsError != nil {
-		return nil, pcsError
+		v2.ParseText()
+		cl = append(cl, v2)
 	}
 
 	return cl, nil
