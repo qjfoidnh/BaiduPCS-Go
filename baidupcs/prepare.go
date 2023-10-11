@@ -320,7 +320,9 @@ func (pcs *BaiduPCS) prepareRapidUpload(targetPath, contentMD5, sliceMD5, crc32 
 	}
 	baiduPCSVerbose.Infof("%s URL: %s, Post: %v\n", OperationRapidUpload, pcsURL, post)
 
-	dataReadCloser, pcsError = pcs.sendReqReturnReadCloser(reqTypePan, OperationRapidUpload, http.MethodPost, pcsURL.String(), post, nil)
+	dataReadCloser, pcsError = pcs.sendReqReturnReadCloser(reqTypePan, OperationRapidUpload, http.MethodPost, pcsURL.String(), post, map[string]string{
+		"Content-Type": "application/x-www-form-urlencoded",
+	})
 	return
 }
 
