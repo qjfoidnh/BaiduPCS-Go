@@ -852,6 +852,9 @@ func main() {
 
 	只列出两层深度
 	BaiduPCS-Go tree --depth 2
+	
+	同时显示文件名和size
+	BaiduPCS-Go tree --size
 
 	同时显示文件名和fsid
 	BaiduPCS-Go tree --fsid
@@ -861,6 +864,7 @@ func main() {
 			Action: func(c *cli.Context) error {
 				pcscommand.RunTree(c.Args().Get(0), 0, &pcscommand.TreeOptions{
 					Depth:    c.Int("depth"),
+					ShowSize: c.Bool("size"),
 					ShowFsid: c.Bool("fsid"),
 				})
 				return nil
@@ -870,6 +874,10 @@ func main() {
 					Name:  "depth",
 					Usage: "显示深度",
 					Value: -1,
+				},
+				cli.BoolFlag{
+					Name:  "size",
+					Usage: "带size显示",
 				},
 				cli.BoolFlag{
 					Name:  "fsid",
