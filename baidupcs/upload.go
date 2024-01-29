@@ -109,17 +109,26 @@ func randomifyMD5(md5 string) string {
 }
 
 // RapidUpload 秒传文件
-func (pcs *BaiduPCS) RapidUpload(targetPath, contentMD5, sliceMD5, crc32 string, length int64) (pcsError pcserror.Error) {
+func (pcs *BaiduPCS) RapidUpload(targetPath, contentMD5, sliceMD5, dataContent, crc32 string, offset, length, totalSize, dataTime int64) (pcsError pcserror.Error) {
 	defer func() {
 		if pcsError == nil {
 			// 更新缓存
 			pcs.deleteCache([]string{path.Dir(targetPath)})
 		}
 	}()
-	pcsError = pcs.rapidUploadV2(targetPath, strings.ToLower(contentMD5), strings.ToLower(sliceMD5), length)
-	if pcsError != nil {
-		pcsError = pcs.rapidUpload(targetPath, strings.ToLower(contentMD5), strings.ToLower(sliceMD5), "", length)
-	}
+	pcsError = pcs.rapidUploadV2(targetPath, strings.ToLower(contentMD5), strings.ToLower(sliceMD5), dataContent, crc32, offset, length, totalSize, dataTime)
+	return
+}
+
+// APIRapidUpload openapi秒传文件
+func (pcs *BaiduPCS) APIRapidUpload(targetPath, contentMD5, sliceMD5, crc32 string, length int64) (pcsError pcserror.Error) {
+	defer func() {
+		if pcsError == nil {
+			// 更新缓存
+			pcs.deleteCache([]string{path.Dir(targetPath)})
+		}
+	}()
+	pcsError = pcs.rapidUpload(targetPath, strings.ToLower(contentMD5), strings.ToLower(sliceMD5), "", length)
 	return
 }
 
@@ -132,8 +141,8 @@ func (pcs *BaiduPCS) rapidUpload(targetPath, contentMD5, sliceMD5, crc32 string,
 	return pcserror.DecodePanJSONError(OperationRapidUpload, dataReadCloser)
 }
 
-func (pcs *BaiduPCS) rapidUploadV2(targetPath, contentMD5, sliceMD5 string, length int64) (pcsError pcserror.Error) {
-	dataReadCloser, pcsError := pcs.PrepareRapidUploadV2(targetPath, contentMD5, sliceMD5, length)
+func (pcs *BaiduPCS) rapidUploadV2(targetPath, contentMD5, sliceMD5, dataContent, crc32 string, offset, length, totalSize, dataTime int64) (pcsError pcserror.Error) {
+	dataReadCloser, pcsError := pcs.PrepareRapidUploadV2(targetPath, contentMD5, sliceMD5, dataContent, crc32, offset, length, totalSize, dataTime)
 	if pcsError != nil {
 		return
 	}

@@ -102,11 +102,11 @@ func (pane *XPanErrorInfo) Error() string {
 func FindXPanErr(errno, returnType int) (errmsg string) {
 	switch errno {
 	case 0:
-		if returnType != 2 {
-			return "未匹配到符合文件"
+		if returnType == 2 {
+			return StrSuccess
 		}
-		return StrSuccess
+		return fmt.Sprintf("错误类型: %d", returnType)
 	default:
-		return "未知错误"
+		return fmt.Sprintf("错误类型: %d", returnType)
 	}
 }

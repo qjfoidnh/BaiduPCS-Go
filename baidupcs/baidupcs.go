@@ -135,16 +135,17 @@ var (
 type (
 	// BaiduPCS 百度 PCS API 详情
 	BaiduPCS struct {
-		appID      int                   // app_id
-		isHTTPS    bool                  // 是否启用https
-		uid        uint64                // 百度uid
-		client     *requester.HTTPClient // http 客户端
-		pcsUA      string
-		pcsAddr    string
-		panUA      string
-		isSetPanUA bool
-		ph         *panhome.PanHome
-		cacheOpMap cachemap.CacheOpMap
+		appID       int                   // app_id
+		isHTTPS     bool                  // 是否启用https
+		uid         uint64                // 百度uid
+		client      *requester.HTTPClient // http 客户端
+		accessToken string                // accessToken
+		pcsUA       string
+		pcsAddr     string
+		panUA       string
+		isSetPanUA  bool
+		ph          *panhome.PanHome
+		cacheOpMap  cachemap.CacheOpMap
 	}
 
 	userInfoJSON struct {
@@ -310,6 +311,11 @@ func (pcs *BaiduPCS) SetUID(uid uint64) {
 	pcs.uid = uid
 }
 
+// SetaccessToken 设置秒传转存用的accesstoken
+func (pcs *BaiduPCS) SetaccessToken(accessToken string) {
+	pcs.accessToken = accessToken
+}
+
 // SetStoken 设置stoken
 func (pcs *BaiduPCS) SetStoken(stoken string) {
 	pcs.lazyInit()
@@ -406,7 +412,6 @@ func (pcs *BaiduPCS) generatePCSURL2(subPath, method string, param ...map[string
 	}
 
 	uv := pcsURL2.Query()
-	uv.Set("app_id", PanAppID)
 	uv.Set("method", method)
 	for k := range param {
 		for k2 := range param[k] {
