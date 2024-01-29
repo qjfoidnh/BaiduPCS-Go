@@ -230,7 +230,7 @@ func RunRapidUpload(targetPath, contentMD5, sliceMD5, crc32 string, length int64
 	if err != nil {
 		fmt.Printf("警告: %s, 获取网盘路径 %s 错误, %s\n", baidupcs.OperationRapidUpload, dirname, err)
 	}
-	err = pcscommand.GetBaiduPCS().RapidUpload(targetPath, contentMD5, sliceMD5, crc32, length)
+	err = pcscommand.GetBaiduPCS().RapidUpload4Run(targetPath, contentMD5, sliceMD5, crc32, length)
 	if err != nil {
 		fmt.Printf("%s失败, 消息: %s\n", baidupcs.OperationRapidUpload, err)
 		return

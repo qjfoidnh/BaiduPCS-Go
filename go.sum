@@ -201,6 +201,9 @@ github.com/qjfoidnh/Baidu-Login v1.4.1/go.mod h1:oRFCmVYQka0KYwvbf2zS6UeMupgv0w1
 github.com/qjfoidnh/BaiduPCS-Go v0.0.0-20201218134534-d55d9918bd1b/go.mod h1:00iH1dQEStMeT3t+oeVrIucWcu3fFEaFYyygNxfOEv4=
 github.com/qjfoidnh/baidu-tools v1.2.0 h1:VoXJCN16xzL0xh1BOI2l2p80X5HwKB0PE4SgtX8wn30=
 github.com/qjfoidnh/baidu-tools v1.2.0/go.mod h1:TzIKHinLPcQbWxAROpqoSvYxM/kDeswfXJaQ2E1p4zs=
+github.com/rogpeppe/go-internal v1.9.0/go.mod h1:WtVeX8xhTBvf0smdhujwtBcq4Qrzq/fJaraNFVN+nFs=
+github.com/rogpeppe/go-internal v1.11.0 h1:cWPaGQEPrBb5/AsnsZesgZZ9yb1OQ+GOISoDNXVBh4M=
+github.com/rogpeppe/go-internal v1.11.0/go.mod h1:ddIwULY96R17DhadqLgMfk9H9tvdUzkipdSkR5nkCZA=
 github.com/russross/blackfriday v1.5.2/go.mod h1:JO/DiYxRf+HjHt06OyowR9PTA263kcR/rfWxYHBV53g=
 github.com/russross/blackfriday/v2 v2.0.1 h1:lPqVAte+HuHNfhJ/0LC98ESWRz8afy9tM/0RK8m9o+Q=
 github.com/russross/blackfriday/v2 v2.0.1/go.mod h1:+Rmxgy9KzJVeS9/2gXHxylqXiyQDYRxCVz55jmeOWTM=
