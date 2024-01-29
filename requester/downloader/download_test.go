@@ -2,11 +2,12 @@ package downloader
 
 import (
 	"fmt"
-	"github.com/qjfoidnh/BaiduPCS-Go/pcsverbose"
-	"github.com/qjfoidnh/BaiduPCS-Go/requester"
 	"os"
 	"testing"
 	"time"
+
+	"github.com/qjfoidnh/BaiduPCS-Go/pcsverbose"
+	"github.com/qjfoidnh/BaiduPCS-Go/requester"
 )
 
 var (
@@ -38,14 +39,6 @@ func TestDownloadTIM(t *testing.T) {
 	client.SetTimeout(10 * time.Second)
 	d.SetClient(client)
 
-	go func() {
-		for {
-			if d.monitor != nil {
-				fmt.Println(d.monitor.ShowWorkers())
-			}
-			time.Sleep(1e9)
-		}
-	}()
 	go func() {
 		time.Sleep(3e9)
 		d.Pause()
