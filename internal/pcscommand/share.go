@@ -25,8 +25,11 @@ func RunShareSet(paths []string, option *baidupcs.ShareOption) {
 		fmt.Printf("%s失败: %s\n", baidupcs.OperationShareSet, err)
 		return
 	}
-
-	fmt.Printf("shareID: %d, 链接: %s, 密码: %s\n", shared.ShareID, shared.Link, shared.Pwd)
+	if option.IsCombined {
+		fmt.Printf("shareID: %d, 链接: %s?pwd=%s\n", shared.ShareID, shared.Link, shared.Pwd)
+	} else {
+		fmt.Printf("shareID: %d, 链接: %s, 密码: %s\n", shared.ShareID, shared.Link, shared.Pwd)
+	}
 }
 
 // RunShareCancel 执行取消分享

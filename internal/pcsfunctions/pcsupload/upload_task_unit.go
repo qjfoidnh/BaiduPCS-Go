@@ -2,6 +2,7 @@ package pcsupload
 
 import (
 	"bytes"
+	"encoding/base64"
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -58,6 +59,7 @@ const (
 const (
 	StrUploadFailed = "上传文件失败"
 	DefaultPrintFormat = "\r[%s] ↑ %s/%s %s/s in %s ............"
+	DefaultContentSize = 4 * converter.KB
 )
 
 func (utu *UploadTaskUnit) SetTaskInfo(taskInfo *taskframework.TaskInfo) {
@@ -153,7 +155,31 @@ func (utu *UploadTaskUnit) rapidUpload() (isContinue bool, result *taskframework
 		}
 	}
 
-	pcsError = utu.PCS.RapidUpload(utu.SavePath, hex.EncodeToString(utu.LocalFileChecksum.MD5), hex.EncodeToString(utu.LocalFileChecksum.SliceMD5), fmt.Sprint(utu.LocalFileChecksum.CRC32), utu.LocalFileChecksum.Length)
+	uk, err := utu.PCS.UK()
+	if err != nil {
+		result.ResultMessage = "获取用户uk错误, 请确保登录信息包含了STOKEN"
+		result.Err = err
+		fmt.Printf("[%s] 秒传失败, 开始上传文件...\n\n", utu.taskInfo.Id())
+		isContinue = true
+		return
+	}
+	currentTime := time.Now().Unix()
+	offset, err := creaetDataOffset(hex.EncodeToString(utu.LocalFileChecksum.MD5), uk, currentTime, utu.LocalFileChecksum.Length, DefaultContentSize)
+	if err != nil {
+		result.ResultMessage = "计算文件偏移量错误"
+		result.Err = err
+		return
+	}
+	dataContent, dataLength, err := utu.LocalFileChecksum.GetSliceDataContent(offset, DefaultContentSize)
+	if err != nil {
+		result.ResultMessage = "读取随机文件子片段错误"
+		result.Err = err
+		return
+	}
+	b64Content := strings.TrimRight(base64.StdEncoding.EncodeToString(dataContent), "=")
+	pcsError = utu.PCS.RapidUpload(utu.SavePath, hex.EncodeToString(utu.LocalFileChecksum.MD5),
+		hex.EncodeToString(utu.LocalFileChecksum.SliceMD5), b64Content, fmt.Sprint(utu.LocalFileChecksum.CRC32),
+		offset, dataLength, utu.LocalFileChecksum.Length, currentTime)
 	if pcsError == nil {
 		fmt.Printf("[%s] 秒传成功, 保存到网盘路径: %s\n\n", utu.taskInfo.Id(), utu.SavePath)
 		// 统计
@@ -172,7 +198,6 @@ func (utu *UploadTaskUnit) rapidUpload() (isContinue bool, result *taskframework
 			return
 		}
 	}
-
 	fmt.Printf("[%s] 秒传失败, 开始上传文件...\n\n", utu.taskInfo.Id())
 
 	// 保存秒传信息

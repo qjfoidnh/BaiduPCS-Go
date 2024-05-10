@@ -37,8 +37,11 @@ type Baidu struct {
 	BDUSS   string `json:"bduss"`
 	PTOKEN  string `json:"ptoken"`
 	STOKEN  string `json:"stoken"`
+	BAIDUID string `json:"baiduid"`
 	SBOXTKN string `json:"sboxtkn"`
 	COOKIES string `json:"cookies"`
+
+	AccessToken string `json:"accesstoken"`
 
 	Workdir string `json:"workdir"` // 工作目录
 }
@@ -58,6 +61,7 @@ func (baidu *Baidu) BaiduPCS() *baidupcs.BaiduPCS {
 	pcs.SetPCSUserAgent(Config.PCSUA)
 	pcs.SetPanUserAgent(Config.PanUA)
 	pcs.SetUID(baidu.UID)
+	pcs.SetaccessToken(baidu.AccessToken)
 	return pcs
 }
 

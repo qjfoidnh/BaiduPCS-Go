@@ -42,14 +42,13 @@ func uploadPrintFormat(load int) string {
 }
 
 // RunRapidUpload 执行秒传文件, 前提是知道文件的大小, md5, 前256KB切片的 md5, crc32
-func RunRapidUpload(targetPath, contentMD5, sliceMD5, crc32 string, length int64) {
+func RunRapidUpload(targetPath, contentMD5, sliceMD5 string, length int64) {
 	dirname := path.Dir(targetPath)
 	err := matchPathByShellPatternOnce(&dirname)
 	if err != nil {
 		fmt.Printf("警告: %s, 获取网盘路径 %s 错误, %s\n", baidupcs.OperationRapidUpload, dirname, err)
 	}
-
-	err = GetBaiduPCS().RapidUpload(targetPath, contentMD5, sliceMD5, crc32, length)
+	err = GetBaiduPCS().APIRapidUpload(targetPath, contentMD5, sliceMD5, "", length)
 	if err != nil {
 		fmt.Printf("%s失败, 消息: %s\n", baidupcs.OperationRapidUpload, err)
 		return

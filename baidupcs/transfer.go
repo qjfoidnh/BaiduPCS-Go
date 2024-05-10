@@ -2,6 +2,8 @@ package baidupcs
 
 import (
 	"fmt"
+	"github.com/qjfoidnh/BaiduPCS-Go/requester"
+	"github.com/tidwall/gjson"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -10,8 +12,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-
-	"github.com/tidwall/gjson"
+	"time"
 )
 
 type (
@@ -19,6 +20,7 @@ type (
 	TransferOption struct {
 		Download bool // 是否直接开始下载
 		Collect  bool // 多文件整合
+		Rname    bool // 随机改文件名
 	}
 )
 
@@ -31,8 +33,9 @@ func (pcs *BaiduPCS) GenerateShareQueryURL(subPath string, params map[string]str
 	uv := shareURL.Query()
 	uv.Set("app_id", PanAppID)
 	uv.Set("channel", "chunlei")
-	uv.Set("clienttype", "0")
+	uv.Set("t", strconv.Itoa(int(time.Now().UnixMilli())))
 	uv.Set("web", "1")
+	uv.Set("clienttype", "0")
 	for key, value := range params {
 		uv.Set(key, value)
 	}
@@ -49,7 +52,7 @@ func (pcs *BaiduPCS) ExtractShareInfo(metajsonstr string) (res map[string]string
 	}
 	errno := gjson.Get(metajsonstr, `file_list.errno`).Int()
 	if errno != 0 {
-		res["ErrMsg"] = "提取码错误"
+		res["ErrMsg"] = fmt.Sprintf("未知错误, 错误码%d", errno)
 		return
 	}
 	res["filename"] = gjson.Get(metajsonstr, `file_list.0.server_filename`).String()
@@ -83,11 +86,11 @@ func (pcs *BaiduPCS) ExtractShareInfo(metajsonstr string) (res map[string]string
 	return
 }
 
-func (pcs *BaiduPCS) PostShareQuery(url string, surl string, data map[string]string) (res map[string]string) {
+func (pcs *BaiduPCS) PostShareQuery(url string, referer string, data map[string]string) (res map[string]string) {
 	dataReadCloser, panError := pcs.sendReqReturnReadCloser(reqTypePan, OperationShareFileSavetoLocal, http.MethodPost, url, data, map[string]string{
-		"User-Agent":   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.100 Safari/537.36",
-		"Content-Type": "application/x-www-form-urlencoded",
-		"Referer":      fmt.Sprintf("https://pan.baidu.com/share/init?surl=%s", surl),
+		"User-Agent":   requester.UserAgent,
+		"Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+		"Referer": referer,
 	})
 	res = make(map[string]string)
 	if panError != nil {
@@ -96,9 +99,12 @@ func (pcs *BaiduPCS) PostShareQuery(url string, surl string, data map[string]str
 	}
 	defer dataReadCloser.Close()
 	body, _ := ioutil.ReadAll(dataReadCloser)
-	errno := gjson.Get(string(body), `errno`).String()
-	if errno != "0" {
-		res["ErrMsg"] = "分享码错误"
+	errno := gjson.Get(string(body), `errno`).Int()
+	if errno != 0 {
+		res["ErrMsg"] = fmt.Sprintf("未知错误, 错误码%d", errno)
+		if errno == -9 {
+			res["ErrMsg"] = "提取码错误"
+		}
 		return
 	}
 	res["ErrMsg"] = "0"
@@ -142,6 +148,9 @@ func (pcs *BaiduPCS) AccessSharePage(featurestr string, first bool) (tokens map[
 		}
 		tokens["metajson"] = string(sub[1])
 		tokens["bdstoken"] = gjson.Get(string(sub[1]), `bdstoken`).String()
+		tokens["uk"] = gjson.Get(string(sub[1]), `uk`).String()
+		tokens["share_uk"] = gjson.Get(string(sub[1]), `share_uk`).String()
+		tokens["shareid"] = gjson.Get(string(sub[1]), `shareid`).String()
 		return
 	}
 
@@ -198,8 +207,8 @@ func (pcs *BaiduPCS) GenerateRequestQuery(mode string, params map[string]string)
 			} else {
 				res["ErrMsg"] = fmt.Sprintf("未知错误, 错误代码%d", _errno)
 			}
-		} else {
-			res["ErrMsg"] = fmt.Sprintf("未知错误, 错误代码%d", errno)
+		} else if mode == "POST" && errno == 4 {
+			res["ErrMsg"] = fmt.Sprintf("文件重复")
 		}
 		return
 	}

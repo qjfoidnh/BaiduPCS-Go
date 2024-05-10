@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -22,6 +23,7 @@ type (
 
 	// UploadingDatabase 未完成上传的数据库
 	UploadingDatabase struct {
+		lock sync.RWMutex
 		UploadingList []*Uploading `json:"upload_state"`
 		Timestamp     int64        `json:"timestamp"`
 
@@ -91,10 +93,11 @@ func (ud *UploadingDatabase) Save() error {
 
 // UpdateUploading 更新正在上传
 func (ud *UploadingDatabase) UpdateUploading(meta *checksum.LocalFileMeta, state *uploader.InstanceState) {
+	ud.lock.RLock()
+	defer ud.lock.RUnlock()
 	if meta == nil {
 		return
 	}
-
 	meta.CompleteAbsPath()
 	for k, uploading := range ud.UploadingList {
 		if uploading.LocalFileMeta == nil {
@@ -118,10 +121,11 @@ func (ud *UploadingDatabase) deleteIndex(k int) {
 
 // Delete 删除
 func (ud *UploadingDatabase) Delete(meta *checksum.LocalFileMeta) bool {
+	ud.lock.Lock()
+	defer ud.lock.Unlock()
 	if meta == nil {
 		return false
 	}
-
 	meta.CompleteAbsPath()
 	for k, uploading := range ud.UploadingList {
 		if uploading.LocalFileMeta == nil {
@@ -158,7 +162,6 @@ func (ud *UploadingDatabase) Search(meta *checksum.LocalFileMeta) *uploader.Inst
 				return nil
 			}
 
-			// 覆盖数据
 			meta.MD5 = uploading.LocalFileMeta.MD5
 			meta.SliceMD5 = uploading.LocalFileMeta.SliceMD5
 			return uploading.State
@@ -168,6 +171,8 @@ func (ud *UploadingDatabase) Search(meta *checksum.LocalFileMeta) *uploader.Inst
 }
 
 func (ud *UploadingDatabase) clearModTimeChange() {
+	ud.lock.Lock()
+	defer ud.lock.Unlock()
 	for i := 0; i < len(ud.UploadingList); i++ {
 		uploading := ud.UploadingList[i]
 		if uploading.LocalFileMeta == nil {

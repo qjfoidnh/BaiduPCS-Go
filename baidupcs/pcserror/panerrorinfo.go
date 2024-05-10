@@ -11,7 +11,6 @@ type (
 		ErrType   ErrType
 		Err       error
 		ErrNo     int `json:"errno"`
-		// ErrMsg    string `json:"err_msg"`
 	}
 )
 
@@ -118,7 +117,7 @@ func FindPanErr(errno int) (errmsg string) {
 	case -7:
 		return "该分享已删除或已取消"
 	case -8:
-		return "该分享已经过期"
+		return "已存在同名文件"
 	case -9:
 		return "文件不存在"
 	case -10:
@@ -150,7 +149,7 @@ func FindPanErr(errno int) (errmsg string) {
 	case -70:
 		return "你分享的文件中包含病毒或疑似病毒，为了你和他人的数据安全，换个文件分享吧"
 	case 2:
-		return "参数错误"
+		return "请稍后再试, 或更换保存路径"
 	case 3:
 		return "未登录或帐号无效"
 	case 4:
@@ -171,6 +170,8 @@ func FindPanErr(errno int) (errmsg string) {
 		return "该文件禁止分享"
 	case 132:
 		return "您的帐号可能存在安全风险，为了确保为您本人操作，请先进行安全验证。"
+	case 9019:
+		return "accesstoken未设置或过期, 请使用setastoken命令设置`"
 	default:
 		return "未知错误"
 	}
