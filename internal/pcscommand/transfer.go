@@ -53,7 +53,6 @@ func RunShareTransfer(params []string, opt *baidupcs.TransferOption) {
 	var vefiryurl string
 	var randsk string
 	featuremap := make(map[string]string)
-	//featuremap["surl"] = featurestr[1:len(featurestr)]
 	featuremap["shareid"] = tokens["shareid"]
 	featuremap["uk"] = tokens["share_uk"]
 	if extracode != "none" {
