@@ -3,6 +3,14 @@ package pcsdownload
 import (
 	"errors"
 	"fmt"
+	"io"
+	"net/http"
+	"os"
+	"path/filepath"
+	"strconv"
+	"strings"
+	"time"
+
 	"github.com/qjfoidnh/BaiduPCS-Go/baidupcs"
 	"github.com/qjfoidnh/BaiduPCS-Go/baidupcs/pcserror"
 	"github.com/qjfoidnh/BaiduPCS-Go/internal/pcsconfig"
@@ -14,13 +22,6 @@ import (
 	"github.com/qjfoidnh/BaiduPCS-Go/requester"
 	"github.com/qjfoidnh/BaiduPCS-Go/requester/downloader"
 	"github.com/qjfoidnh/BaiduPCS-Go/requester/transfer"
-	"io"
-	"net/http"
-	"os"
-	"path/filepath"
-	"strconv"
-	"strings"
-	"time"
 )
 
 type (
@@ -150,7 +151,7 @@ func (dtu *DownloadTaskUnit) download(downloadURL string, client *requester.HTTP
 		if dtu.IsPrintStatus {
 			// 输出所有的worker状态
 			var (
-				tb      = pcstable.NewTable(builder)
+				tb = pcstable.NewTable(builder)
 			)
 			tb.SetHeader([]string{"#", "status", "range", "left", "speeds", "error"})
 			workersCallback(func(key int, worker *downloader.Worker) bool {
@@ -173,7 +174,7 @@ func (dtu *DownloadTaskUnit) download(downloadURL string, client *requester.HTTP
 			leftStr = left.String()
 		}
 
-		fmt.Fprintf(builder,dtu.PrintFormat, dtu.taskInfo.Id(),
+		fmt.Fprintf(builder, dtu.PrintFormat, dtu.taskInfo.Id(),
 			converter.ConvertFileSize(status.Downloaded(), 2),
 			converter.ConvertFileSize(status.TotalSize(), 2),
 			converter.ConvertFileSize(status.SpeedsPerSecond(), 2),
@@ -231,8 +232,8 @@ func (dtu *DownloadTaskUnit) download(downloadURL string, client *requester.HTTP
 	return nil
 }
 
-//panHTTPClient 获取包含特定User-Agent的HTTPClient
-func (dtu *DownloadTaskUnit) panHTTPClient() (*requester.HTTPClient) {
+// panHTTPClient 获取包含特定User-Agent的HTTPClient
+func (dtu *DownloadTaskUnit) panHTTPClient() *requester.HTTPClient {
 	if client == nil {
 		client = pcsconfig.Config.PanHTTPClient()
 	}
@@ -305,12 +306,12 @@ func (dtu *DownloadTaskUnit) locateDownload(result *taskframework.TaskUnitRunRes
 
 	// 更新链接的协议
 	// 跳过nb.cache这种还没有证书的
-	if len(rawDlinks) < dtu.DlinkPrefer + 1 {
+	if len(rawDlinks) < dtu.DlinkPrefer+1 {
 		dtu.DlinkPrefer = len(rawDlinks) - 1
 	}
 	raw_dlink := rawDlinks[dtu.DlinkPrefer]
-	if strings.HasPrefix(raw_dlink.Host, "nb.cache") && len(rawDlinks) > dtu.DlinkPrefer + 1 {
-		raw_dlink = rawDlinks[dtu.DlinkPrefer + 1]
+	if strings.HasPrefix(raw_dlink.Host, "nb.cache") && len(rawDlinks) > dtu.DlinkPrefer+1 {
+		raw_dlink = rawDlinks[dtu.DlinkPrefer+1]
 	}
 	FixHTTPLinkURL(raw_dlink)
 	dlink := raw_dlink.String()
@@ -348,7 +349,7 @@ func (dtu *DownloadTaskUnit) pcsOrStreamingDownload(mode DownloadMode, result *t
 	return true // 下载成功
 }
 
-//checkFileValid 检测文件有效性
+// checkFileValid 检测文件有效性
 func (dtu *DownloadTaskUnit) checkFileValid(result *taskframework.TaskUnitRunResult) (ok bool) {
 	fi, err := os.Stat(dtu.SavePath)
 	if err == nil {
@@ -486,7 +487,7 @@ func (dtu *DownloadTaskUnit) Run() (result *taskframework.TaskUnitRunResult) {
 		result.Succeed = true // 执行成功
 		return
 	}
-	
+
 	if dtu.FileInfo.Size == 0 {
 		if !dtu.Cfg.IsTest {
 			os.Create(dtu.SavePath)
