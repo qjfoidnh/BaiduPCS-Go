@@ -93,7 +93,7 @@ func WalkDir(dirPth, suffix string) (files []string, err error) {
 		}
 		if fi.Mode()&os.ModeSymlink != 0 { // 读取 symbol link
 			err = filepath.Walk(filename+string(os.PathSeparator), walkFunc)
-			return err
+			if err !=nil{return nil} // ignore freaking error.
 		}
 
 		if strings.HasSuffix(strings.ToUpper(fi.Name()), suffix) {
