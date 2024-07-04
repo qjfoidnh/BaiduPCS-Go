@@ -31,11 +31,8 @@ func (pcs *BaiduPCS) GenerateShareQueryURL(subPath string, params map[string]str
 		Path:   "/share/" + subPath,
 	}
 	uv := shareURL.Query()
-	uv.Set("app_id", PanAppID)
-	uv.Set("channel", "chunlei")
-	uv.Set("t", strconv.Itoa(int(time.Now().UnixMilli())))
-	uv.Set("web", "1")
-	uv.Set("clienttype", "0")
+	uv.Set("time", strconv.Itoa(int(time.Now().UnixMilli())))
+	uv.Set("clienttype", "1")
 	for key, value := range params {
 		uv.Set(key, value)
 	}
@@ -90,7 +87,7 @@ func (pcs *BaiduPCS) PostShareQuery(url string, referer string, data map[string]
 	dataReadCloser, panError := pcs.sendReqReturnReadCloser(reqTypePan, OperationShareFileSavetoLocal, http.MethodPost, url, data, map[string]string{
 		"User-Agent":   requester.UserAgent,
 		"Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-		"Referer": referer,
+		"Referer":      referer,
 	})
 	res = make(map[string]string)
 	if panError != nil {
