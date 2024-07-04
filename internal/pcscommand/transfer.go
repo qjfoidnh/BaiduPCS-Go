@@ -53,15 +53,16 @@ func RunShareTransfer(params []string, opt *baidupcs.TransferOption) {
 	var vefiryurl string
 	var randsk string
 	featuremap := make(map[string]string)
-	featuremap["bdstoken"] = tokens["bdstoken"]
-	featuremap["surl"] = featurestr[1:len(featurestr)]
+	featuremap["shareid"] = tokens["shareid"]
+	featuremap["uk"] = tokens["share_uk"]
 	if extracode != "none" {
 
 		vefiryurl = pcs.GenerateShareQueryURL("verify", featuremap).String()
 		res := pcs.PostShareQuery(vefiryurl, link, map[string]string{
 			"pwd":       extracode,
-			"vcode":     "",
-			"vcode_str": "",
+			"vcode":     "null",
+			"vcode_str": "null",
+			"bdstoken":  tokens["bdstoken"],
 		})
 		if res["ErrMsg"] != "0" {
 			fmt.Printf("%s失败: %s\n", baidupcs.OperationShareFileSavetoLocal, res["ErrMsg"])
