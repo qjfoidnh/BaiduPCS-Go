@@ -78,8 +78,12 @@ func RunShareTransfer(params []string, opt *baidupcs.TransferOption) {
 		fmt.Printf("%s失败: %s\n", baidupcs.OperationShareFileSavetoLocal, tokens["ErrMsg"])
 		return
 	}
-	metajsonstr := tokens["metajson"]
-	trans_metas := pcs.ExtractShareInfo(metajsonstr)
+
+	featuremap["sekey"] = randsk
+	featuremap["bdstoken"] = tokens["bdstoken"]
+	queryShareInfoUrl := pcs.GenerateShareQueryURL("list", featuremap).String()
+	//metajsonstr := tokens["metajson"]
+	trans_metas := pcs.ExtractShareInfo(queryShareInfoUrl)
 
 	if trans_metas["ErrMsg"] != "0" {
 		fmt.Printf("%s失败: %s\n", baidupcs.OperationShareFileSavetoLocal, trans_metas["ErrMsg"])

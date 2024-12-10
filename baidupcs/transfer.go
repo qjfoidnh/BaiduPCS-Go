@@ -41,45 +41,54 @@ func (pcs *BaiduPCS) GenerateShareQueryURL(subPath string, params map[string]str
 	return shareURL
 }
 
-func (pcs *BaiduPCS) ExtractShareInfo(metajsonstr string) (res map[string]string) {
+func (pcs *BaiduPCS) ExtractShareInfo(shareURL string) (res map[string]string) {
 	res = make(map[string]string)
-	if !strings.Contains(metajsonstr, "server_filename") {
-		res["ErrMsg"] = "获取分享文件详情失败"
+	dataReadCloser, panError := pcs.sendReqReturnReadCloser(reqTypePan, OperationShareFileSavetoLocal, http.MethodGet, shareURL, nil, map[string]string{
+		"User-Agent":   requester.UserAgent,
+		"Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+	})
+	if panError != nil {
+		res["ErrMsg"] = "提交分享项查询请求时发生错误"
 		return
 	}
-	errno := gjson.Get(metajsonstr, `file_list.errno`).Int()
-	if errno != 0 {
-		res["ErrMsg"] = fmt.Sprintf("未知错误, 错误码%d", errno)
-		return
-	}
-	res["filename"] = gjson.Get(metajsonstr, `file_list.0.server_filename`).String()
-	fsid_list := gjson.Get(metajsonstr, `file_list.#.fs_id`).Array()
-	var fids_str string = "["
-	for _, sid := range fsid_list {
-		fids_str += sid.String() + ","
-	}
-
-	res["shareid"] = gjson.Get(metajsonstr, `shareid`).String()
-	res["from"] = gjson.Get(metajsonstr, `share_uk`).String()
-	res["bdstoken"] = gjson.Get(metajsonstr, `bdstoken`).String()
-	shareUrl := &url.URL{
-		Scheme: GetHTTPScheme(true),
-		Host:   PanBaiduCom,
-		Path:   "/share/transfer",
-	}
-	uv := shareUrl.Query()
-	uv.Set("app_id", PanAppID)
-	uv.Set("channel", "chunlei")
-	uv.Set("clienttype", "0")
-	uv.Set("web", "1")
-	for key, value := range res {
-		uv.Set(key, value)
-	}
-	res["item_num"] = strconv.Itoa(len(fsid_list))
-	res["ErrMsg"] = "0"
-	res["fs_id"] = fids_str[:len(fids_str)-1] + "]"
-	shareUrl.RawQuery = uv.Encode()
-	res["shareUrl"] = shareUrl.String()
+	defer dataReadCloser.Close()
+	//if !strings.Contains(metajsonstr, "server_filename") {
+	//	res["ErrMsg"] = "获取分享文件详情失败"
+	//	return
+	//}
+	//errno := gjson.Get(metajsonstr, `file_list.errno`).Int()
+	//if errno != 0 {
+	//	res["ErrMsg"] = fmt.Sprintf("未知错误, 错误码%d", errno)
+	//	return
+	//}
+	//res["filename"] = gjson.Get(metajsonstr, `file_list.0.server_filename`).String()
+	//fsid_list := gjson.Get(metajsonstr, `file_list.#.fs_id`).Array()
+	//var fids_str string = "["
+	//for _, sid := range fsid_list {
+	//	fids_str += sid.String() + ","
+	//}
+	//
+	//res["shareid"] = gjson.Get(metajsonstr, `shareid`).String()
+	//res["from"] = gjson.Get(metajsonstr, `share_uk`).String()
+	//res["bdstoken"] = gjson.Get(metajsonstr, `bdstoken`).String()
+	//shareUrl := &url.URL{
+	//	Scheme: GetHTTPScheme(true),
+	//	Host:   PanBaiduCom,
+	//	Path:   "/share/transfer",
+	//}
+	//uv := shareUrl.Query()
+	//uv.Set("app_id", PanAppID)
+	//uv.Set("channel", "chunlei")
+	//uv.Set("clienttype", "0")
+	//uv.Set("web", "1")
+	//for key, value := range res {
+	//	uv.Set(key, value)
+	//}
+	//res["item_num"] = strconv.Itoa(len(fsid_list))
+	//res["ErrMsg"] = "0"
+	//res["fs_id"] = fids_str[:len(fids_str)-1] + "]"
+	//shareUrl.RawQuery = uv.Encode()
+	//res["shareUrl"] = shareUrl.String()
 	return
 }
 
@@ -104,6 +113,7 @@ func (pcs *BaiduPCS) PostShareQuery(url string, referer string, data map[string]
 		}
 		return
 	}
+	res["randsk"] = gjson.Get(string(body), `randsk`).String()
 	res["ErrMsg"] = "0"
 	return
 }
@@ -143,7 +153,7 @@ func (pcs *BaiduPCS) AccessSharePage(featurestr string, first bool) (tokens map[
 			tokens["ErrMsg"] = "请确认登录参数中已经包含了网盘STOKEN"
 			return
 		}
-		tokens["metajson"] = string(sub[1])
+		//tokens["metajson"] = string(sub[1])
 		tokens["bdstoken"] = gjson.Get(string(sub[1]), `bdstoken`).String()
 		tokens["uk"] = gjson.Get(string(sub[1]), `uk`).String()
 		tokens["share_uk"] = gjson.Get(string(sub[1]), `share_uk`).String()
