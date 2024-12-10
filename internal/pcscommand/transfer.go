@@ -3,6 +3,7 @@ package pcscommand
 import (
 	"encoding/base64"
 	"fmt"
+	"net/url"
 	"path"
 	"regexp"
 	"strconv"
@@ -79,7 +80,8 @@ func RunShareTransfer(params []string, opt *baidupcs.TransferOption) {
 		return
 	}
 
-	featuremap["sekey"] = randsk
+	sekey, _ := url.QueryUnescape(randsk)
+	featuremap["sekey"] = sekey
 	featuremap["bdstoken"] = tokens["bdstoken"]
 	queryShareInfoUrl := pcs.GenerateShareQueryURL("list", featuremap).String()
 	//metajsonstr := tokens["metajson"]
