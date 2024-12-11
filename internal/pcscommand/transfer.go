@@ -88,6 +88,7 @@ func RunShareTransfer(params []string, opt *baidupcs.TransferOption) {
 	featuremap["share_type"] = "100"
 	//featuremap["devuid"] = baidupcs.
 	featuremap["timestamp"] = strconv.Itoa(int(time.Now().Unix()))
+	featuremap["channel"] = "android_7.0_EVA-AL10_bd-netdisk_1523a"
 	queryShareInfoUrl := pcs.GenerateShareQueryURL("list", featuremap).String()
 	//metajsonstr := tokens["metajson"]
 	trans_metas := pcs.ExtractShareInfo(queryShareInfoUrl)
