@@ -86,7 +86,7 @@ func RunShareTransfer(params []string, opt *baidupcs.TransferOption) {
 	featuremap["bdstoken"] = tokens["bdstoken"]
 	featuremap["root"] = "1"
 	featuremap["share_type"] = "100"
-	featuremap["devuid"] = "1B2F1B5433FA268A289BD8870EDC7222|0"
+	//featuremap["devuid"] = baidupcs.
 	featuremap["timestamp"] = strconv.Itoa(int(time.Now().Unix()))
 	queryShareInfoUrl := pcs.GenerateShareQueryURL("list", featuremap).String()
 	//metajsonstr := tokens["metajson"]
