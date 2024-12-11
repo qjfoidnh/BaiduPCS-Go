@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/qjfoidnh/BaiduPCS-Go/baidupcs"
 )
@@ -83,6 +84,10 @@ func RunShareTransfer(params []string, opt *baidupcs.TransferOption) {
 	sekey, _ := url.QueryUnescape(randsk)
 	featuremap["sekey"] = sekey
 	featuremap["bdstoken"] = tokens["bdstoken"]
+	featuremap["root"] = "1"
+	featuremap["share_type"] = "100"
+	//featuremap["devuid"] = pcs.(pcs.GetBDUSS())
+	featuremap["timestamp"] = strconv.Itoa(int(time.Now().Unix()))
 	queryShareInfoUrl := pcs.GenerateShareQueryURL("list", featuremap).String()
 	//metajsonstr := tokens["metajson"]
 	trans_metas := pcs.ExtractShareInfo(queryShareInfoUrl)
