@@ -2,7 +2,6 @@ package baidupcs
 
 import (
 	"fmt"
-	"github.com/qjfoidnh/BaiduPCS-Go/baidupcs/netdisksign"
 	"github.com/qjfoidnh/BaiduPCS-Go/requester"
 	"github.com/tidwall/gjson"
 	"io/ioutil"
@@ -34,8 +33,6 @@ func (pcs *BaiduPCS) GenerateShareQueryURL(subPath string, params map[string]str
 	uv := shareURL.Query()
 	uv.Set("time", strconv.Itoa(int(time.Now().UnixMilli())))
 	uv.Set("clienttype", "1")
-	uv.Set("cuid", netdisksign.DevUID(pcs.GetBDUSS()))
-	uv.Set("devuid", netdisksign.DevUID(pcs.GetBDUSS()))
 	for key, value := range params {
 		uv.Set(key, value)
 	}

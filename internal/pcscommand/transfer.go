@@ -3,7 +3,6 @@ package pcscommand
 import (
 	"encoding/base64"
 	"fmt"
-	"net/url"
 	"path"
 	"regexp"
 	"strconv"
@@ -81,14 +80,16 @@ func RunShareTransfer(params []string, opt *baidupcs.TransferOption) {
 		return
 	}
 
-	sekey, _ := url.QueryUnescape(randsk)
-	featuremap["sekey"] = sekey
+	//sekey, _ := url.QueryUnescape(randsk)
+	//featuremap["sekey"] = sekey
 	featuremap["bdstoken"] = tokens["bdstoken"]
 	featuremap["root"] = "1"
-	featuremap["share_type"] = "100"
+	featuremap["web"] = "1"
+	featuremap["app_id"] = "250528"
+	featuremap["shorturl"] = featurestr[1:]
 	//featuremap["devuid"] = baidupcs.
 	featuremap["timestamp"] = strconv.Itoa(int(time.Now().Unix()))
-	featuremap["channel"] = "android_7.0_EVA-AL10_bd-netdisk_1523a"
+	featuremap["channel"] = "chunlei"
 	queryShareInfoUrl := pcs.GenerateShareQueryURL("list", featuremap).String()
 	//metajsonstr := tokens["metajson"]
 	trans_metas := pcs.ExtractShareInfo(queryShareInfoUrl)
