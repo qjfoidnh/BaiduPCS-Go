@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 )
 
 // RunShareTransfer 执行分享链接转存到网盘
@@ -48,14 +49,15 @@ func RunShareTransfer(params []string, opt *baidupcs.TransferOption) {
 		fmt.Printf("%s失败: %s\n", baidupcs.OperationShareFileSavetoLocal, tokens["ErrMsg"])
 		return
 	}
-	// pcs.UpdatePCSCookies(true)
-	var vefiryurl string
-	featuremap := make(map[string]string)
-	featuremap["shareid"] = tokens["shareid"]
-	featuremap["uk"] = tokens["share_uk"]
+
 	if extracode != "none" {
-		vefiryurl = pcs.GenerateShareQueryURL("verify", featuremap).String()
-		res := pcs.PostShareQuery(vefiryurl, link, map[string]string{
+		verifyUrl := pcs.GenerateShareQueryURL("verify", map[string]string{
+			"shareid":    tokens["shareid"],
+			"time":       strconv.Itoa(int(time.Now().UnixMilli())),
+			"clienttype": "1",
+			"uk":         tokens["share_uk"],
+		}).String()
+		res := pcs.PostShareQuery(verifyUrl, link, map[string]string{
 			"pwd":       extracode,
 			"vcode":     "null",
 			"vcode_str": "null",
@@ -73,14 +75,15 @@ func RunShareTransfer(params []string, opt *baidupcs.TransferOption) {
 		fmt.Printf("%s失败: %s\n", baidupcs.OperationShareFileSavetoLocal, tokens["ErrMsg"])
 		return
 	}
-
-	featuremap["bdstoken"] = tokens["bdstoken"]
-	featuremap["root"] = "1"
-	featuremap["web"] = "5"
-	featuremap["app_id"] = "250528"
-	featuremap["shorturl"] = featureStr[1:]
-	featuremap["channel"] = "chunlei"
-	queryShareInfoUrl := pcs.GenerateShareQueryURL("list", featuremap).String()
+	featureMap := map[string]string{
+		"bdstoken": tokens["bdstoken"],
+		"root":     "1",
+		"web":      "5",
+		"app_id":   "250528",
+		"shorturl": featureStr[1:],
+		"channel":  "chunlei",
+	}
+	queryShareInfoUrl := pcs.GenerateShareQueryURL("list", featureMap).String()
 	transMetas := pcs.ExtractShareInfo(queryShareInfoUrl, tokens["shareid"], tokens["share_uk"], tokens["bdstoken"])
 
 	if transMetas["ErrMsg"] != "success" {
