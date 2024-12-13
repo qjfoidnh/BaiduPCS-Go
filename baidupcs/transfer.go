@@ -124,9 +124,9 @@ func (pcs *BaiduPCS) AccessSharePage(featurestr string, first bool) (tokens map[
 	if !first {
 		headers["Referer"] = fmt.Sprintf("https://pan.baidu.com/share/init?surl=%s", featurestr[1:])
 	}
-	sharelink := fmt.Sprintf("https://pan.baidu.com/s/%s", featurestr)
+	shareLink := fmt.Sprintf("https://pan.baidu.com/s/%s", featurestr)
 
-	dataReadCloser, panError := pcs.sendReqReturnReadCloser(reqTypePan, OperationShareFileSavetoLocal, http.MethodGet, sharelink, nil, headers)
+	dataReadCloser, panError := pcs.sendReqReturnReadCloser(reqTypePan, OperationShareFileSavetoLocal, http.MethodGet, shareLink, nil, headers)
 
 	if panError != nil {
 		tokens["ErrMsg"] = "访问分享页失败"

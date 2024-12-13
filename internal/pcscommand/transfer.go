@@ -14,22 +14,22 @@ import (
 // RunShareTransfer 执行分享链接转存到网盘
 func RunShareTransfer(params []string, opt *baidupcs.TransferOption) {
 	var link string
-	var extracode string
+	var extraCode string
 	if len(params) == 1 {
 		link = params[0]
 		if strings.Contains(link, "bdlink=") || !strings.Contains(link, "pan.baidu.com/") {
-			RunRapidTransfer(link, opt.Rname)
-			//fmt.Printf("%s失败: %s\n", baidupcs.OperationShareFileSavetoLocal, "秒传已不再被支持")
+			//RunRapidTransfer(link, opt.Rname)
+			fmt.Printf("%s失败: %s\n", baidupcs.OperationShareFileSavetoLocal, "秒传已不再被支持")
 			return
 		}
-		extracode = "none"
+		extraCode = "none"
 		if strings.Contains(link, "?pwd=") {
-			extracode = strings.Split(link, "?pwd=")[1]
+			extraCode = strings.Split(link, "?pwd=")[1]
 			link = strings.Split(link, "?pwd=")[0]
 		}
 	} else if len(params) == 2 {
 		link = params[0]
-		extracode = params[1]
+		extraCode = params[1]
 	}
 	if link[len(link)-1:] == "/" {
 		link = link[0 : len(link)-1]
@@ -39,7 +39,7 @@ func RunShareTransfer(params []string, opt *baidupcs.TransferOption) {
 	if strings.Contains(featureStr, "init?") {
 		featureStr = "1" + strings.Split(featureStr, "=")[1]
 	}
-	if len(featureStr) > 23 || featureStr[0:1] != "1" || len(extracode) != 4 {
+	if len(featureStr) > 23 || featureStr[0:1] != "1" || len(extraCode) != 4 {
 		fmt.Printf("%s失败: %s\n", baidupcs.OperationShareFileSavetoLocal, "链接地址或提取码非法")
 		return
 	}
@@ -50,7 +50,7 @@ func RunShareTransfer(params []string, opt *baidupcs.TransferOption) {
 		return
 	}
 
-	if extracode != "none" {
+	if extraCode != "none" {
 		verifyUrl := pcs.GenerateShareQueryURL("verify", map[string]string{
 			"shareid":    tokens["shareid"],
 			"time":       strconv.Itoa(int(time.Now().UnixMilli())),
@@ -58,7 +58,7 @@ func RunShareTransfer(params []string, opt *baidupcs.TransferOption) {
 			"uk":         tokens["share_uk"],
 		}).String()
 		res := pcs.PostShareQuery(verifyUrl, link, map[string]string{
-			"pwd":       extracode,
+			"pwd":       extraCode,
 			"vcode":     "null",
 			"vcode_str": "null",
 			"bdstoken":  tokens["bdstoken"],
@@ -79,7 +79,7 @@ func RunShareTransfer(params []string, opt *baidupcs.TransferOption) {
 		"bdstoken": tokens["bdstoken"],
 		"root":     "1",
 		"web":      "5",
-		"app_id":   "250528",
+		"app_id":   baidupcs.PanAppID,
 		"shorturl": featureStr[1:],
 		"channel":  "chunlei",
 	}

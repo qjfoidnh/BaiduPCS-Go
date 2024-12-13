@@ -56,7 +56,7 @@ const (
 var (
 	// Version 版本号
 	//Version = "v3.9.4-devel"
-	Version = "v3.9.5-devel"
+	Version = "v3.9.6-devel"
 
 	historyFilePath = filepath.Join(pcsconfig.GetConfigDir(), "pcs_command_history.txt")
 	reloadFn        = func(c *cli.Context) error {
@@ -604,8 +604,8 @@ func main() {
 			},
 		},
 		{
-			Name:        "setastoken",
-			Usage:       "设定当前账号的accessToken",
+			Name:  "setastoken",
+			Usage: "设定当前账号的accessToken",
 			Description: `
 	设定当前登录帐号的accessToken:
 	若不使用秒传链接转存, 可不设定; accessToken申请及获取教程:
@@ -615,9 +615,9 @@ func main() {
 	示例:
 	BaiduPCS-Go setastoken 156.182v9052tgf1006c89891bsfb2401974.YmKOAwBD9yGaG2s4p5NNkX4CXeIbJxx4hAxotfS.PyuHEs
 `,
-			Category:    "百度帐号",
-			Before:      reloadFn,
-			After:       saveFunc,
+			Category: "百度帐号",
+			Before:   reloadFn,
+			After:    saveFunc,
 			Action: func(c *cli.Context) error {
 				activeUser := pcsconfig.Config.ActiveUser()
 				if activeUser.UID == 0 {
@@ -1161,7 +1161,7 @@ func main() {
 					Usage: "将本地文件的修改时间设置为服务器上的修改时间",
 				},
 				cli.IntFlag{
-					Name: "dindex",
+					Name:  "dindex",
 					Usage: "使用备选下载链接中的第几个，默认第一个",
 				},
 				cli.BoolFlag{
@@ -1519,8 +1519,8 @@ func main() {
 							return nil
 						}
 						opt := &baidupcs.ShareOption{
-							Password: c.String("p"),
-							Period:   c.Int("period"),
+							Password:   c.String("p"),
+							Period:     c.Int("period"),
 							IsCombined: c.Bool("f"),
 						}
 						pcscommand.RunShareSet(c.Args(), opt)
@@ -1538,7 +1538,7 @@ func main() {
 							Value: 0,
 						},
 						cli.BoolFlag{
-							Name: "f",
+							Name:  "f",
 							Usage: "输出带密码的完整链接格式",
 						},
 					},
