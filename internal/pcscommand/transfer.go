@@ -3,13 +3,11 @@ package pcscommand
 import (
 	"encoding/base64"
 	"fmt"
+	"github.com/qjfoidnh/BaiduPCS-Go/baidupcs"
 	"path"
 	"regexp"
 	"strconv"
 	"strings"
-	"time"
-
-	"github.com/qjfoidnh/BaiduPCS-Go/baidupcs"
 )
 
 // RunShareTransfer 执行分享链接转存到网盘
@@ -84,11 +82,11 @@ func RunShareTransfer(params []string, opt *baidupcs.TransferOption) {
 	//featuremap["sekey"] = sekey
 	featuremap["bdstoken"] = tokens["bdstoken"]
 	featuremap["root"] = "1"
-	featuremap["web"] = "1"
+	featuremap["web"] = "5"
 	featuremap["app_id"] = "250528"
 	featuremap["shorturl"] = featurestr[1:]
 	//featuremap["devuid"] = baidupcs.
-	featuremap["timestamp"] = strconv.Itoa(int(time.Now().Unix()))
+	//featuremap["timestamp"] = strconv.Itoa(int(time.Now().Unix()))
 	featuremap["channel"] = "chunlei"
 	queryShareInfoUrl := pcs.GenerateShareQueryURL("list", featuremap).String()
 	//metajsonstr := tokens["metajson"]

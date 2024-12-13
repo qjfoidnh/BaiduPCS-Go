@@ -10,9 +10,7 @@ import (
 	"path"
 	"path/filepath"
 	"regexp"
-	"strconv"
 	"strings"
-	"time"
 )
 
 type (
@@ -31,8 +29,8 @@ func (pcs *BaiduPCS) GenerateShareQueryURL(subPath string, params map[string]str
 		Path:   "/share/" + subPath,
 	}
 	uv := shareURL.Query()
-	uv.Set("time", strconv.Itoa(int(time.Now().UnixMilli())))
-	uv.Set("clienttype", "1")
+	//uv.Set("time", strconv.Itoa(int(time.Now().UnixMilli())))
+	//uv.Set("clienttype", "1")
 	for key, value := range params {
 		uv.Set(key, value)
 	}
