@@ -51,6 +51,8 @@ func RunShareTransfer(params []string, opt *baidupcs.TransferOption) {
 	// pcs.UpdatePCSCookies(true)
 	var vefiryurl string
 	featuremap := make(map[string]string)
+	featuremap["shareid"] = tokens["shareid"]
+	featuremap["uk"] = tokens["share_uk"]
 	if extracode != "none" {
 		vefiryurl = pcs.GenerateShareQueryURL("verify", featuremap).String()
 		res := pcs.PostShareQuery(vefiryurl, link, map[string]string{
