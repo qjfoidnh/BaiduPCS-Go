@@ -1,6 +1,6 @@
 module github.com/qjfoidnh/BaiduPCS-Go
 
-go 1.18
+go 1.23
 
 require (
 	github.com/GeertJohan/go.incremental v1.0.0
