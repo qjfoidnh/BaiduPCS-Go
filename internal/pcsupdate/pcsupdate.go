@@ -84,30 +84,28 @@ func CheckUpdate(version string, yes bool) {
 
 	builder := &strings.Builder{}
 	builder.WriteString("BaiduPCS-Go-" + releaseInfo.TagName + "-" + runtime.GOOS + "-.*?")
-	if runtime.GOOS == "darwin" && (runtime.GOARCH == "arm" || runtime.GOARCH == "arm64") {
-		builder.WriteString("arm")
-	} else {
-		switch runtime.GOARCH {
-		case "amd64":
-			builder.WriteString("(amd64|x86_64|x64)")
-		case "386":
-			builder.WriteString("(386|x86)")
-		case "arm":
-			builder.WriteString("(armv5|armv7|arm)")
-		case "arm64":
-			builder.WriteString("arm64")
-		case "mips":
-			builder.WriteString("mips")
-		case "mips64":
-			builder.WriteString("mips64")
-		case "mipsle":
-			builder.WriteString("(mipsle|mipsel)")
-		case "mips64le":
-			builder.WriteString("(mips64le|mips64el)")
-		default:
-			builder.WriteString(runtime.GOARCH)
-		}
+
+	switch runtime.GOARCH {
+	case "amd64":
+		builder.WriteString("(amd64|x86_64|x64)")
+	case "386":
+		builder.WriteString("(386|x86)")
+	case "arm":
+		builder.WriteString("(armv5|armv7|arm)")
+	case "arm64":
+		builder.WriteString("arm64")
+	case "mips":
+		builder.WriteString("mips")
+	case "mips64":
+		builder.WriteString("mips64")
+	case "mipsle":
+		builder.WriteString("(mipsle|mipsel)")
+	case "mips64le":
+		builder.WriteString("(mips64le|mips64el)")
+	default:
+		builder.WriteString(runtime.GOARCH)
 	}
+
 	builder.WriteString("\\.zip")
 
 	exp := regexp.MustCompile(builder.String())
