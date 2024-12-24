@@ -96,6 +96,13 @@ func WalkDir(dirPth, suffix string) (files []string, err error) {
 		if err != nil || fileInfo.Size() == 0 {
 			return nil
 		}
+		if fileInfo.Mode()&os.ModeSymlink != 0 { // 读取 symbol link
+			targetFileInfo, _ := os.Stat(filename)
+			if targetFileInfo.IsDir() {
+				err = filepath.WalkDir(filename+string(os.PathSeparator), walkFunc)
+				return err
+			}
+		}
 
 		if strings.HasSuffix(strings.ToUpper(fi.Name()), suffix) {
 			files = append(files, path.Clean(filename))
