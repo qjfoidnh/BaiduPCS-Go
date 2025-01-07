@@ -15,7 +15,7 @@ require (
 	github.com/peterh/liner v1.2.1
 	github.com/qjfoidnh/Baidu-Login v1.4.1
 	github.com/qjfoidnh/baidu-tools v1.2.0 //dfa5778abeed
-	github.com/tidwall/gjson v1.6.4
+	github.com/tidwall/gjson v1.18.0
 	github.com/urfave/cli v1.22.5
 	golang.org/x/crypto v0.0.0-20191011191535-87dc89f01550
 	golang.org/x/sys v0.0.0-20200615200032-f1bc736245b1
@@ -34,7 +34,7 @@ require (
 	github.com/modern-go/reflect2 v1.0.1 // indirect
 	github.com/russross/blackfriday/v2 v2.0.1 // indirect
 	github.com/shurcooL/sanitized_anchor_name v1.0.0 // indirect
-	github.com/tidwall/match v1.0.1 // indirect
-	github.com/tidwall/pretty v1.0.2 // indirect
+	github.com/tidwall/match v1.1.1 // indirect
+	github.com/tidwall/pretty v1.2.0 // indirect
 	google.golang.org/protobuf v1.23.0 // indirect
 )
