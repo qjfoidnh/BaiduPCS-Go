@@ -12,13 +12,13 @@ require (
 	github.com/mattn/go-runewidth v0.0.9
 	github.com/oleiade/lane v1.0.1
 	github.com/olekukonko/tablewriter v0.0.4
-	github.com/peterh/liner v1.2.1
+	github.com/peterh/liner v1.2.2
 	github.com/qjfoidnh/Baidu-Login v1.4.1
 	github.com/qjfoidnh/baidu-tools v1.2.0 //dfa5778abeed
 	github.com/tidwall/gjson v1.6.4
 	github.com/urfave/cli v1.22.5
 	golang.org/x/crypto v0.0.0-20191011191535-87dc89f01550
-	golang.org/x/sys v0.0.0-20200615200032-f1bc736245b1
+	golang.org/x/sys v0.0.0-20211117180635-dee7805ff2e1
 )
 
 require (
