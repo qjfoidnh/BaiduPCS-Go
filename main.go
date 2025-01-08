@@ -13,6 +13,7 @@ import (
 	"image"
 	"os/exec"
 
+	"github.co
 	"net/http"
 	"os"
 	"path"
@@ -24,9 +25,6 @@ import (
 	"strings"
 	"time"
 	"unicode"
-
-	// 注意: 这里的 client 包路径，需要改成你项目实际的路径
-	"github.com/qjfoidnh/BaiduPCS-Go/client"
 
 	"github.com/mdp/qrterminal"
 	"github.com/olekukonko/tablewriter"
