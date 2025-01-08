@@ -197,7 +197,7 @@ func (wer *Worker) Canceled() bool {
 //Completed 是否已经完成
 func (wer *Worker) Completed() bool {
 	switch wer.status.statusCode {
-	case StatusCodeSuccessed, StatusCodeCanceled:
+	case StatusCodeSucceeded, StatusCodeCanceled:
 		return true
 	default:
 		return false
@@ -245,7 +245,7 @@ func (wer *Worker) Execute() {
 			if rlen < 0 {
 				pcsverbose.Verbosef("DEBUG: RangeLen is negative at begin: %v, %d\n", wer.wrange, wer.wrange.Len())
 			}
-			wer.status.statusCode = StatusCodeSuccessed
+			wer.status.statusCode = StatusCodeSucceeded
 			return
 		}
 	}
@@ -440,7 +440,7 @@ func (wer *Worker) Execute() {
 				case rlen <= 0:
 					// 下载完成
 					// 小于0可能是因为 worker 被 duplicate
-					wer.status.statusCode = StatusCodeSuccessed
+					wer.status.statusCode = StatusCodeSucceeded
 					if rlen < 0 {
 						pcsverbose.Verbosef("DEBUG: RangeLen is negative at end: %v, %d\n", wer.wrange, wer.wrange.Len())
 					}

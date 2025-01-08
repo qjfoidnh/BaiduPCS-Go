@@ -357,7 +357,7 @@ func (pcs *BaiduPCS) recurseMatchPathByShellPattern(index int, patternSlice *[]s
 
 // MatchPathByShellPattern 通配符匹配文件路径, pattern 为绝对路径
 func (pcs *BaiduPCS) MatchPathByShellPattern(pattern string) (pcspaths []string, pcsError pcserror.Error) {
-	errInfo := pcserror.NewPCSErrorInfo(OperrationMatchPathByShellPattern)
+	errInfo := pcserror.NewPCSErrorInfo(OperationMatchPathByShellPattern)
 	errInfo.ErrType = pcserror.ErrTypeOthers
 
 	patternSlice := strings.Split(escaper.Escape(path.Clean(pattern), []rune{'['}), PathSeparator) // 转义中括号
