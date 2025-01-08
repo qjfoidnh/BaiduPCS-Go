@@ -8,11 +8,13 @@ import (
 	"fmt"
 	"github.com/makiuchi-d/gozxing"
 	"github.com/makiuchi-d/gozxing/qrcode"
+	"github.com/mattn/go-colorable"
+	"github.com/qjfoidnh/BaiduPCS-Go/internal/pcsupdate"
 	"image"
+	"os/exec"
 
 	"net/http"
 	"os"
-	"os/exec"
 	"path"
 	"path/filepath"
 	"regexp"
@@ -23,18 +25,17 @@ import (
 	"time"
 	"unicode"
 
-	"github.com/mattn/go-colorable"
-	"github.com/mdp/qrterminal"
+	// 注意: 这里的 client 包路径，需要改成你项目实际的路径
+	"github.com/qjfoidnh/BaiduPCS-Go/client"
 
+	"github.com/mdp/qrterminal"
 	"github.com/olekukonko/tablewriter"
 	"github.com/peterh/liner"
 	"github.com/qjfoidnh/BaiduPCS-Go/baidupcs"
-	"github.com/qjfoidnh/BaiduPCS-Go/client"
 	"github.com/qjfoidnh/BaiduPCS-Go/internal/pcscommand"
 	"github.com/qjfoidnh/BaiduPCS-Go/internal/pcsconfig"
 	"github.com/qjfoidnh/BaiduPCS-Go/internal/pcsfunctions/pcsdownload"
 	_ "github.com/qjfoidnh/BaiduPCS-Go/internal/pcsinit"
-	"github.com/qjfoidnh/BaiduPCS-Go/internal/pcsupdate"
 	"github.com/qjfoidnh/BaiduPCS-Go/pcsliner"
 	"github.com/qjfoidnh/BaiduPCS-Go/pcsliner/args"
 	"github.com/qjfoidnh/BaiduPCS-Go/pcstable"
@@ -113,9 +114,10 @@ type SessionData struct {
 }
 
 type SessionInfo struct {
-	Bduss  string `json:"bduss"`
-	Stoken string `json:"stoken"`
-	Ptoken string `json:"ptoken"`
+	Bduss      string `json:"bduss"`
+	Stoken     string `json:"stoken"`
+	Ptoken     string `json:"ptoken"`
+	StokenList string `json:"stokenList"` // 保留原始 JSON 字符串
 }
 
 // QrCodeLogin handles QR code login
@@ -124,9 +126,11 @@ type QrCodeLogin struct {
 }
 
 func (q *QrCodeLogin) InitClient() {
+	// 这里创建新版 HTTPClient（已实现 FetchWithHeaders、Get 等）
 	q.httpClient = client.NewHTTPClient()
 }
 
+// GenerateGid 生成随机gid
 func (q *QrCodeLogin) GenerateGid() (string, error) {
 	vm := otto.New()
 	_, err := vm.Run(`
@@ -148,12 +152,14 @@ func (q *QrCodeLogin) GenerateGid() (string, error) {
 	return value.String(), nil
 }
 
+// GetQrCode 获取登录二维码链接
 func (q *QrCodeLogin) GetQrCode(gid string) (string, string, error) {
 	t := int64(time.Now().Unix() * 1000)
 	t1 := t + 21232
 	t2 := t1 + 4
 	callBack := fmt.Sprintf("tangram_guid_%d", t)
-	webUrl := fmt.Sprintf("https://passport.baidu.com/v2/api/getqrcode?lp=pc&qrloginfrom=pc&gid=%s&callback=%s&apiver=v3&tt=%d&tpl=netdisk&_=%d", gid, callBack, t1, t2)
+	webUrl := fmt.Sprintf("https://passport.baidu.com/v2/api/getqrcode?lp=pc&qrloginfrom=pc&gid=%s&callback=%s&apiver=v3&tt=%d&tpl=netdisk&_=%d",
+		gid, callBack, t1, t2)
 
 	headers := map[string]string{
 		"Accept":          "*/*",
@@ -190,7 +196,7 @@ func (q *QrCodeLogin) GetQrCode(gid string) (string, string, error) {
 		return "", "", fmt.Errorf("获取二维码失败, errno: %d", qrData.Errno)
 	}
 
-	// 确保 imageUrl 包含协议部分
+	// 确保 imageUrl 带协议
 	if !strings.HasPrefix(qrData.ImageUrl, "http://") && !strings.HasPrefix(qrData.ImageUrl, "https://") {
 		qrData.ImageUrl = "https://" + qrData.ImageUrl
 	}
@@ -198,8 +204,8 @@ func (q *QrCodeLogin) GetQrCode(gid string) (string, string, error) {
 	return qrData.ImageUrl, qrData.Sign, nil
 }
 
+// DownloadQrCode 下载二维码并在终端上打印生成的二维码图案
 func (q *QrCodeLogin) DownloadQrCode(imageUrl string) error {
-	// 确保 imageUrl 包含协议部分
 	if !strings.HasPrefix(imageUrl, "http://") && !strings.HasPrefix(imageUrl, "https://") {
 		imageUrl = "https://" + imageUrl
 	}
@@ -229,10 +235,10 @@ func (q *QrCodeLogin) DownloadQrCode(imageUrl string) error {
 
 	fmt.Println("扫描以下二维码以登录:")
 	q.DisplayQRCode(qrContent)
-
 	return nil
 }
 
+// QueryQrCode 查询二维码状态
 func (q *QrCodeLogin) QueryQrCode(channelId string, gid string) (string, error) {
 	for {
 		time.Sleep(2 * time.Second)
@@ -241,7 +247,8 @@ func (q *QrCodeLogin) QueryQrCode(channelId string, gid string) (string, error) 
 		t1 := t + 5
 		t2 := t1 + 5
 
-		webUrl := fmt.Sprintf("https://passport.baidu.com/channel/unicast?channel_id=%s&tpl=netdisk&gid=%s&callback=%s&apiver=v3&tt=%d&_=%d", channelId, gid, callBack, t1, t2)
+		webUrl := fmt.Sprintf("https://passport.baidu.com/channel/unicast?channel_id=%s&tpl=netdisk&gid=%s&callback=%s&apiver=v3&tt=%d&_=%d",
+			channelId, gid, callBack, t1, t2)
 		headers := map[string]string{
 			"Accept":          "*/*",
 			"Accept-Encoding": "gzip, deflate, br",
@@ -289,11 +296,13 @@ func (q *QrCodeLogin) QueryQrCode(channelId string, gid string) (string, error) 
 	}
 }
 
-func (q *QrCodeLogin) Login(channelV string) (string, error) {
+// Login 触发登录逻辑, 同时写入本地配置 (BDUSS, STOKEN, PTOKEN)
+func (q *QrCodeLogin) Login(channelV string) (string, string, string, string, error) {
 	t := time.Now().Unix() * 1000
 	t1 := t + 225
 	callBack := "bd__cbs__ay6xvs"
-	webUrl := fmt.Sprintf("https://passport.baidu.com/v3/login/main/qrbdusslogin?v=%d&bduss=%s&loginVersion=v4&qrcode=1&tpl=netdisk&apiver=v3&tt=%d&traceid=&time=%d&alg=v3&callback=%s", t, channelV, t, t1, callBack)
+	webUrl := fmt.Sprintf("https://passport.baidu.com/v3/login/main/qrbdusslogin?v=%d&bduss=%s&loginVersion=v4&qrcode=1&tpl=netdisk&apiver=v3&tt=%d&traceid=&time=%d&alg=v3&callback=%s",
+		t, channelV, t, t1, callBack)
 	webUrl += "&u=https%253A%252F%252Fpan.baidu.com%252Fdisk%252Fhome"
 
 	headers := map[string]string{
@@ -313,35 +322,62 @@ func (q *QrCodeLogin) Login(channelV string) (string, error) {
 
 	respBody, err := q.httpClient.Fetch(webUrl, http.MethodGet, headers, nil)
 	if err != nil {
-		return "", fmt.Errorf("failed to fetch URL: %w", err)
+		return "", "", "", "", fmt.Errorf("failed to fetch URL: %w", err)
 	}
+
+	// 从响应头中获取 Set-Cookie
+	//cookies := respHeaders.Get("Set-Cookie")
 
 	parsedBody, err := q.ParseCallBackData(callBack, respBody)
 	if err != nil {
-		return "", fmt.Errorf("failed to parse callback data: %w", err)
+		return "", "", "", "", fmt.Errorf("failed to parse callback data: %w", err)
 	}
 
 	text := string(parsedBody)
 
-	// 修复 JSON 格式问题
+	// 修复 JSON 格式问题并解析 loginData
 	text = strings.ReplaceAll(text, "'", "\"") // 将单引号替换为双引号
 	text = strings.TrimSpace(text)             // 去除首尾空格
 	text = strings.ReplaceAll(text, "\\", "")  // 删除多余的反斜杠
 
 	// 确保 JSON 数据格式有效
 	if !json.Valid([]byte(text)) {
-		return "", fmt.Errorf("invalid JSON format: %s", text)
+		return "", "", "", "", fmt.Errorf("invalid JSON format: %s", text)
 	}
 
 	var loginData LoginData
 	err = json.Unmarshal([]byte(text), &loginData)
 	if err != nil {
-		return "", fmt.Errorf("failed to unmarshal JSON: %w", err)
+		return "", "", "", "", fmt.Errorf("解析 JSON 错误: %w", err)
 	}
 
-	return loginData.Data.Session.Bduss, nil
+	// 从 stokenList 中提取 netdisk 的 stoken
+	netdiskStoken, err := ExtractNetdiskStoken(loginData.Data.Session.StokenList)
+	if err != nil {
+		fmt.Println("提取 netdisk 的 stoken 失败:", err)
+		return "", "", "", "", err
+	}
+
+	// 更新 stoken 为 netdisk 的值
+	loginData.Data.Session.Stoken = netdiskStoken
+
+	// 配置 BDUSS, STOKEN, PTOKEN
+	bduss := loginData.Data.Session.Bduss
+	stoken := loginData.Data.Session.Stoken
+	ptoken := loginData.Data.Session.Ptoken
+	cookies := fmt.Sprintf("BDUSS=%s;PTOKEN=%s;STOKEN=%s;", bduss, ptoken, stoken)
+
+	_, err = pcsconfig.Config.SetupUserByBDUSS(bduss, "", stoken, cookies)
+	if err != nil {
+		fmt.Println("设置用户失败:", err)
+		return "", "", "", "", err
+	}
+	fmt.Printf("登录成功, BDUSS=%s\nSTOKEN=%s\nPTOKEN=%s\n", bduss, stoken, ptoken)
+
+	return bduss, stoken, ptoken, cookies, nil
 }
 
+// GetBdstoken 仅作示例
 func (q *QrCodeLogin) GetBdstoken() (string, error) {
 	webUrl := "https://tongxunlu.baidu.com"
 
@@ -360,6 +396,7 @@ func (q *QrCodeLogin) GetBdstoken() (string, error) {
 	return "", errors.New("未找到 bdstoken")
 }
 
+// ParseCallBackData 从jsonp形态的回调函数中提取JSON片段
 func (q *QrCodeLogin) ParseCallBackData(callBack string, respBody []byte) ([]byte, error) {
 	if callBack == "" {
 		return nil, errors.New("回调函数名为空")
@@ -376,40 +413,39 @@ func (q *QrCodeLogin) ParseCallBackData(callBack string, respBody []byte) ([]byt
 	return res[0][1], nil
 }
 
+// DecodeQRCode 将二维码图片的二进制数据解码解析出二维码内容
 func (q *QrCodeLogin) DecodeQRCode(data []byte) (string, error) {
-	// Decode the byte array to an image
 	img, _, err := image.Decode(bytes.NewReader(data))
 	if err != nil {
 		return "", fmt.Errorf("failed to decode image: %v", err)
 	}
 
-	// Convert image to BinaryBitmap using gozxing
 	bmp, err := gozxing.NewBinaryBitmapFromImage(img)
 	if err != nil {
 		return "", fmt.Errorf("failed to create binary bitmap: %v", err)
 	}
 
-	// Decode the QR code
 	qrReader := qrcode.NewQRCodeReader()
 	result, err := qrReader.Decode(bmp, nil)
 	if err != nil {
 		return "", fmt.Errorf("failed to decode QR code: %v", err)
 	}
-
 	return result.GetText(), nil
 }
 
+// DisplayQRCode 控制台生成二维码图案
 func (q *QrCodeLogin) DisplayQRCode(content string) {
 	config := qrterminal.Config{
-		Level:     qrterminal.L, // 容错级别
+		Level:     qrterminal.L,
 		Writer:    colorable.NewColorableStdout(),
-		BlackChar: qrterminal.BLACK, // 黑色字符
-		WhiteChar: qrterminal.WHITE, // 白色字符
-		QuietZone: 1,                // 空白区域
+		BlackChar: qrterminal.BLACK,
+		WhiteChar: qrterminal.WHITE,
+		QuietZone: 1,
 	}
 	qrterminal.GenerateWithConfig(content, config)
 }
 
+// init 初始化配置
 func init() {
 	pcsutil.ChWorkDir()
 
@@ -424,6 +460,7 @@ func init() {
 	}
 }
 
+// main 入口
 func main() {
 	defer pcsconfig.Config.Close()
 
@@ -498,7 +535,6 @@ func main() {
 					if !strings.HasPrefix(name, line) {
 						continue
 					}
-
 					s = append(s, name+" ")
 				}
 			}
@@ -579,7 +615,6 @@ func main() {
 					appendLine string
 				)
 
-				// 已经有的情况
 				if !closed {
 					if !strings.HasPrefix(file.Path, path.Clean(path.Join(targetDir, path.Base(targetPath)))) {
 						if path.Base(targetDir) == path.Base(targetPath) {
@@ -593,8 +628,6 @@ func main() {
 				}
 				// 没有的情况
 				appendLine = strings.Join(append(lineArgs, escaper.EscapeByRuneFunc(file.Filename, pcsRuneFunc)), " ")
-				goto handle
-
 			handle:
 				if file.Isdir {
 					s = append(s, appendLine+"/")
@@ -618,11 +651,8 @@ func main() {
 			)
 
 			if activeUser.Name != "" {
-				// 格式: BaiduPCS-Go:<工作目录> <百度ID>$
-				// 工作目录太长时, 会自动缩略
 				prompt = app.Name + ":" + converter.ShortDisplay(path.Base(activeUser.Workdir), NameShortDisplayNum) + " " + activeUser.Name + "$ "
 			} else {
-				// BaiduPCS-Go >
 				prompt = app.Name + " > "
 			}
 
@@ -631,7 +661,6 @@ func main() {
 			case liner.ErrPromptAborted:
 				return
 			case nil:
-				// continue
 			default:
 				fmt.Println(err)
 				return
@@ -647,8 +676,6 @@ func main() {
 			s := []string{os.Args[0]}
 			s = append(s, cmdArgs...)
 
-			// 恢复原始终端状态
-			// 防止运行命令时程序被结束, 终端出现异常
 			line.Pause()
 			c.App.Run(s)
 			line.Resume()
@@ -734,9 +761,9 @@ BAIDUPCS_GO_VERBOSE: 是否启用调试.
     BaiduPCS-Go login
 
 执行该命令后, 程序会在控制台生成一个二维码, 使用百度网盘移动端应用扫描该二维码完成登录。
-    
+
 登录成功后, 程序会自动保存登录状态, 以后无需重复扫码登录。
-    `,
+`,
 			Category: "百度帐号",
 			Before:   reloadFn,
 			After:    saveFunc,
@@ -757,7 +784,6 @@ BAIDUPCS_GO_VERBOSE: 是否启用调试.
 					fmt.Println("获取二维码失败:", err)
 					return err
 				}
-
 				fmt.Println("image url is:", imageUrl)
 
 				// 下载并显示二维码
@@ -775,27 +801,18 @@ BAIDUPCS_GO_VERBOSE: 是否启用调试.
 				}
 
 				// 执行登录
-				bduss, err := qrLogin.Login(channelV)
+				_, _, _, cookies, err := qrLogin.Login(channelV)
 				if err != nil {
 					fmt.Println("登录失败:", err)
 					return err
 				}
 
-				// 设置 BDUSS 并保存用户
-				baidu, err := pcsconfig.Config.SetupUserByBDUSS(bduss, "", "", "")
-				if err != nil {
-					fmt.Println("设置用户失败:", err)
-					return err
-				}
-
-				fmt.Println("百度帐号登录成功:", baidu.Name)
+				// 登录成功后, BDUSS 等写到配置了, 这里仅打印
+				baidu := pcsconfig.Config.ActiveUser()
+				fmt.Println("百度帐号登录成功:", baidu.Name, "cookies=", cookies)
 				return nil
 			},
-			Flags: []cli.Flag{
-				// 移除旧的 Flags, 因为不再使用用户名和密码
-			},
 		},
-
 		{
 			Name:  "su",
 			Usage: "切换百度帐号",
@@ -817,7 +834,6 @@ BaiduPCS-Go su <uid or name>
 				}
 
 				numLogins := pcsconfig.Config.NumLogins()
-
 				if numLogins == 0 {
 					fmt.Printf("未设置任何百度帐号, 不能切换\n")
 					return nil
@@ -832,17 +848,13 @@ BaiduPCS-Go su <uid or name>
 					// 直接切换
 					uid, _ = strconv.ParseUint(inputData, 10, 64)
 				} else if c.NArg() == 0 {
-					// 输出所有帐号供选择切换
 					cli.HandleAction(app.Command("loglist").Action, c)
-
-					// 提示输入 index
 					var index string
 					fmt.Printf("输入要切换帐号的 # 值 > ")
 					_, err := fmt.Scanln(&index)
 					if err != nil {
 						return nil
 					}
-
 					if n, err := strconv.Atoi(index); err == nil && n >= 0 && n < numLogins {
 						uid = pcsconfig.Config.BaiduUserList[n].UID
 					} else {
@@ -882,12 +894,10 @@ BaiduPCS-Go su <uid or name>
 					fmt.Println("未设置任何百度帐号, 不能退出")
 					return nil
 				}
-
 				var (
 					confirm    string
 					activeUser = pcsconfig.Config.ActiveUser()
 				)
-
 				if !c.Bool("y") {
 					fmt.Printf("确认退出百度帐号: %s ? (y/n) > ", activeUser.Name)
 					_, err := fmt.Scanln(&confirm)
@@ -895,14 +905,12 @@ BaiduPCS-Go su <uid or name>
 						return err
 					}
 				}
-
 				deletedUser, err := pcsconfig.Config.DeleteUser(&pcsconfig.BaiduBase{
 					UID: activeUser.UID,
 				})
 				if err != nil {
 					fmt.Printf("退出用户 %s, 失败, 错误: %s\n", activeUser.Name, err)
 				}
-
 				fmt.Printf("退出用户成功, %s\n", deletedUser.Name)
 				return nil
 			},
@@ -966,7 +974,8 @@ BaiduPCS-Go setastoken 156.182v9052tgf1006c89891bsfb2401974.YmKOAwBD9yGaG2s4p5NN
 			Before:      reloadFn,
 			Action: func(c *cli.Context) error {
 				activeUser := pcsconfig.Config.ActiveUser()
-				fmt.Printf("当前帐号 uid: %d, 用户名: %s, 性别: %s, 年龄: %.1f\n", activeUser.UID, activeUser.Name, activeUser.Sex, activeUser.Age)
+				fmt.Printf("当前帐号 uid: %d, 用户名: %s, 性别: %s, 年龄: %.1f\n",
+					activeUser.UID, activeUser.Name, activeUser.Sex, activeUser.Age)
 				return nil
 			},
 		},
@@ -1012,9 +1021,7 @@ BaiduPCS-Go cd /我的*
 					cli.ShowCommandHelp(c, c.Command.Name)
 					return nil
 				}
-
 				pcscommand.RunChangeDirectory(c.Args().Get(0), c.Bool("l"))
-
 				return nil
 			},
 			Flags: []cli.Flag{
@@ -1061,7 +1068,6 @@ BaiduPCS-Go ls /我的*
 				default:
 					orderOptions.Order = baidupcs.OrderAsc
 				}
-
 				switch {
 				case c.IsSet("time"):
 					orderOptions.By = baidupcs.OrderByTime
@@ -1072,11 +1078,9 @@ BaiduPCS-Go ls /我的*
 				default:
 					orderOptions.By = baidupcs.OrderByName
 				}
-
 				pcscommand.RunLs(c.Args().Get(0), &pcscommand.LsOptions{
 					Total: c.Bool("l") || c.Parent().Args().Get(0) == "ll",
 				}, orderOptions)
-
 				return nil
 			},
 			Flags: []cli.Flag{
@@ -2609,4 +2613,25 @@ BaiduPCS-Go match /我的资源/*.mp4
 	sort.Sort(cli.CommandsByName(app.Commands))
 
 	app.Run(os.Args)
+}
+
+// htmlUnescape 解码 HTML 实体
+func htmlUnescape(input string) string {
+	replacer := strings.NewReplacer("&quot;", `"`)
+	return replacer.Replace(input)
+}
+
+// ExtractNetdiskStoken 从 stokenList 中提取 netdisk 的 stoken
+func ExtractNetdiskStoken(stokenList string) (string, error) {
+	decodedList := htmlUnescape(stokenList) // 解码 HTML 实体
+	stokens := strings.Split(decodedList, ",")
+	for _, item := range stokens {
+		if strings.HasPrefix(item, `"netdisk#`) { // 查找 netdisk 前缀
+			parts := strings.Split(item, "#")
+			if len(parts) == 2 {
+				return strings.Trim(parts[1], `"`), nil
+			}
+		}
+	}
+	return "", errors.New("未找到 netdisk 的 stoken")
 }
