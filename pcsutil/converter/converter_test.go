@@ -7,9 +7,9 @@ import (
 )
 
 func TestTrimPathInvalidChars(t *testing.T) {
-	trimed := converter.TrimPathInvalidChars("ksjadfi*/?adf")
-	if strings.Compare(trimed, "ksjadfiadf") != 0 {
-		t.Fatalf("trimed: %s\n", trimed)
+	trimmed := converter.TrimPathInvalidChars("ksjadfi*/?adf")
+	if strings.Compare(trimmed, "ksjadfiadf") != 0 {
+		t.Fatalf("trimmed: %s\n", trimmed)
 	}
 	return
 }

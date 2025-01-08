@@ -64,10 +64,10 @@
 | 400 | 31451 | quota size param not exist | 找不到参数quota size | 否 |
 | 503 | 31452 | quota info fail | quota info失败 | 是 |
 | 400 | 31453 | quota too big | quota过大 | 否 |
-| 400 | 31454 | quota size param not numberic | quota size 参数未数值化 | 否 |
+| 400 | 31454 | quota size param not numeric | quota size 参数未数值化 | 否 |
 | 400 | 31460 | no permission | 未授权 | 否 |
 | 400 | 31461 | account not login | 账户为登录，使用bduss认证失败 | 否 |
-| 400 | 31462 | access token errro | access token校验失败 | 否 |
+| 400 | 31462 | access token error | access token校验失败 | 否 |
 | 400 | 31470 | index num too much | index num太多 | 否 |
 | 400 | 31472 | table already exist | table已存在 | 否 |
 | 400 | 31473 | abnormal table already exist | 异常table已存在 | 否 |

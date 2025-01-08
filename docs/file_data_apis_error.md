@@ -42,8 +42,8 @@
 | 403 | 31110 | access denied to set quota | 未授权设置此目录配额 |
 | 400 | 31111 | quota only sopport 2 level directories | 配额管理只支持两级目录 |
 | 400 | 31112 | exceed quota | 超出配额 |
-| 403 | 31113 | the quota is bigger than one of its parent directorys | 配额不能超出目录祖先的配额 |
-| 403 | 31114 | the quota is smaller than one of its sub directorys | 配额不能比子目录配额小 |
+| 403 | 31113 | the quota is bigger than one of its parent directories | 配额不能超出目录祖先的配额 |
+| 403 | 31114 | the quota is smaller than one of its sub directories | 配额不能比子目录配额小 |
 | 503 | 31141 | thumbnail failed, internal error | 请求缩略图服务失败 |
 | 401 | 110 | Access token invalid or no longer valid | Access Token不正确或者已经过期 |
 | 400 | 31201 | signature error | 签名错误 |

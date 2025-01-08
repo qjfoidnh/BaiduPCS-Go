@@ -99,8 +99,8 @@ const (
 	OperationGetRapidUploadInfo = "获取文件秒传信息"
 	// OperationFixMD5 修复文件md5
 	OperationFixMD5 = "修复文件md5"
-	// OperrationMatchPathByShellPattern 通配符匹配文件路径
-	OperrationMatchPathByShellPattern = "通配符匹配文件路径"
+	// OperationMatchPathByShellPattern 通配符匹配文件路径
+	OperationMatchPathByShellPattern = "通配符匹配文件路径"
 
 	// PCSBaiduCom pcs api地址
 	PCSBaiduCom = "pcs.baidu.com"

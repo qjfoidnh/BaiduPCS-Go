@@ -34,12 +34,12 @@ func handleRespClose(resp *http.Response) error {
 	return nil
 }
 
-func handleRespStatusError(opreation string, resp *http.Response) pcserror.Error {
-	//errInfo := pcserror.NewPCSErrorInfo(opreation)
+func handleRespStatusError(operation string, resp *http.Response) pcserror.Error {
+	//errInfo := pcserror.NewPCSErrorInfo(operation)
 	// http 响应错误处理
 	switch resp.StatusCode / 100 {
 	case 4, 5:
-		errInfo := pcserror.DecodePCSJSONError(opreation, resp.Body)
+		errInfo := pcserror.DecodePCSJSONError(operation, resp.Body)
 		resp.Body.Close()
 		errInfo.SetRemoteError()
 		//errInfo.SetNetError(fmt.Errorf("http 响应错误, %s", resp.Status))
@@ -138,7 +138,7 @@ func (pcs *BaiduPCS) PrepareFilesDirectoriesBatchMeta(paths ...string) (dataRead
 
 	// 表单上传
 	mr := multipartreader.NewMultipartReader()
-	mr.AddFormFeild("param", bytes.NewReader(sendData))
+	mr.AddFormField("param", bytes.NewReader(sendData))
 	mr.CloseMultipart()
 
 	dataReadCloser, pcsError = pcs.sendReqReturnReadCloser(reqTypePCS, OperationFilesDirectoriesMeta, http.MethodPost, pcsURL.String(), mr, nil)
@@ -231,7 +231,7 @@ func (pcs *BaiduPCS) PrepareRemove(paths ...string) (dataReadCloser io.ReadClose
 
 	// 表单上传
 	mr := multipartreader.NewMultipartReader()
-	mr.AddFormFeild("param", bytes.NewReader(sendData))
+	mr.AddFormField("param", bytes.NewReader(sendData))
 	mr.CloseMultipart()
 
 	dataReadCloser, pcsError = pcs.sendReqReturnReadCloser(reqTypePCS, OperationRemove, http.MethodPost, pcsURL.String(), mr, nil)
@@ -259,7 +259,7 @@ func (pcs *BaiduPCS) prepareCpMvOp(op string, cpmvJSON ...*CpMvJSON) (dataReadCl
 	case OperationMove, OperationRename:
 		method = "move"
 	default:
-		panic("Unknown opreation: " + op)
+		panic("Unknown operation: " + op)
 	}
 
 	sendData, err := (&CpMvListJSON{
@@ -275,7 +275,7 @@ func (pcs *BaiduPCS) prepareCpMvOp(op string, cpmvJSON ...*CpMvJSON) (dataReadCl
 
 	// 表单上传
 	mr := multipartreader.NewMultipartReader()
-	mr.AddFormFeild("param", bytes.NewReader(sendData))
+	mr.AddFormField("param", bytes.NewReader(sendData))
 	mr.CloseMultipart()
 
 	dataReadCloser, pcsError = pcs.sendReqReturnReadCloser(reqTypePCS, op, http.MethodPost, pcsURL.String(), mr, nil)
@@ -534,7 +534,7 @@ func (pcs *BaiduPCS) PrepareUploadCreateSuperFile(policy string, checkDir bool, 
 
 	// 表单上传
 	mr := multipartreader.NewMultipartReader()
-	mr.AddFormFeild("param", bytes.NewReader(sendData))
+	mr.AddFormField("param", bytes.NewReader(sendData))
 	mr.CloseMultipart()
 
 	dataReadCloser, pcsError = pcs.sendReqReturnReadCloser(reqTypePCS, OperationUploadCreateSuperFile, http.MethodPost, pcsURL.String(), mr, nil)
@@ -644,15 +644,15 @@ func (pcs *BaiduPCS) PrepareCloudDlListTask() (dataReadCloser io.ReadCloser, pcs
 	return
 }
 
-func (pcs *BaiduPCS) prepareCloudDlCDTask(opreation, method string, taskID int64) (dataReadCloser io.ReadCloser, pcsError pcserror.Error) {
+func (pcs *BaiduPCS) prepareCloudDlCDTask(operation, method string, taskID int64) (dataReadCloser io.ReadCloser, pcsError pcserror.Error) {
 	pcs.lazyInit()
 	pcsURL2 := pcs.generatePCSURL2("services/cloud_dl", method, map[string]string{
 		"app_id":  PanAppID,
 		"task_id": strconv.FormatInt(taskID, 10),
 	})
-	baiduPCSVerbose.Infof("%s URL: %s\n", opreation, pcsURL2)
+	baiduPCSVerbose.Infof("%s URL: %s\n", operation, pcsURL2)
 
-	dataReadCloser, pcsError = pcs.sendReqReturnReadCloser(reqTypePCS, opreation, http.MethodPost, pcsURL2.String(), nil, nil)
+	dataReadCloser, pcsError = pcs.sendReqReturnReadCloser(reqTypePCS, operation, http.MethodPost, pcsURL2.String(), nil, nil)
 	return
 }
 
@@ -799,7 +799,7 @@ func (pcs *BaiduPCS) PrepareRecycleRestore(fidList ...int64) (dataReadCloser io.
 
 	// 表单上传
 	mr := multipartreader.NewMultipartReader()
-	mr.AddFormFeild("param", bytes.NewReader(sendData))
+	mr.AddFormField("param", bytes.NewReader(sendData))
 	mr.CloseMultipart()
 
 	dataReadCloser, pcsError = pcs.sendReqReturnReadCloser(reqTypePCS, OperationRecycleRestore, http.MethodPost, pcsURL.String(), mr, nil)
