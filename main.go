@@ -13,7 +13,7 @@ import (
 	"image"
 	"os/exec"
 
-	"github.co
+	"github.com/qjfoidnh/BaiduPCS-Go/client"
 	"net/http"
 	"os"
 	"path"
