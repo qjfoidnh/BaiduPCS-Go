@@ -14,13 +14,11 @@ import (
 
 const (
 	// MaxUploadBlockSize 最大上传的文件分片大小
-	MaxUploadBlockSize = 2 * converter.GB
+	MaxUploadBlockSize = 16 * converter.MB
 	// MinUploadBlockSize 最小的上传的文件分片大小
 	MinUploadBlockSize = 4 * converter.MB
 	// MaxRapidUploadSize 秒传文件支持的最大文件大小
 	MaxRapidUploadSize = 20 * converter.GB
-	// RecommendUploadBlockSize 推荐的上传的文件分片大小
-	RecommendUploadBlockSize = 1 * converter.GB
 	// SliceMD5Size 计算 slice-md5 所需的长度
 	SliceMD5Size = 256 * converter.KB
 	// EmptyContentMD5 空串的md5

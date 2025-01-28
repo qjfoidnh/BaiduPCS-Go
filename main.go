@@ -56,8 +56,7 @@ const (
 
 var (
 	// Version 版本号
-	//Version = "v3.9.4-devel"
-	Version = "v3.9.5-devel"
+	Version = "v3.9.7-devel"
 
 	historyFilePath = filepath.Join(pcsconfig.GetConfigDir(), "pcs_command_history.txt")
 	reloadFn        = func(c *cli.Context) error {
@@ -605,8 +604,8 @@ func main() {
 			},
 		},
 		{
-			Name:        "setastoken",
-			Usage:       "设定当前账号的accessToken",
+			Name:  "setastoken",
+			Usage: "设定当前账号的accessToken",
 			Description: `
 	设定当前登录帐号的accessToken:
 	若不使用秒传链接转存, 可不设定; accessToken申请及获取教程:
@@ -616,9 +615,9 @@ func main() {
 	示例:
 	BaiduPCS-Go setastoken 156.182v9052tgf1006c89891bsfb2401974.YmKOAwBD9yGaG2s4p5NNkX4CXeIbJxx4hAxotfS.PyuHEs
 `,
-			Category:    "百度帐号",
-			Before:      reloadFn,
-			After:       saveFunc,
+			Category: "百度帐号",
+			Before:   reloadFn,
+			After:    saveFunc,
 			Action: func(c *cli.Context) error {
 				activeUser := pcsconfig.Config.ActiveUser()
 				if activeUser.UID == 0 {
