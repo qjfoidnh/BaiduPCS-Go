@@ -3,6 +3,7 @@ package pcsutil
 import (
 	"github.com/kardianos/osext"
 	"github.com/qjfoidnh/BaiduPCS-Go/pcsverbose"
+	"io/fs"
 	"os"
 	"path"
 	"path/filepath"
@@ -83,17 +84,24 @@ func WalkDir(dirPth, suffix string) (files []string, err error) {
 	files = make([]string, 0, 32)
 	suffix = strings.ToUpper(suffix) //忽略后缀匹配的大小写
 
-	var walkFunc filepath.WalkFunc
-	walkFunc = func(filename string, fi os.FileInfo, err error) error { //遍历目录
+	var walkFunc fs.WalkDirFunc
+	walkFunc = func(filename string, fi fs.DirEntry, err error) error { //遍历目录
 		if err != nil {
 			return err
 		}
-		if fi.IsDir() || fi.Size() == 0 { // 忽略目录和空文件
+		if fi.IsDir() { // 忽略目录和空文件
 			return nil
 		}
-		if fi.Mode()&os.ModeSymlink != 0 { // 读取 symbol link
-			err = filepath.Walk(filename+string(os.PathSeparator), walkFunc)
-			return err
+		fileInfo, err := fi.Info()
+		if err != nil || fileInfo.Size() == 0 {
+			return nil
+		}
+		if fileInfo.Mode()&os.ModeSymlink != 0 { // 读取 symbol link
+			targetFileInfo, _ := os.Stat(filename)
+			if targetFileInfo.IsDir() {
+				err = filepath.WalkDir(filename+string(os.PathSeparator), walkFunc)
+				return err
+			}
 		}
 
 		if strings.HasSuffix(strings.ToUpper(fi.Name()), suffix) {
@@ -102,7 +110,7 @@ func WalkDir(dirPth, suffix string) (files []string, err error) {
 		return nil
 	}
 
-	err = filepath.Walk(dirPth, walkFunc)
+	err = filepath.WalkDir(dirPth, walkFunc)
 	return files, err
 }
 

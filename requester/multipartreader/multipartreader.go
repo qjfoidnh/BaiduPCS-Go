@@ -55,8 +55,8 @@ func NewMultipartReader() (mr *MultipartReader) {
 	return
 }
 
-// AddFormFeild 增加 form 表单
-func (mr *MultipartReader) AddFormFeild(fieldname string, readerlen rio.ReaderLen) {
+// AddFormField 增加 form 表单
+func (mr *MultipartReader) AddFormField(fieldname string, readerlen rio.ReaderLen) {
 	if readerlen == nil {
 		return
 	}

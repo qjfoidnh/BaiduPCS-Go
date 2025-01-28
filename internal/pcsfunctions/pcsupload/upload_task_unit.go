@@ -34,8 +34,8 @@ type (
 		PCS               *baidupcs.BaiduPCS
 		UploadingDatabase *UploadingDatabase // 数据库
 		Parallel          int
-		NoRapidUpload     bool // 禁用秒传
-		NoSplitFile       bool // 禁用分片上传
+		NoRapidUpload     bool   // 禁用秒传
+		NoSplitFile       bool   // 禁用分片上传
 		Policy            string // 上传重名文件策略
 
 		UploadStatistic *UploadStatistic
@@ -57,7 +57,7 @@ const (
 )
 
 const (
-	StrUploadFailed = "上传文件失败"
+	StrUploadFailed    = "上传文件失败"
 	DefaultPrintFormat = "\r[%s] ↑ %s/%s %s/s in %s ............"
 	DefaultContentSize = 4 * converter.KB
 )

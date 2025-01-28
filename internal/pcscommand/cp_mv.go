@@ -25,9 +25,9 @@ func runCpMvOp(op string, paths ...string) {
 		return
 	}
 
-	froms, to := cpmvParsePath(paths...) // 分割
+	from, to := cpmvParsePath(paths...) // 分割
 
-	froms, err = matchPathByShellPattern(froms...)
+	from, err = matchPathByShellPattern(from...)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -58,35 +58,35 @@ func runCpMvOp(op string, paths ...string) {
 		// 判断路径是否存在
 		// 如果不存在, 则为重命名或同目录拷贝操作
 
-		// 如果 froms 数不是1, 则意义不明确.
-		if len(froms) != 1 {
+		// 如果 from 数不是1, 则意义不明确.
+		if len(from) != 1 {
 			fmt.Println(err)
 			return
 		}
 
 		if op == "copy" { // 拷贝
 			err = pcs.Copy(&baidupcs.CpMvJSON{
-				From: froms[0],
+				From: from[0],
 				To:   to,
 			})
 			if err != nil {
 				fmt.Println(err)
 				fmt.Println("文件/目录拷贝失败: ")
-				fmt.Printf("%s <-> %s\n", froms[0], to)
+				fmt.Printf("%s <-> %s\n", from[0], to)
 				return
 			}
 			fmt.Println("文件/目录拷贝成功: ")
-			fmt.Printf("%s <-> %s\n", froms[0], to)
+			fmt.Printf("%s <-> %s\n", from[0], to)
 		} else { // 重命名
-			err = pcs.Rename(froms[0], path.Clean(to))
+			err = pcs.Rename(from[0], path.Clean(to))
 			if err != nil {
 				fmt.Println(err)
 				fmt.Println("重命名失败: ")
-				fmt.Printf("%s -> %s\n", froms[0], to)
+				fmt.Printf("%s -> %s\n", from[0], to)
 				return
 			}
 			fmt.Println("重命名成功: ")
-			fmt.Printf("%s -> %s\n", froms[0], to)
+			fmt.Printf("%s -> %s\n", from[0], to)
 		}
 		return
 	case pcsError != nil && pcsError.GetErrType() != pcserror.ErrTypeRemoteError:
@@ -100,11 +100,11 @@ func runCpMvOp(op string, paths ...string) {
 	}
 
 	cj := new(baidupcs.CpMvListJSON)
-	cj.List = make([]*baidupcs.CpMvJSON, len(froms))
-	for k := range froms {
+	cj.List = make([]*baidupcs.CpMvJSON, len(from))
+	for k := range from {
 		cj.List[k] = &baidupcs.CpMvJSON{
-			From: froms[k],
-			To:   path.Clean(to + baidupcs.PathSeparator + path.Base(froms[k])),
+			From: from[k],
+			To:   path.Clean(to + baidupcs.PathSeparator + path.Base(from[k])),
 		}
 	}
 
@@ -145,11 +145,11 @@ func cpmvPathValid(paths ...string) (err error) {
 }
 
 // cpmvParsePath 解析路径
-func cpmvParsePath(paths ...string) (froms []string, to string) {
+func cpmvParsePath(paths ...string) (from []string, to string) {
 	if len(paths) == 0 {
 		return nil, ""
 	}
-	froms = paths[:len(paths)-1]
+	from = paths[:len(paths)-1]
 	to = paths[len(paths)-1]
 	return
 }

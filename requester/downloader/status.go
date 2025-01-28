@@ -26,8 +26,8 @@ type (
 const (
 	//StatusCodeInit 初始化
 	StatusCodeInit StatusCode = iota
-	//StatusCodeSuccessed 成功
-	StatusCodeSuccessed
+	//StatusCodeSucceeded 成功
+	StatusCodeSucceeded
 	//StatusCodePending 等待响应
 	StatusCodePending
 	//StatusCodeDownloading 下载中
@@ -55,7 +55,7 @@ func GetStatusText(sc StatusCode) string {
 	switch sc {
 	case StatusCodeInit:
 		return "初始化"
-	case StatusCodeSuccessed:
+	case StatusCodeSucceeded:
 		return "成功"
 	case StatusCodePending:
 		return "等待响应"

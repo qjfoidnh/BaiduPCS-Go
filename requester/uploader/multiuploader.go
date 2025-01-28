@@ -47,10 +47,10 @@ type (
 
 	// MultiUploaderConfig 多线程上传配置
 	MultiUploaderConfig struct {
-		Parallel  int   // 上传并发量
-		BlockSize int64 // 上传分块
-		MaxRate   int64 // 限制最大上传速度
-		Policy    string  // 文件重名策略
+		Parallel  int    // 上传并发量
+		BlockSize int64  // 上传分块
+		MaxRate   int64  // 限制最大上传速度
+		Policy    string // 文件重名策略
 	}
 )
 
@@ -85,7 +85,7 @@ func (muer *MultiUploader) lazyInit() {
 		muer.config.Parallel = 4
 	}
 	if muer.config.BlockSize <= 0 {
-		muer.config.BlockSize = 1 * converter.GB
+		muer.config.BlockSize = 16 * converter.MB
 	}
 	if muer.speedsStat == nil {
 		muer.speedsStat = &speeds.Speeds{}
@@ -167,32 +167,32 @@ func (muer *MultiUploader) Cancel() {
 	close(muer.canceled)
 }
 
-//OnExecute 设置开始上传事件
+// OnExecute 设置开始上传事件
 func (muer *MultiUploader) OnExecute(onExecuteEvent requester.Event) {
 	muer.onExecuteEvent = onExecuteEvent
 }
 
-//OnSuccess 设置成功上传事件
+// OnSuccess 设置成功上传事件
 func (muer *MultiUploader) OnSuccess(onSuccessEvent requester.Event) {
 	muer.onSuccessEvent = onSuccessEvent
 }
 
-//OnFinish 设置结束上传事件
+// OnFinish 设置结束上传事件
 func (muer *MultiUploader) OnFinish(onFinishEvent requester.Event) {
 	muer.onFinishEvent = onFinishEvent
 }
 
-//OnCancel 设置取消上传事件
+// OnCancel 设置取消上传事件
 func (muer *MultiUploader) OnCancel(onCancelEvent requester.Event) {
 	muer.onCancelEvent = onCancelEvent
 }
 
-//OnError 设置上传发生错误事件
+// OnError 设置上传发生错误事件
 func (muer *MultiUploader) OnError(onErrorEvent requester.EventOnError) {
 	muer.onErrorEvent = onErrorEvent
 }
 
-//OnUploadStatusEvent 设置上传状态事件
+// OnUploadStatusEvent 设置上传状态事件
 func (muer *MultiUploader) OnUploadStatusEvent(f UploadStatusFunc) {
 	muer.onUploadStatusEvent = f
 }

@@ -169,7 +169,7 @@ func (mt *Monitor) registerAllCompleted() {
 					mt.err = worker.Err()
 					close(mt.completed)
 					return
-				case StatusCodeSuccessed, StatusCodeCanceled:
+				case StatusCodeSucceeded, StatusCodeCanceled:
 					completeNum++
 				}
 			}
