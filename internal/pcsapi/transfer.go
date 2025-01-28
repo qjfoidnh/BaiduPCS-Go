@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/qjfoidnh/BaiduPCS-Go/baidupcs"
@@ -22,6 +23,7 @@ type (
 	TransferStructre struct {
 		Download bool           `json:"download,omitempty" form:"download,omitempty"`
 		Collect  bool           `json:"collect,omitempty" form:"collect,omitempty"`
+		Rname    bool           `json:"rname,omitempty" form:"rname,omitempty"`
 		Links    []TransferLink `json:"links,omitempty" form:"links,omitempty"`
 	}
 )
@@ -37,10 +39,9 @@ func runTransfer(ctx *gin.Context) {
 		})
 		return
 	}
-	var (
-		errs  []error
-		resps []map[string]string
-	)
+	errs := []error{}
+	resps := []map[string]string{}
+
 	for _, link := range args.Links {
 		l := link.Url
 		if strings.Contains(l, "bdlink=") || strings.Contains(l, "pan.baidu.com/") {
@@ -73,35 +74,49 @@ func runTransfer(ctx *gin.Context) {
 		}
 
 		var verifyUrl string
-		var randsk string
 		featuremap := make(map[string]string)
 		featuremap["bdstoken"] = tokens["bdstoken"]
 		featuremap["surl"] = featurestr[1:]
 		if link.Token != "" {
-			verifyUrl = pcs.GenerateShareQueryURL("verify", featuremap).String()
+			verifyUrl = pcs.GenerateShareQueryURL("verify", map[string]string{
+				"shareid":    tokens["shareid"],
+				"time":       strconv.Itoa(int(time.Now().UnixMilli())),
+				"clienttype": "1",
+				"uk":         tokens["share_uk"],
+			}).String()
 			res := pcs.PostShareQuery(verifyUrl, link.Url, map[string]string{
 				"pwd":       link.Token,
-				"vcode":     "",
-				"vcode_str": "",
+				"vcode":     "null",
+				"vcode_str": "null",
+				"bdstoken":  tokens["bdstoken"],
 			})
 			if res["ErrMsg"] != "0" {
 				errs = append(errs, fmt.Errorf("%s失败: %s", baidupcs.OperationShareFileSavetoLocal, res["ErrMsg"]))
 				continue
 			}
-			randsk = res["randsk"]
 		}
 		pcs.UpdatePCSCookies(true)
 
 		tokens = pcs.AccessSharePage(featurestr, false)
-		tokens["randsk"] = randsk
 		if tokens["ErrMsg"] != "0" {
 			errs = append(errs, fmt.Errorf("%s失败: %s", baidupcs.OperationShareFileSavetoLocal, tokens["ErrMsg"]))
 			tokens["error_message"] = "access share page failed"
 			resps = append(resps, tokens)
 			continue
 		}
-		trans_metas := pcs.ExtractShareInfo(tokens["metajson"])
-		if trans_metas["ErrMsg"] != "0" {
+
+		featureMap := map[string]string{
+			"bdstoken": tokens["bdstoken"],
+			"root":     "1",
+			"web":      "5",
+			"app_id":   baidupcs.PanAppID,
+			"shorturl": featurestr[1:],
+			"channel":  "chunlei",
+		}
+		queryShareInfoUrl := pcs.GenerateShareQueryURL("list", featureMap).String()
+		trans_metas := pcs.ExtractShareInfo(queryShareInfoUrl, tokens["shareid"], tokens["share_uk"], tokens["bdstoken"])
+
+		if trans_metas["ErrMsg"] != "success" {
 			errs = append(errs, fmt.Errorf("%s失败: %s", baidupcs.OperationShareFileSavetoLocal, trans_metas["ErrMsg"]))
 			trans_metas["error_message"] = "extract share url info failed"
 			resps = append(resps, trans_metas)
@@ -120,17 +135,15 @@ func runTransfer(ctx *gin.Context) {
 			errs = append(errs, fmt.Errorf("%s失败: %s", baidupcs.OperationShareFileSavetoLocal, resp["ErrMsg"]))
 			resp["error_message"] = "query saved file failed"
 			resps = append(resps, resp)
-			if resp["ErrNo"] == "4" {
-				trans_metas["shorturl"] = featurestr
-				pcs.SuperTransfer(trans_metas, resp["limit"]) // 试验性功能, 当前未启用
-			}
-			continue
+			//if resp["ErrNo"] == "4" {
+			//	transMetas["shorturl"] = featureStr
+			//	pcs.SuperTransfer(transMetas, resp["limit"]) // 试验性功能, 当前未启用
+			//}
+			return
 		}
 		if args.Collect {
 			resp["filename"] = trans_metas["filename"]
 		}
-		// 保存成功保存的响应
-		resps = append(resps, resp)
 		fmt.Printf("%s成功, 保存了%s到当前目录\n", baidupcs.OperationShareFileSavetoLocal, resp["filename"])
 		if args.Download {
 			// 开始后台下载
