@@ -44,10 +44,11 @@ func runTransfer(ctx *gin.Context) {
 
 	for _, link := range args.Links {
 		l := link.Url
-		if strings.Contains(l, "bdlink=") || strings.Contains(l, "pan.baidu.com/") {
-			if err := RunRapidTransfer(l); err != nil {
-				errs = append(errs, err)
-			}
+		if strings.Contains(l, "bdlink=") || !strings.Contains(l, "pan.baidu.com/") {
+			// if err := RunRapidTransfer(l); err != nil {
+			// 	errs = append(errs, err)
+			// }
+			errs = append(errs, fmt.Errorf("%s失败: %s", baidupcs.OperationShareFileSavetoLocal, "秒传已不再被支持"))
 			continue
 		}
 		if strings.Contains(l, "?pwd=") {
