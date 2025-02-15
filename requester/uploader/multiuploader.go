@@ -16,7 +16,7 @@ type (
 	// MultiUpload 支持多线程的上传, 可用于断点续传
 	MultiUpload interface {
 		Precreate(fileSize int64, policy string) (err pcserror.Error)
-		TmpFile(ctx context.Context, partseq int, partOffset int64, readerlen64 rio.ReaderLen64) (checksum string, terr error)
+		TmpFile(ctx context.Context, uploadid, targetPath string, partseq int, partOffset int64, readerlen64 rio.ReaderLen64) (checksum string, terr error)
 		CreateSuperFile(policy string, checksumList ...string) (cerr error)
 	}
 
@@ -37,6 +37,8 @@ type (
 		workers     workerList
 		speedsStat  *speeds.Speeds
 		rateLimit   *speeds.RateLimit
+		uploadid    string
+		targetPath  string
 
 		executeTime             time.Time
 		finished                chan struct{}
@@ -55,11 +57,12 @@ type (
 )
 
 // NewMultiUploader 初始化上传
-func NewMultiUploader(multiUpload MultiUpload, file rio.ReaderAtLen64, config *MultiUploaderConfig) *MultiUploader {
+func NewMultiUploader(multiUpload MultiUpload, file rio.ReaderAtLen64, config *MultiUploaderConfig, uploadid string) *MultiUploader {
 	return &MultiUploader{
 		multiUpload: multiUpload,
 		file:        file,
 		config:      config,
+		uploadid:    uploadid,
 	}
 }
 

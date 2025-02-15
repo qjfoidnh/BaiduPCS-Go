@@ -53,11 +53,11 @@ func (pu *PCSUpload) Precreate(fileSize int64, policy string) pcserror.Error {
 	return pcsError
 }
 
-func (pu *PCSUpload) TmpFile(ctx context.Context, partseq int, partOffset int64, r rio.ReaderLen64) (checksum string, uperr error) {
+func (pu *PCSUpload) TmpFile(ctx context.Context, uploadId, targetPath string, partSeq int, partOffset int64, r rio.ReaderLen64) (checksum string, uperr error) {
 	pu.lazyInit()
 
 	var respErr *uploader.MultiError
-	checksum, pcsError := pu.pcs.UploadTmpFile(func(uploadURL string, jar http.CookieJar) (resp *http.Response, err error) {
+	checksum, pcsError := pu.pcs.UploadTmpFile(uploadId, targetPath, partSeq, partOffset, func(uploadURL string, jar http.CookieJar) (resp *http.Response, err error) {
 		//client := pcsconfig.Config.PCSHTTPClient()
 		client.SetCookiejar(jar)
 		client.SetTimeout(200 * time.Second)
@@ -121,5 +121,5 @@ func (pu *PCSUpload) CreateSuperFile(policy string, checksumList ...string) (err
 
 	// 此时已到了最后的合并环节，policy只能使用overwrite, newpath而不用pu.targetPath是因为newcopy策略可能导致文件名变化
 	//return pu.pcs.UploadCreateSuperFile("overwrite",false, pu.targetPath, checksumList...)
-	return pu.pcs.UploadCreateSuperFile("overwrite",false, newpath, checksumList...)
+	return pu.pcs.UploadCreateSuperFile("overwrite", false, newpath, checksumList...)
 }

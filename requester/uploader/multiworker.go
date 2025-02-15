@@ -2,6 +2,7 @@ package uploader
 
 import (
 	"context"
+	"errors"
 	"github.com/oleiade/lane"
 	"github.com/qjfoidnh/BaiduPCS-Go/pcsutil/waitgroup"
 	"os"
@@ -72,7 +73,7 @@ func (muer *MultiUploader) upload() (uperr error) {
 					terr        error
 				)
 				go func() {
-					checksum, terr = muer.multiUpload.TmpFile(ctx, int(wer.id), wer.partOffset, wer.splitUnit)
+					checksum, terr = muer.multiUpload.TmpFile(ctx, muer.uploadid, muer.targetPath, wer.id, wer.partOffset, wer.splitUnit)
 					close(doneChan)
 				}()
 				select {
@@ -84,7 +85,8 @@ func (muer *MultiUploader) upload() (uperr error) {
 				}
 				cancel()
 				if terr != nil {
-					if me, ok := terr.(*MultiError); ok {
+					var me *MultiError
+					if errors.As(terr, &me) {
 						if me.Terminated { // 终止
 							muer.closeCanceledOnce.Do(func() { // 只关闭一次
 								close(muer.canceled)

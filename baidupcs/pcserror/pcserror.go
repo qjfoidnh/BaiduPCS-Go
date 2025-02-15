@@ -91,6 +91,5 @@ func HandleJSONParse(op string, data io.Reader, info interface{}) (pcsError Erro
 		errInfo.SetRemoteError()
 		return errInfo
 	}
-
 	return nil
 }

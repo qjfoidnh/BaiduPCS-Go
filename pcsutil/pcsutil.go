@@ -6,10 +6,14 @@ import (
 	"flag"
 	"io"
 	"io/ioutil"
+	"math/rand"
 	"net/http/cookiejar"
 	"net/url"
 	"strings"
+	"time"
 )
+
+const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
 // TrimPathPrefix 去除目录的前缀
 func TrimPathPrefix(path, prefixPath string) string {
@@ -17,6 +21,15 @@ func TrimPathPrefix(path, prefixPath string) string {
 		return path
 	}
 	return strings.TrimPrefix(path, prefixPath)
+}
+
+func GenerateRandomString(length int) string {
+	var seededRand = rand.New(rand.NewSource(time.Now().UnixNano()))
+	result := make([]byte, length)
+	for i := range result {
+		result[i] = charset[seededRand.Intn(len(charset))] // 生成随机索引并获取字符
+	}
+	return string(result)
 }
 
 // ContainsString 检测字符串是否在字符串数组里

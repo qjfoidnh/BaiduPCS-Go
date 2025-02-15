@@ -23,9 +23,10 @@ type (
 
 	// UploadingDatabase 未完成上传的数据库
 	UploadingDatabase struct {
-		lock sync.RWMutex
+		lock          sync.RWMutex
 		UploadingList []*Uploading `json:"upload_state"`
 		Timestamp     int64        `json:"timestamp"`
+		Uploadid      string       `json:"upoadid"`
 
 		dataFile *os.File
 	}

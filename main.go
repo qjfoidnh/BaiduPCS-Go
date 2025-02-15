@@ -1216,7 +1216,6 @@ func main() {
 					MaxRetry:      c.Int("retry"),
 					Load:          c.Int("l"),
 					NoRapidUpload: c.Bool("norapid"),
-					NoSplitFile:   c.Bool("nosplit"),
 					Policy:        c.String("policy"),
 				})
 				return nil
@@ -1238,10 +1237,6 @@ func main() {
 				cli.BoolFlag{
 					Name:  "norapid",
 					Usage: "不检测秒传",
-				},
-				cli.BoolFlag{
-					Name:  "nosplit",
-					Usage: "禁用分片上传",
 				},
 				cli.StringFlag{
 					Name:  "policy",

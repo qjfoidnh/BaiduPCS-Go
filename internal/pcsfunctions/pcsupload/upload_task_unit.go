@@ -87,11 +87,13 @@ func (utu *UploadTaskUnit) prepareFile() {
 		return
 	}
 
-	if utu.LocalFileChecksum.Length > baidupcs.MaxRapidUploadSize {
-		fmt.Printf("[%s] 文件超过20GB, 无法使用秒传功能, 跳过秒传...\n", utu.taskInfo.Id())
-		utu.Step = StepUploadUpload
-		return
-	}
+	// 秒传不分文件大小一律进行
+
+	//if utu.LocalFileChecksum.Length > baidupcs.MaxRapidUploadSize {
+	//	fmt.Printf("[%s] 文件超过20GB, 无法使用秒传功能, 跳过秒传...\n", utu.taskInfo.Id())
+	//	utu.Step = StepUploadUpload
+	//	return
+	//}
 	// 下一步: 秒传
 	utu.Step = StepUploadRapidUpload
 }
@@ -177,9 +179,10 @@ func (utu *UploadTaskUnit) rapidUpload() (isContinue bool, result *taskframework
 		return
 	}
 	b64Content := strings.TrimRight(base64.StdEncoding.EncodeToString(dataContent), "=")
-	pcsError = utu.PCS.RapidUpload(utu.SavePath, hex.EncodeToString(utu.LocalFileChecksum.MD5),
+	pcsError, uploadid := utu.PCS.RapidUpload(utu.SavePath, hex.EncodeToString(utu.LocalFileChecksum.MD5),
 		hex.EncodeToString(utu.LocalFileChecksum.SliceMD5), b64Content, fmt.Sprint(utu.LocalFileChecksum.CRC32),
 		offset, dataLength, utu.LocalFileChecksum.Length, currentTime)
+	utu.UploadingDatabase.Uploadid = uploadid
 	if pcsError == nil {
 		fmt.Printf("[%s] 秒传成功, 保存到网盘路径: %s\n\n", utu.taskInfo.Id(), utu.SavePath)
 		// 统计
@@ -224,7 +227,7 @@ func (utu *UploadTaskUnit) upload() (result *taskframework.TaskUnitRunResult) {
 		BlockSize: blockSize,
 		MaxRate:   pcsconfig.Config.MaxUploadRate,
 		Policy:    utu.Policy,
-	})
+	}, utu.UploadingDatabase.Uploadid)
 
 	// 设置断点续传
 	if utu.state != nil {
