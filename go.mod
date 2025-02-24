@@ -1,7 +1,6 @@
 module github.com/qjfoidnh/BaiduPCS-Go
 
 go 1.23
-
 require (
 	github.com/GeertJohan/go.incremental v1.0.0
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
@@ -17,8 +16,8 @@ require (
 	github.com/qjfoidnh/baidu-tools v1.2.0 //dfa5778abeed
 	github.com/tidwall/gjson v1.18.0
 	github.com/urfave/cli v1.22.5
-	golang.org/x/crypto v0.0.0-20191011191535-87dc89f01550
-	golang.org/x/sys v0.25.0
+	golang.org/x/crypto v0.34.0
+	golang.org/x/sys v0.30.0
 )
 
 require (
