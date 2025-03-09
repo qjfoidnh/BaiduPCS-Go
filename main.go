@@ -1975,6 +1975,9 @@ func main() {
 						if c.IsSet("savedir") {
 							pcsconfig.Config.SaveDir = c.String("savedir")
 						}
+						if c.IsSet("save_prefix") {
+							pcsconfig.Config.SavePrefix = c.String("save_prefix")
+						}
 						if c.IsSet("proxy") {
 							pcsconfig.Config.SetProxy(c.String("proxy"))
 						}
@@ -2029,6 +2032,10 @@ func main() {
 						cli.StringFlag{
 							Name:  "savedir",
 							Usage: "下载文件的储存目录",
+						},
+						cli.StringFlag{
+							Name:  "save_prefix",
+							Usage: "指定各个账号下载到的子目录 (默认为: {{.UID}}-{{trim .NAME}})",
 						},
 						cli.BoolFlag{
 							Name:  "enable_https",
