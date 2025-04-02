@@ -1104,7 +1104,29 @@ func main() {
 					FullPath:             c.Bool("fullpath"),
 				}
 
-				pcscommand.RunDownload(c.Args(), do)
+				// 加入“ -dpro ”参数，来绕过限速，使用方式“ BaiduPCS-Go d filename -dpro”
+				if c.Bool("dpro") {
+					// 重命名文件
+					for _, arg := range c.Args() {
+						pcscommand.RunMove(arg, arg+".txt")
+					}
+
+					// 构建重命名后的路径列表
+					renamedArgs := make([]string, len(c.Args()))
+					for i, arg := range c.Args() {
+						renamedArgs[i] = arg + ".txt"
+					}
+
+					// 使用重命名后的路径列表进行下载
+					pcscommand.RunDownload(renamedArgs, do)
+
+					// 恢复文件名
+					for _, arg := range c.Args() {
+						pcscommand.RunMove(arg+".txt", arg)
+					}
+				} else {
+					pcscommand.RunDownload(c.Args(), do)
+				}
 
 				return nil
 			},
