@@ -24,7 +24,7 @@ const (
 	DefaultAcceptRanges = "bytes"
 )
 
-var BlockSizeList = [6]int64{128*converter.KB, 256*converter.KB, 1024*converter.KB, 2*converter.MB, 4*converter.MB, 999*converter.GB}
+var BlockSizeList = [6]int64{128 * converter.KB, 256 * converter.KB, 1024 * converter.KB, 2 * converter.MB, 999 * converter.GB}
 
 type (
 	// Downloader 下载
@@ -59,7 +59,7 @@ type (
 	StatusCodeBodyCheckFunc func(respBody io.Reader) error
 )
 
-//NewDownloader 初始化Downloader
+// NewDownloader 初始化Downloader
 func NewDownloader(durl string, writer io.WriterAt, config *Config) (der *Downloader) {
 	der = &Downloader{
 		durl:   durl,
@@ -76,7 +76,7 @@ func (der *Downloader) SetFirstInfo(i *DownloadFirstInfo) {
 	der.firstInfo = i
 }
 
-//SetClient 设置http客户端
+// SetClient 设置http客户端
 func (der *Downloader) SetClient(client *requester.HTTPClient) {
 	der.client = client
 }
@@ -90,16 +90,17 @@ func (der *Downloader) SetFileContentLength(length int64) {
 	if der.firstInfo == nil {
 		der.firstInfo = &DownloadFirstInfo{
 			ContentLength: length,
-			AcceptRanges : DefaultAcceptRanges,
+			AcceptRanges:  DefaultAcceptRanges,
 		}
 	}
 }
+
 // SetLoadBalancerCompareFunc 设置负载均衡检测函数
 func (der *Downloader) SetLoadBalancerCompareFunc(f LoadBalancerCompareFunc) {
 	der.loadBalancerCompareFunc = f
 }
 
-//SetStatusCodeBodyCheckFunc 设置响应状态码出错的检查函数, 当FirstCheckMethod不为HEAD时才有效
+// SetStatusCodeBodyCheckFunc 设置响应状态码出错的检查函数, 当FirstCheckMethod不为HEAD时才有效
 func (der *Downloader) SetStatusCodeBodyCheckFunc(f StatusCodeBodyCheckFunc) {
 	der.statusCodeBodyCheckFunc = f
 }
@@ -164,14 +165,12 @@ func (der *Downloader) SelectBlockSizeAndInitRangeGen(single bool, status *trans
 			//	blockSize = b2
 			//}
 			totalSize := status.TotalSize()
-			if totalSize < 2 * converter.MB {
+			if totalSize < 2*converter.MB {
 				blockSize = BlockSizeList[1]
-			} else if totalSize < 10 * converter.MB {
+			} else if totalSize < 10*converter.MB {
 				blockSize = BlockSizeList[2]
-			} else if totalSize < 80 * converter.MB {
-				blockSize = BlockSizeList[3]
 			} else {
-				blockSize = BlockSizeList[4]
+				blockSize = BlockSizeList[3]
 			}
 			gen = transfer.NewRangeListGenBlockSize(totalSize, 0, blockSize)
 		default:
@@ -288,7 +287,7 @@ func (der *Downloader) checkLoadBalancers() *LoadBalancerResponseList {
 	return loadBalancerResponseList
 }
 
-//Execute 开始任务
+// Execute 开始任务
 func (der *Downloader) Execute() error {
 	der.lazyInit()
 	var (
@@ -479,7 +478,7 @@ func (der *Downloader) Execute() error {
 	return err
 }
 
-//downloadStatusEvent 执行状态处理事件
+// downloadStatusEvent 执行状态处理事件
 func (der *Downloader) downloadStatusEvent() {
 	if der.onDownloadStatusEvent == nil {
 		return
@@ -500,7 +499,7 @@ func (der *Downloader) downloadStatusEvent() {
 	}()
 }
 
-//Pause 暂停
+// Pause 暂停
 func (der *Downloader) Pause() {
 	if der.monitor == nil {
 		return
@@ -509,7 +508,7 @@ func (der *Downloader) Pause() {
 	der.monitor.Pause()
 }
 
-//Resume 恢复
+// Resume 恢复
 func (der *Downloader) Resume() {
 	if der.monitor == nil {
 		return
@@ -518,7 +517,7 @@ func (der *Downloader) Resume() {
 	der.monitor.Resume()
 }
 
-//Cancel 取消
+// Cancel 取消
 func (der *Downloader) Cancel() {
 	if der.monitor == nil {
 		return
@@ -527,37 +526,37 @@ func (der *Downloader) Cancel() {
 	pcsutil.Trigger(der.monitorCancelFunc)
 }
 
-//OnExecute 设置开始下载事件
+// OnExecute 设置开始下载事件
 func (der *Downloader) OnExecute(onExecuteEvent requester.Event) {
 	der.onExecuteEvent = onExecuteEvent
 }
 
-//OnSuccess 设置成功下载事件
+// OnSuccess 设置成功下载事件
 func (der *Downloader) OnSuccess(onSuccessEvent requester.Event) {
 	der.onSuccessEvent = onSuccessEvent
 }
 
-//OnFinish 设置结束下载事件
+// OnFinish 设置结束下载事件
 func (der *Downloader) OnFinish(onFinishEvent requester.Event) {
 	der.onFinishEvent = onFinishEvent
 }
 
-//OnPause 设置暂停下载事件
+// OnPause 设置暂停下载事件
 func (der *Downloader) OnPause(onPauseEvent requester.Event) {
 	der.onPauseEvent = onPauseEvent
 }
 
-//OnResume 设置恢复下载事件
+// OnResume 设置恢复下载事件
 func (der *Downloader) OnResume(onResumeEvent requester.Event) {
 	der.onResumeEvent = onResumeEvent
 }
 
-//OnCancel 设置取消下载事件
+// OnCancel 设置取消下载事件
 func (der *Downloader) OnCancel(onCancelEvent requester.Event) {
 	der.onCancelEvent = onCancelEvent
 }
 
-//OnDownloadStatusEvent 设置状态处理函数
+// OnDownloadStatusEvent 设置状态处理函数
 func (der *Downloader) OnDownloadStatusEvent(f DownloadStatusFunc) {
 	der.onDownloadStatusEvent = f
 }

@@ -22,7 +22,8 @@ type (
 	// URLInfo 下载链接详情
 	URLInfo struct {
 		URLs []struct {
-			URL string `json:"url"`
+			URL     string `json:"url"`
+			Encrypt int    `json:"encrypt"`
 		} `json:"urls"`
 	}
 
@@ -55,13 +56,15 @@ type (
 // URLStrings 返回下载链接数组
 func (ui *URLInfo) URLStrings(https bool) (urls []*url.URL) {
 	urls = make([]*url.URL, 0, len(ui.URLs))
-	for k := range ui.URLs {
-		thisURL, err := url.Parse(ui.URLs[k].URL)
-		if err != nil {
-			continue
+	for _, urlInfo := range ui.URLs {
+		if urlInfo.Encrypt == 0 { // 只使用非加密链接
+			u, err := url.Parse(urlInfo.URL)
+			if err != nil {
+				continue // 如果解析失败，跳过当前 URL
+			}
+			u.Scheme = GetHTTPScheme(https)
+			urls = append(urls, u)
 		}
-		thisURL.Scheme = GetHTTPScheme(https)
-		urls = append(urls, thisURL)
 	}
 	return urls
 }
@@ -72,12 +75,17 @@ func (ui *URLInfo) SingleURL(https bool) *url.URL {
 		return nil
 	}
 
-	u, err := url.Parse(ui.URLs[0].URL)
-	if err != nil {
-		return nil
+	for _, urlInfo := range ui.URLs {
+		if urlInfo.Encrypt == 0 { // 假设 Encrypt 是 int 类型
+			u, err := url.Parse(urlInfo.URL)
+			if err != nil {
+				continue // 如果解析失败，跳过当前 URL
+			}
+			u.Scheme = GetHTTPScheme(https)
+			return u
+		}
 	}
-	u.Scheme = GetHTTPScheme(https)
-	return u
+	return nil
 }
 
 // LastURL 返回最后一条下载链接
