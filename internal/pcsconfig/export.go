@@ -77,6 +77,7 @@ func (c *PCSConfig) PrintTable() {
 		[]string{"savedir", c.SaveDir, "", "下载文件的储存目录"},
 		[]string{"enable_https", fmt.Sprint(c.EnableHTTPS), "true", "启用 https"},
 		[]string{"force_login_username", fmt.Sprint(c.ForceLogin), "留空", "强制登录指定用户名, 适用于tieba用户信息接口不可用的情况, 如登录正常请留空"},
+		[]string{"save_prefix", fmt.Sprint(c.SavePrefix), "", "指定各个账号下载到的子目录"},
 		[]string{"no_check", fmt.Sprint(c.NoCheck), "true", "关闭下载文件md5校验"},
 		[]string{"ignore_illegal", fmt.Sprint(c.IgnoreIllegal), "false", "关闭上传文件的文件名非法字符检查"},
 		[]string{"upload_policy", fmt.Sprint(c.UPolicy), "fail", "上传遇到重名文件时的处理策略, fail(默认，直接返回失败)、newcopy(重命名文件)、overwrite(覆盖)、skip(跳过)、rsync(仅跳过大小未变化的文件)"},

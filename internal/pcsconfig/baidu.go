@@ -1,12 +1,14 @@
 package pcsconfig
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"path"
 	"path/filepath"
 	"strconv"
 	"strings"
+	"text/template"
 
 	"github.com/olekukonko/tablewriter"
 	"github.com/qjfoidnh/BaiduPCS-Go/baidupcs"
@@ -22,7 +24,7 @@ var (
 	ErrBaiduUserNotFound = errors.New("baidu user not found")
 )
 
-//BaiduBase Baidu基
+// BaiduBase Baidu基
 type BaiduBase struct {
 	UID  uint64 `json:"uid"`  // 百度ID对应的uid
 	Name string `json:"name"` // 真实ID
@@ -65,10 +67,27 @@ func (baidu *Baidu) BaiduPCS() *baidupcs.BaiduPCS {
 	return pcs
 }
 
+func resolveTemplate(tmpl string, data *Baidu) (string, error) {
+	var buf bytes.Buffer
+	t, err := template.New("template").Funcs(template.FuncMap{"trim": converter.TrimPathInvalidChars}).Parse(tmpl)
+	if err != nil {
+		return "", err
+	}
+	err = t.Execute(&buf, data)
+	if err != nil {
+		return "", err
+	}
+	return buf.String(), nil
+}
+
 // GetSavePath 根据提供的网盘文件路径 pcspath, 返回本地储存路径,
 // 返回绝对路径, 获取绝对路径出错时才返回相对路径...
 func (baidu *Baidu) GetSavePath(pcspath string) string {
-	dirStr := filepath.Join(Config.SaveDir, fmt.Sprintf("%d_%s", baidu.UID, converter.TrimPathInvalidChars(baidu.Name)), pcspath)
+	dirName, err := resolveTemplate(Config.SavePrefix, baidu)
+	if err != nil {
+		dirName = fmt.Sprintf("%d_%s", baidu.UID, converter.TrimPathInvalidChars(baidu.Name))
+	}
+	dirStr := filepath.Join(Config.SaveDir, dirName, pcspath)
 	dir, err := filepath.Abs(dirStr)
 	if err != nil {
 		dir = filepath.Clean(dirStr)
