@@ -68,7 +68,7 @@ func (c *PCSConfig) PrintTable() {
 	tb.AppendBulk([][]string{
 		[]string{"appid", fmt.Sprint(c.AppID), "", "百度 PCS 应用ID"},
 		[]string{"cache_size", converter.ConvertFileSize(int64(c.CacheSize), 2), "1KB ~ 256KB", "下载缓存, 如果硬盘占用高或下载速度慢, 请尝试调大此值"},
-		[]string{"max_parallel", strconv.Itoa(c.MaxParallel), "1 ~ 14", "下载总最大并发量"},
+		[]string{"max_parallel", strconv.Itoa(c.MaxParallel), "1 ~ 14", "下载总最大并发量, 非svip不可>1"},
 		[]string{"max_upload_parallel", strconv.Itoa(c.MaxUploadParallel), "1 ~ 100", "上传单文件最大并发量"},
 		[]string{"max_download_load", strconv.Itoa(c.MaxDownloadLoad), "1 ~ 5", "同时进行下载文件的最大数量"},
 		[]string{"max_download_rate", showMaxRate(c.MaxDownloadRate), "", "限制最大下载速度, 0代表不限制"},
@@ -77,9 +77,7 @@ func (c *PCSConfig) PrintTable() {
 		[]string{"savedir", c.SaveDir, "", "下载文件的储存目录"},
 		[]string{"enable_https", fmt.Sprint(c.EnableHTTPS), "true", "启用 https"},
 		[]string{"force_login_username", fmt.Sprint(c.ForceLogin), "留空", "强制登录指定用户名, 适用于tieba用户信息接口不可用的情况, 如登录正常请留空"},
-		[]string{"no_check", fmt.Sprint(c.NoCheck), "true", "关闭下载文件md5校验"},
 		[]string{"ignore_illegal", fmt.Sprint(c.IgnoreIllegal), "false", "关闭上传文件的文件名非法字符检查"},
-		[]string{"upload_policy", fmt.Sprint(c.UPolicy), "fail", "上传遇到重名文件时的处理策略, fail(默认，直接返回失败)、newcopy(重命名文件)、overwrite(覆盖)、skip(跳过)、rsync(仅跳过大小未变化的文件)"},
 		[]string{"user_agent", c.UserAgent, requester.DefaultUserAgent, "浏览器标识"},
 		[]string{"pcs_ua", c.PCSUA, "", "PCS 浏览器标识"},
 		[]string{"pcs_addr", c.PCSAddr, "pcs.baidu.com", "PCS 服务器地址"},

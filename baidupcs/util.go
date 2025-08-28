@@ -10,6 +10,7 @@ import (
 	"io"
 	"path"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -78,6 +79,21 @@ func mergeStringList(a ...string) string {
 	return `["` + s + `"]`
 }
 
+func sortBlockList(checksumMap map[int]string) []string {
+	keys := make([]int, 0, len(checksumMap))
+	for k := range checksumMap {
+		keys = append(keys, k)
+	}
+	sort.Ints(keys) // 升序排序
+
+	// 2. 按排序后的 Key 提取 Value
+	result := make([]string, 0, len(checksumMap))
+	for _, k := range keys {
+		result = append(result, checksumMap[k])
+	}
+	return result
+}
+
 func mergeInt64List(si ...int64) string {
 	i := converter.SliceInt64ToString(si)
 	s := strings.Join(i, ",")
@@ -120,19 +136,19 @@ func DecryptMD5(rawMD5 string) string {
 	if match {
 		return rawMD5
 	}
-	sliceFirst := fmt.Sprintf("%x", []rune(rawMD5)[9] -'g')
+	sliceFirst := fmt.Sprintf("%x", []rune(rawMD5)[9]-'g')
 	sliceSecond := rawMD5[0:9] + sliceFirst + rawMD5[10:]
 	sliceThird := ""
 	for i := 0; i < len(sliceSecond); i++ {
 		if sliceSecond[i:i+1] == "-" {
-			sliceThird += fmt.Sprintf("%x", 15 & i)
+			sliceThird += fmt.Sprintf("%x", 15&i)
 			continue
 		}
 		num, err := strconv.ParseInt(sliceSecond[i:i+1], 16, 64)
 		if err != nil {
 			return rawMD5
 		}
-		sliceThird += fmt.Sprintf("%x", int(num) ^ (15 & i))
+		sliceThird += fmt.Sprintf("%x", int(num)^(15&i))
 	}
 	return sliceThird[8:16] + sliceThird[0:8] + sliceThird[24:32] + sliceThird[16:24]
 }

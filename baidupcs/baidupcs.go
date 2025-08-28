@@ -22,6 +22,8 @@ const (
 	OperationGetBDSToken = "获取bdstoken"
 	// OperationGetCursorDiff
 	OperationGetCursorDiff = "获取cursor后文件列表diff信息"
+	// OperationGetPCSServer 获取可用的psc服务器
+	OperationGetPCSServer = "获取可用的PCS服务器列表"
 	// OperationQuotaInfo 获取当前用户空间配额信息
 	OperationQuotaInfo = "获取当前用户空间配额信息"
 	// OperationFilesDirectoriesMeta 获取文件/目录的元信息
@@ -163,7 +165,7 @@ type (
 	}
 )
 
-//UpdatePCSCookies 去除重名Cookies, 同名cookeis只保留最新的
+// UpdatePCSCookies 去除重名Cookies, 同名cookeis只保留最新的
 func (pcs *BaiduPCS) UpdatePCSCookies(reverse bool) {
 	cookies := pcs.GetClient().Jar.Cookies(baiduComURL)
 	new_cookies := make([]*http.Cookie, 0)
@@ -300,6 +302,10 @@ func (pcs *BaiduPCS) GetBAIDUID() (baiduid string) {
 	return ""
 }
 
+func (pcs *BaiduPCS) GetPCSAddr() string {
+	return pcs.pcsAddr
+}
+
 // SetAPPID 设置app_id
 func (pcs *BaiduPCS) SetAPPID(appID int) {
 	pcs.appID = appID
@@ -355,7 +361,9 @@ func (pcs *BaiduPCS) SetPCSUserAgent(ua string) {
 
 // SetPCSAddr 设置 PCS 服务器地址
 func (pcs *BaiduPCS) SetPCSAddr(addr string) {
-	pcs.pcsAddr = addr
+	if addr != "" {
+		pcs.pcsAddr = addr
+	}
 }
 
 // SetPanUserAgent 设置 Pan User-Agent

@@ -10,8 +10,6 @@ import (
 )
 
 const (
-	// MaxUploadBlockSize 最大上传的文件分片大小
-	MaxUploadBlockSize = 16 * converter.MB
 	// MinUploadBlockSize 最小的上传的文件分片大小
 	MinUploadBlockSize = 4 * converter.MB
 	// MaxRapidUploadSize 秒传文件支持的最大文件大小
@@ -48,11 +46,6 @@ type (
 		ContentCrc32  string
 	}
 
-	uploadJSON struct {
-		*PathJSON
-		*pcserror.PCSErrInfo
-	}
-
 	uploadTmpFileJSON struct {
 		MD5 string `json:"md5"`
 		*pcserror.PCSErrInfo
@@ -64,12 +57,6 @@ type (
 		BlockList  []int  `json:"block_list"`
 		*pcserror.PanErrorInfo
 		fdJSON `json:"info"`
-	}
-
-	uploadCreateJSON struct {
-		ErrNo int    `json:"errno"` // 0成功, 2失败
-		Path  string `json:"path"`
-		*pcserror.PanErrorInfo
 	}
 
 	// UploadSeq 分片上传顺序
@@ -84,22 +71,17 @@ type (
 		UploadID      string
 		UploadSeqList []*UploadSeq
 	}
-
-	uploadSuperfile2JSON struct {
-		MD5 string `json:"md5"`
-		*pcserror.PCSErrInfo
-	}
 )
 
 // RapidUpload 秒传文件
-func (pcs *BaiduPCS) RapidUpload(targetPath, contentMD5, sliceMD5, dataContent, crc32 string, offset, length, totalSize, dataTime int64) (pcsError pcserror.Error, uploadid string) {
+func (pcs *BaiduPCS) RapidUpload(targetPath, contentMD5, sliceMD5, dataContent, crc32 string, offset, length, totalSize, dataTime int64, blockListMD5 []string) (pcsError pcserror.Error, jsonData uploadPrecreateJSON) {
 	defer func() {
 		if pcsError == nil {
 			// 更新缓存
 			pcs.deleteCache([]string{path.Dir(targetPath)})
 		}
 	}()
-	pcsError, uploadid = pcs.rapidUploadV2(targetPath, strings.ToLower(contentMD5), strings.ToLower(sliceMD5), dataContent, crc32, offset, length, totalSize, dataTime)
+	pcsError, jsonData = pcs.rapidUploadV2(targetPath, strings.ToLower(contentMD5), strings.ToLower(sliceMD5), dataContent, crc32, offset, length, totalSize, dataTime, blockListMD5)
 	return
 }
 
@@ -124,17 +106,17 @@ func (pcs *BaiduPCS) rapidUpload(targetPath, contentMD5, sliceMD5, crc32 string,
 	return pcserror.DecodePanJSONError(OperationRapidUpload, dataReadCloser)
 }
 
-func (pcs *BaiduPCS) rapidUploadV2(targetPath, contentMD5, sliceMD5, dataContent, crc32 string, offset, length, totalSize, dataTime int64) (pcsError pcserror.Error, uploadid string) {
-	dataReadCloser, pcsError := pcs.PrepareRapidUploadV2(targetPath, contentMD5, sliceMD5, dataContent, crc32, offset, length, totalSize, dataTime)
+func (pcs *BaiduPCS) rapidUploadV2(targetPath, contentMD5, sliceMD5, dataContent, crc32 string, offset, length, totalSize, dataTime int64, blockListMD5 []string) (pcsError pcserror.Error, jsonData uploadPrecreateJSON) {
+	dataReadCloser, pcsError := pcs.PrepareRapidUploadV2(targetPath, contentMD5, sliceMD5, dataContent, crc32, offset, length, totalSize, dataTime, blockListMD5)
 	if pcsError != nil {
 		return
 	}
 	defer dataReadCloser.Close()
-	jsonData := uploadPrecreateJSON{
+	jsonData = uploadPrecreateJSON{
 		PanErrorInfo: pcserror.NewPanErrorInfo(OperationRapidUpload),
 	}
 	pcsError = pcserror.HandleJSONParse(OperationUpload, dataReadCloser, &jsonData)
-	return pcsError, jsonData.UploadID
+	return pcsError, jsonData
 }
 
 // RapidUploadNoCheckDir 秒传文件, 不进行目录检查, 会覆盖掉同名的目录!
@@ -152,36 +134,6 @@ func (pcs *BaiduPCS) RapidUploadNoCheckDir(targetPath, contentMD5, sliceMD5, crc
 	}
 
 	return nil
-}
-
-// Upload 上传单个文件
-func (pcs *BaiduPCS) Upload(policy, targetPath string, uploadFunc UploadFunc) (pcsError pcserror.Error, newpath string) {
-	dataReadCloser, pcsError := pcs.PrepareUpload(policy, targetPath, uploadFunc)
-	if pcsError != nil {
-		return pcsError, ""
-	}
-
-	defer dataReadCloser.Close()
-
-	// 数据处理
-	jsonData := uploadJSON{
-		PCSErrInfo: pcserror.NewPCSErrorInfo(OperationUpload),
-	}
-
-	pcsError = pcserror.HandleJSONParse(OperationUpload, dataReadCloser, &jsonData)
-	if pcsError != nil {
-		return
-	}
-
-	if jsonData.Path == "" {
-		jsonData.PCSErrInfo.ErrType = pcserror.ErrTypeInternalError
-		jsonData.PCSErrInfo.Err = ErrUploadSavePathFound
-		return jsonData.PCSErrInfo, ""
-	}
-
-	// 更新缓存
-	pcs.deleteCache([]string{path.Dir(targetPath)})
-	return nil, jsonData.Path
 }
 
 // UploadTmpFile 分片上传—文件分片及上传
@@ -214,8 +166,9 @@ func (pcs *BaiduPCS) UploadTmpFile(uploadid, targetPath string, partseq int, par
 }
 
 // UploadCreateSuperFile 分片上传—合并分片文件
-func (pcs *BaiduPCS) UploadCreateSuperFile(policy string, checkDir bool, targetPath string, blockList ...string) (pcsError pcserror.Error) {
-	dataReadCloser, pcsError := pcs.PrepareUploadCreateSuperFile(policy, checkDir, targetPath, blockList...)
+func (pcs *BaiduPCS) UploadCreateSuperFile(uploadid string, fileSize int64, targetPath string, checksumMap map[int]string) (pcsError pcserror.Error) {
+	blockList := sortBlockList(checksumMap)
+	dataReadCloser, pcsError := pcs.PrepareUploadCreateSuperFile(uploadid, fileSize, targetPath, blockList)
 	if pcsError != nil {
 		return pcsError
 	}
@@ -234,8 +187,8 @@ func (pcs *BaiduPCS) UploadCreateSuperFile(policy string, checkDir bool, targetP
 
 // UploadPrecreate 分片上传—Precreate,
 // 支持检验秒传
-func (pcs *BaiduPCS) UploadPrecreate(targetPath, contentMD5, sliceMD5, crc32 string, size int64, bolckList ...string) (precreateInfo *PrecreateInfo, pcsError pcserror.Error) {
-	dataReadCloser, pcsError := pcs.PrepareUploadPrecreate(targetPath, contentMD5, sliceMD5, crc32, size, bolckList...)
+func (pcs *BaiduPCS) UploadPrecreate(targetPath, contentMD5, sliceMD5, crc32 string, size int64, blockList ...string) (precreateInfo *PrecreateInfo, pcsError pcserror.Error) {
+	dataReadCloser, pcsError := pcs.PrepareUploadPrecreate(targetPath, contentMD5, sliceMD5, crc32, size, blockList)
 	if pcsError != nil {
 		return
 	}
@@ -255,7 +208,7 @@ func (pcs *BaiduPCS) UploadPrecreate(targetPath, contentMD5, sliceMD5, crc32 str
 	switch jsonData.ReturnType {
 	case 1: // 上传
 		seqLen := len(jsonData.BlockList)
-		if seqLen != len(bolckList) {
+		if seqLen != len(blockList) {
 			errInfo.ErrType = pcserror.ErrTypeRemoteError
 			errInfo.Err = ErrUploadSeqNotMatch
 			return nil, errInfo
@@ -265,7 +218,7 @@ func (pcs *BaiduPCS) UploadPrecreate(targetPath, contentMD5, sliceMD5, crc32 str
 		for k, seq := range jsonData.BlockList {
 			seqList = append(seqList, &UploadSeq{
 				Seq:   seq,
-				Block: bolckList[k],
+				Block: blockList[k],
 			})
 		}
 		return &PrecreateInfo{
@@ -281,25 +234,4 @@ func (pcs *BaiduPCS) UploadPrecreate(targetPath, contentMD5, sliceMD5, crc32 str
 	default:
 		panic("unknown returntype")
 	}
-}
-
-// UploadSuperfile2 分片上传—Superfile2
-func (pcs *BaiduPCS) UploadSuperfile2(uploadid, targetPath string, partseq int, partOffset int64, uploadFunc UploadFunc) (md5sum string, pcsError pcserror.Error) {
-	dataReadCloser, pcsError := pcs.PrepareUploadSuperfile2(uploadid, targetPath, partseq, partOffset, uploadFunc)
-	if pcsError != nil {
-		return
-	}
-
-	defer dataReadCloser.Close()
-
-	jsonData := uploadSuperfile2JSON{
-		PCSErrInfo: pcserror.NewPCSErrorInfo(OperationUploadSuperfile2),
-	}
-
-	pcsError = pcserror.HandleJSONParse(OperationUploadSuperfile2, dataReadCloser, &jsonData)
-	if pcsError != nil {
-		return
-	}
-
-	return jsonData.MD5, nil
 }

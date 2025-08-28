@@ -3,6 +3,8 @@ package checksum
 
 import (
 	"crypto/md5"
+	"encoding/hex"
+	"fmt"
 	"github.com/qjfoidnh/BaiduPCS-Go/pcsutil/cachepool"
 	"github.com/qjfoidnh/BaiduPCS-Go/pcsutil/converter"
 	"hash/crc32"
@@ -27,12 +29,13 @@ const (
 type (
 	// LocalFileMeta 本地文件元信息
 	LocalFileMeta struct {
-		Path     string `json:"path"`     // 本地路径
-		Length   int64  `json:"length"`   // 文件大小
-		SliceMD5 []byte `json:"slicemd5"` // 文件前 requiredSliceLen (256KB) 切片的 md5 值
-		MD5      []byte `json:"md5"`      // 文件的 md5
-		CRC32    uint32 `json:"crc32"`    // 文件的 crc32
-		ModTime  int64  `json:"modtime"`  // 修改日期
+		Path       string   `json:"path"`      // 本地路径
+		Length     int64    `json:"length"`    // 文件大小
+		SliceMD5   []byte   `json:"slicemd5"`  // 文件前 requiredSliceLen (256KB) 切片的 md5 值
+		BlocksList []string `json:"blocklist"` // 文件分块计算md5的切片
+		MD5        []byte   `json:"md5"`       // 文件的 md5
+		CRC32      uint32   `json:"crc32"`     // 文件的 crc32
+		ModTime    int64    `json:"modtime"`   // 修改日期
 	}
 
 	// LocalFileChecksum 校验本地文件
@@ -230,6 +233,65 @@ func (lfc *LocalFileChecksum) Sum(checkSumFlag int) (err error) {
 
 	err = lfc.repeatRead(wus...)
 	return
+}
+
+// CalculateChunkedMD5 按指定大小分块计算MD5
+func (lfc *LocalFileChecksum) CalculateChunkedSum(chunkSize int64) (err error) {
+
+	// 确保分块大小有效
+	if chunkSize <= 0 {
+		return fmt.Errorf("invalid block size: %d", chunkSize)
+	}
+
+	// 获取文件信息（需要知道总大小来计算分块数）
+	fileInfo, err := lfc.file.Stat()
+	if err != nil {
+		return err
+	}
+	fileSize := fileInfo.Size()
+	if fileSize == 0 {
+		return nil // 空文件
+	}
+
+	// 计算分块数量
+	chunkCount := (fileSize + chunkSize - 1) / chunkSize
+
+	// 初始化结果存储
+	lfc.BlocksList = make([]string, 0, chunkCount)
+
+	// 分块处理
+	buffer := make([]byte, 64*1024) // 64KB读取缓冲区
+	chunkMD5 := md5.New()
+	for offset := int64(0); offset < fileSize; offset += chunkSize {
+		// 计算当前分块的实际大小（最后一块可能较小）
+		currentChunkSize := chunkSize
+		if offset+chunkSize > fileSize {
+			currentChunkSize = fileSize - offset
+		}
+		// Reset MD5 计算器
+		chunkMD5.Reset()
+		bytesRead := int64(0)
+
+		// 读取当前分块的所有数据
+		for bytesRead < currentChunkSize {
+			readSize := int64(len(buffer))
+			if readSize > currentChunkSize-bytesRead {
+				readSize = currentChunkSize - bytesRead
+			}
+
+			n, err := lfc.file.ReadAt(buffer[:readSize], offset+bytesRead)
+			if err != nil && err != io.EOF {
+				return err
+			}
+
+			chunkMD5.Write(buffer[:n])
+			bytesRead += int64(n)
+		}
+
+		lfc.BlocksList = append(lfc.BlocksList, hex.EncodeToString(chunkMD5.Sum(nil)))
+	}
+
+	return nil
 }
 
 func (lfc *LocalFileChecksum) fix() {

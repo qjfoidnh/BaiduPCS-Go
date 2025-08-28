@@ -128,10 +128,7 @@ func (utu *UploadTaskUnit) rapidUpload() (isContinue bool, result *taskframework
 		}
 	}
 
-	// 文件大于128MB, 输出提示信息
-	if utu.LocalFileChecksum.Length >= 128*converter.MB {
-		fmt.Printf("[%s] 检测秒传中, 请稍候...\n", utu.taskInfo.Id())
-	}
+	fmt.Printf("[%s] 检测秒传中, 请稍候...\n", utu.taskInfo.Id())
 
 	// 经测试, 文件的 crc32 值并非秒传文件所必需
 	err := utu.LocalFileChecksum.Sum(checksum.CHECKSUM_MD5 | checksum.CHECKSUM_SLICE_MD5)
@@ -179,28 +176,43 @@ func (utu *UploadTaskUnit) rapidUpload() (isContinue bool, result *taskframework
 		return
 	}
 	b64Content := strings.TrimRight(base64.StdEncoding.EncodeToString(dataContent), "=")
-	pcsError, uploadid := utu.PCS.RapidUpload(utu.SavePath, hex.EncodeToString(utu.LocalFileChecksum.MD5),
-		hex.EncodeToString(utu.LocalFileChecksum.SliceMD5), b64Content, fmt.Sprint(utu.LocalFileChecksum.CRC32),
-		offset, dataLength, utu.LocalFileChecksum.Length, currentTime)
-	utu.UploadingDatabase.Uploadid = uploadid
-	if pcsError == nil {
-		fmt.Printf("[%s] 秒传成功, 保存到网盘路径: %s\n\n", utu.taskInfo.Id(), utu.SavePath)
-		// 统计
-		utu.UploadStatistic.AddTotalSize(utu.LocalFileChecksum.Length)
-		result.Succeed = true // 成功
+
+	blockSize := getBlockSize()
+
+	fmt.Printf("[%s] 开始计算文件分块md5...\n", utu.taskInfo.Id())
+	err = utu.LocalFileChecksum.CalculateChunkedSum(blockSize)
+	if err != nil {
+		// 不重试
+		result.ResultMessage = "计算文件分块md5出错"
+		result.Err = err
 		return
 	}
 
-	// 判断配额是否已满
-	switch pcsError.GetErrType() {
-	// 远程服务器错误
-	case pcserror.ErrTypeRemoteError:
-		switch pcsError.GetRemoteErrCode() {
-		case 31112: //exceed quota
-			result.ResultMessage = "秒传失败, 超出配额, 网盘容量已满"
+	pcsError, jsonData := utu.PCS.RapidUpload(utu.SavePath, hex.EncodeToString(utu.LocalFileChecksum.MD5),
+		hex.EncodeToString(utu.LocalFileChecksum.SliceMD5), b64Content, fmt.Sprint(utu.LocalFileChecksum.CRC32),
+		offset, dataLength, utu.LocalFileChecksum.Length, currentTime, utu.LocalFileChecksum.BlocksList)
+	utu.UploadingDatabase.Uploadid = jsonData.UploadID
+	if pcsError == nil {
+		if jsonData.ReturnType == 2 {
+			fmt.Printf("[%s] 秒传成功, 保存到网盘路径: %s\n\n", utu.taskInfo.Id(), utu.SavePath)
+			// 统计
+			utu.UploadStatistic.AddTotalSize(utu.LocalFileChecksum.Length)
+			result.Succeed = true // 成功
 			return
 		}
+	} else {
+		// 判断配额是否已满
+		switch pcsError.GetErrType() {
+		// 远程服务器错误
+		case pcserror.ErrTypeRemoteError:
+			switch pcsError.GetRemoteErrCode() {
+			case 31112: //exceed quota
+				result.ResultMessage = "秒传失败, 超出配额, 网盘容量已满"
+				return
+			}
+		}
 	}
+
 	fmt.Printf("[%s] 秒传失败, 开始上传文件...\n\n", utu.taskInfo.Id())
 
 	// 保存秒传信息
@@ -214,20 +226,14 @@ func (utu *UploadTaskUnit) rapidUpload() (isContinue bool, result *taskframework
 func (utu *UploadTaskUnit) upload() (result *taskframework.TaskUnitRunResult) {
 	utu.Step = StepUploadUpload
 
-	var blockSize int64
-	if utu.NoSplitFile {
-		// 不分片上传
-		blockSize = utu.LocalFileChecksum.Length
-	} else {
-		blockSize = getBlockSize(utu.LocalFileChecksum.Length)
-	}
+	blockSize := getBlockSize()
 
 	muer := uploader.NewMultiUploader(NewPCSUpload(utu.PCS, utu.SavePath), rio.NewFileReaderAtLen64(utu.LocalFileChecksum.GetFile()), &uploader.MultiUploaderConfig{
 		Parallel:  utu.Parallel,
 		BlockSize: blockSize,
 		MaxRate:   pcsconfig.Config.MaxUploadRate,
 		Policy:    utu.Policy,
-	}, utu.UploadingDatabase.Uploadid)
+	}, utu.UploadingDatabase.Uploadid, utu.SavePath)
 
 	// 设置断点续传
 	if utu.state != nil {

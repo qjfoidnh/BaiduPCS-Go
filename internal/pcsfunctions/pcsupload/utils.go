@@ -4,19 +4,12 @@ import (
 	"crypto/md5"
 	"fmt"
 	"github.com/qjfoidnh/BaiduPCS-Go/baidupcs"
-	"github.com/qjfoidnh/BaiduPCS-Go/pcsutil/converter"
 	"io"
 	"strconv"
 )
 
-func getBlockSize(fileSize int64) int64 {
-	blockSize := baidupcs.MinUploadBlockSize
-	if fileSize > 1*converter.GB && fileSize < 4*converter.GB {
-		blockSize = 2 * baidupcs.MinUploadBlockSize
-	} else if fileSize >= 4*converter.GB {
-		blockSize = baidupcs.MaxUploadBlockSize
-	}
-	return blockSize
+func getBlockSize() int64 {
+	return baidupcs.MinUploadBlockSize
 }
 
 func creaetDataOffset(contentMD5 string, uk, dataTime, fileSize, subSize int64) (offset int64, err error) {

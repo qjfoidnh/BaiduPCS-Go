@@ -6,6 +6,7 @@ import (
 	"github.com/oleiade/lane"
 	"github.com/qjfoidnh/BaiduPCS-Go/pcsutil/waitgroup"
 	"os"
+	"sync"
 )
 
 type (
@@ -38,12 +39,17 @@ func (werl *workerList) Readed() int64 {
 }
 
 func (muer *MultiUploader) upload() (uperr error) {
-	err := muer.multiUpload.Precreate(muer.file.Len(), muer.config.Policy)
+	pcsHost, err := muer.multiUpload.Precreate(muer.file.Len(), muer.config.Policy)
 	if err != nil {
 		return err
 	}
 	var (
 		uploadDeque = lane.NewDeque()
+	)
+
+	var (
+		checksumMap = make(map[int]string) // key: wer.id, value: checksum
+		mu          sync.Mutex
 	)
 
 	// 加入队列
@@ -73,7 +79,7 @@ func (muer *MultiUploader) upload() (uperr error) {
 					terr        error
 				)
 				go func() {
-					checksum, terr = muer.multiUpload.TmpFile(ctx, muer.uploadid, muer.targetPath, wer.id, wer.partOffset, wer.splitUnit)
+					checksum, terr = muer.multiUpload.TmpFile(ctx, pcsHost, muer.uploadid, muer.targetPath, wer.id, wer.partOffset, wer.splitUnit)
 					close(doneChan)
 				}()
 				select {
@@ -102,6 +108,9 @@ func (muer *MultiUploader) upload() (uperr error) {
 					return
 				}
 				wer.checksum = checksum
+				mu.Lock()
+				checksumMap[wer.id] = checksum // 记录成功任务的 checksum
+				mu.Unlock()
 
 				// 通知更新
 				if muer.updateInstanceStateChan != nil && len(muer.updateInstanceStateChan) < cap(muer.updateInstanceStateChan) {
@@ -126,7 +135,7 @@ func (muer *MultiUploader) upload() (uperr error) {
 	default:
 	}
 
-	cerr := muer.multiUpload.CreateSuperFile(muer.config.Policy, muer.workers.CheckSumList()...)
+	cerr := muer.multiUpload.CreateSuperFile(muer.uploadid, muer.file.Len(), checksumMap)
 	if cerr != nil {
 		return cerr
 	}

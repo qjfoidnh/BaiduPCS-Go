@@ -46,18 +46,18 @@ type PCSConfig struct {
 	MaxDownloadRate int64 `json:"max_download_rate"` // 限制最大下载速度
 	MaxUploadRate   int64 `json:"max_upload_rate"`   // 限制最大上传速度
 
-	UserAgent   string `json:"user_agent"`   // 浏览器标识
-	PCSUA       string `json:"pcs_ua"`       // PCS浏览器标识
-	PCSAddr     string `json:"pcs_addr"`     // PCS服务器域名
-	PanUA       string `json:"pan_ua"`       // PAN浏览器标识
-	SaveDir     string `json:"savedir"`      // 下载储存路径
-	EnableHTTPS bool   `json:"enable_https"` // 启用https
-	ForceLogin  string `json:"force_login_username"` // 强制登录
-	Proxy       string `json:"proxy"`        // 代理
-	LocalAddrs  string `json:"local_addrs"`  // 本地网卡地址
-	NoCheck     bool   `json:"no_check"`     // 禁用下载md5校验
-	IgnoreIllegal bool `json:"ignore_illegal"` // 禁用上传文件名非法字符检查
-	UPolicy     string `json:"u_policy"`     // 上传重名文件处理策略
+	UserAgent     string `json:"user_agent"`           // 浏览器标识
+	PCSUA         string `json:"pcs_ua"`               // PCS浏览器标识
+	PCSAddr       string `json:"pcs_addr"`             // PCS服务器域名
+	PanUA         string `json:"pan_ua"`               // PAN浏览器标识
+	SaveDir       string `json:"savedir"`              // 下载储存路径
+	EnableHTTPS   bool   `json:"enable_https"`         // 启用https
+	ForceLogin    string `json:"force_login_username"` // 强制登录
+	Proxy         string `json:"proxy"`                // 代理
+	LocalAddrs    string `json:"local_addrs"`          // 本地网卡地址
+	NoCheck       bool   `json:"no_check"`             // 禁用下载md5校验
+	IgnoreIllegal bool   `json:"ignore_illegal"`       // 禁用上传文件名非法字符检查
+	UPolicy       string `json:"u_policy"`             // 上传重名文件处理策略
 
 	configFilePath string
 	configFile     *os.File

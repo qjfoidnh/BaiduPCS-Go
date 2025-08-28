@@ -55,7 +55,7 @@ const (
 
 var (
 	// Version 版本号
-	Version = "v3.9.7-devel"
+	Version = "v3.9.8-devel"
 
 	historyFilePath = filepath.Join(pcsconfig.GetConfigDir(), "pcs_command_history.txt")
 	reloadFn        = func(c *cli.Context) error {
@@ -1212,11 +1212,9 @@ func main() {
 
 				subArgs := c.Args()
 				pcscommand.RunUpload(subArgs[:c.NArg()-1], subArgs[c.NArg()-1], &pcscommand.UploadOptions{
-					Parallel:      c.Int("p"),
-					MaxRetry:      c.Int("retry"),
-					Load:          c.Int("l"),
-					NoRapidUpload: c.Bool("norapid"),
-					Policy:        c.String("policy"),
+					Parallel: c.Int("p"),
+					MaxRetry: c.Int("retry"),
+					Load:     c.Int("l"),
 				})
 				return nil
 			},
@@ -1233,14 +1231,6 @@ func main() {
 				cli.IntFlag{
 					Name:  "l",
 					Usage: "指定同时上传的最大文件数",
-				},
-				cli.BoolFlag{
-					Name:  "norapid",
-					Usage: "不检测秒传",
-				},
-				cli.StringFlag{
-					Name:  "policy",
-					Usage: "对同名文件的处理策略",
 				},
 			},
 		},
@@ -1275,123 +1265,6 @@ func main() {
 					Name:  "pan",
 					Usage: "从百度网盘首页获取下载链接",
 				},
-			},
-		},
-		{
-			Name:      "rapidupload",
-			Aliases:   []string{"ru"},
-			Usage:     "手动秒传文件",
-			UsageText: app.Name + " rapidupload -length=<文件的大小> -md5=<文件的md5值> -slicemd5=<文件前256KB切片的md5值(可选)> -crc32=<文件的crc32值(可选)> <保存的网盘路径, 需包含文件名>",
-			Description: `
-	使用此功能秒传文件, 前提是知道文件的大小, md5, 前256KB切片的 md5 (可选), crc32 (可选), 且百度网盘中存在一模一样的文件.
-	上传的文件将会保存到网盘的目标目录.
-	遇到同名文件将会自动覆盖!
-
-	可能无法秒传 20GB 以上的文件!!
-
-	示例:
-
-	1. 如果秒传成功, 则保存到网盘路径 /test
-	BaiduPCS-Go rapidupload -length=56276137 -md5=fbe082d80e90f90f0fb1f94adbbcfa7f -slicemd5=38c6a75b0ec4499271d4ea38a667ab61 -crc32=314332359 /test
-`,
-			Category: "百度网盘",
-			Before:   reloadFn,
-			Action: func(c *cli.Context) error {
-				if c.NArg() <= 0 || !c.IsSet("md5") || !c.IsSet("length") || !c.IsSet("slicemd5") {
-					cli.ShowCommandHelp(c, c.Command.Name)
-					return nil
-				}
-				pcscommand.RunRapidUpload(c.Args().Get(0), c.String("md5"), c.String("slicemd5"), c.Int64("length"))
-				return nil
-			},
-			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:  "md5",
-					Usage: "文件的 md5 值",
-				},
-				cli.StringFlag{
-					Name:  "slicemd5",
-					Usage: "文件前 256KB 切片的 md5 值 (可选)",
-				},
-				cli.StringFlag{
-					Name:  "crc32",
-					Usage: "文件的 crc32 值 (可选)",
-				},
-				cli.Int64Flag{
-					Name:  "length",
-					Usage: "文件的大小",
-				},
-			},
-		},
-		{
-			Name:      "createsuperfile",
-			Aliases:   []string{"csf"},
-			Usage:     "手动分片上传—合并分片文件",
-			UsageText: app.Name + " createsuperfile -path=<保存的网盘路径, 需包含文件名> block1 block2 ... ",
-			Description: `
-	block1, block2 ... 为文件分片的md5值
-	上传的文件将会保存到网盘的目标目录.
-	遇到同名文件默认覆盖, 可以--policy参数指定, 支持newcopy, skip, overwrite, fail四种模式
-
-	示例:
-
-	BaiduPCS-Go createsuperfile -path=1.mp4 ec87a838931d4d5d2e94a04644788a55 ec87a838931d4d5d2e94a04644788a55
-`,
-			Category: "百度网盘",
-			Before:   reloadFn,
-			Action: func(c *cli.Context) error {
-				if c.NArg() < 1 {
-					cli.ShowCommandHelp(c, c.Command.Name)
-					return nil
-				}
-
-				pcscommand.RunCreateSuperFile(c.String("policy"), c.String("path"), c.Args()...)
-				return nil
-			},
-			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:  "path",
-					Usage: "保存的网盘路径",
-					Value: "superfile",
-				},
-				cli.StringFlag{
-					Name:  "policy",
-					Usage: "同名文件处理策略",
-					Value: "overwrite",
-				},
-			},
-		},
-		{
-			Name:      "fixmd5",
-			Usage:     "修复文件MD5",
-			UsageText: app.Name + " fixmd5 <文件1> <文件2> <文件3> ...",
-			Description: `
-	尝试修复文件的MD5值, 以便于校验文件的完整性和导出文件.
-
-	使用分片上传文件, 当文件分片数大于1时, 百度网盘服务端最终计算所得的md5值和本地的不一致, 这可能是百度网盘的bug.
-	不过把上传的文件下载到本地后，对比md5值是匹配的, 也就是文件在传输中没有发生损坏.
-
-	对于MD5值可能有误的文件, 程序会在获取文件的元信息时, 给出MD5值 "可能不正确" 的提示, 表示此文件可以尝试进行MD5值修复.
-	修复文件MD5不一定能成功, 原因可能是服务器未刷新, 可过几天后再尝试.
-	修复文件MD5的原理为秒传文件, 即修复文件MD5成功后, 文件的创建日期, 修改日期, fs_id, 版本历史等信息将会被覆盖, 修复的MD5值将覆盖原先的MD5值, 但不影响文件的完整性.
-
-	注意: 无法修复 20GB 以上文件的 md5!!
-
-	示例:
-
-	1. 修复 /我的资源/1.mp4 的 MD5 值
-	BaiduPCS-Go fixmd5 /我的资源/1.mp4
-`,
-			Category: "百度网盘",
-			Before:   reloadFn,
-			Action: func(c *cli.Context) error {
-				if c.NArg() <= 0 {
-					cli.ShowCommandHelp(c, c.Command.Name)
-					return nil
-				}
-
-				pcscommand.RunFixMD5(c.Args()...)
-				return nil
 			},
 		},
 		{
@@ -1916,12 +1789,6 @@ func main() {
 						}
 						if c.IsSet("force_login_username") {
 							pcsconfig.Config.SetForceLogin(c.String("force_login_username"))
-						}
-						if c.IsSet("no_check") {
-							pcsconfig.Config.SetNoCheck(c.Bool("no_check"))
-						}
-						if c.IsSet("upload_policy") {
-							pcsconfig.Config.SetUploadPolicy(c.String("upload_policy"))
 						}
 						if c.IsSet("user_agent") {
 							pcsconfig.Config.SetUserAgent(c.String("user_agent"))

@@ -24,13 +24,13 @@ const (
 type (
 	// UploadOptions 上传可选项
 	UploadOptions struct {
-		Parallel      int
-		MaxRetry      int
-		Load 		  int
-		NoRapidUpload bool
-		NoSplitFile   bool // 禁用分片上传
-		Policy        string // 同名文件处理策略
-		NoFilenameCheck bool // 禁用文件名合法性检查
+		Parallel        int
+		MaxRetry        int
+		Load            int
+		NoRapidUpload   bool
+		NoSplitFile     bool   // 禁用分片上传
+		Policy          string // 同名文件处理策略
+		NoFilenameCheck bool   // 禁用文件名合法性检查
 	}
 )
 
@@ -58,23 +58,6 @@ func RunRapidUpload(targetPath, contentMD5, sliceMD5 string, length int64) {
 	return
 }
 
-// RunCreateSuperFile 执行分片上传—预上传文件及合并分片文件
-func RunCreateSuperFile(policy string, targetPath string, blockList ...string) {
-	err := matchPathByShellPatternOnce(&targetPath)
-	if err != nil {
-		fmt.Printf("警告: %s, 获取网盘路径 %s 错误, %s\n", baidupcs.OperationUploadCreateSuperFile, targetPath, err)
-	}
-
-	err = GetBaiduPCS().UploadCreateSuperFile(policy, true, targetPath, blockList...)
-	if err != nil {
-		fmt.Printf("%s失败, 消息: %s\n", baidupcs.OperationUploadCreateSuperFile, err)
-		return
-	}
-
-	fmt.Printf("%s成功, 保存到网盘路径: %s\n", baidupcs.OperationUploadCreateSuperFile, targetPath)
-	return
-}
-
 // RunUpload 执行文件上传
 func RunUpload(localPaths []string, savePath string, opt *UploadOptions) {
 	if opt == nil {
@@ -92,11 +75,11 @@ func RunUpload(localPaths []string, savePath string, opt *UploadOptions) {
 		opt.MaxRetry = DefaultUploadMaxRetry
 	}
 
-	if opt.Load <=0 {
+	if opt.Load <= 0 {
 		opt.Load = pcsconfig.Config.MaxUploadLoad
 	}
 
-	if opt.Policy!="fail" && opt.Policy!="newcopy" && opt.Policy!="overwrite" && opt.Policy!="skip" && opt.Policy!="rsync" {
+	if opt.Policy != "fail" && opt.Policy != "newcopy" && opt.Policy != "overwrite" && opt.Policy != "skip" && opt.Policy != "rsync" {
 		opt.Policy = pcsconfig.Config.UPolicy
 	}
 
