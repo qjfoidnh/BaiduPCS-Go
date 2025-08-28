@@ -7,7 +7,6 @@ import (
 	"github.com/qjfoidnh/BaiduPCS-Go/pcsutil"
 	"github.com/qjfoidnh/BaiduPCS-Go/pcsutil/cachepool"
 	"github.com/qjfoidnh/BaiduPCS-Go/pcsutil/converter"
-	"github.com/qjfoidnh/BaiduPCS-Go/pcsutil/prealloc"
 	"github.com/qjfoidnh/BaiduPCS-Go/pcsutil/waitgroup"
 	"github.com/qjfoidnh/BaiduPCS-Go/pcsverbose"
 	"github.com/qjfoidnh/BaiduPCS-Go/requester"
@@ -392,13 +391,13 @@ func (der *Downloader) Execute() error {
 
 	var writer Writer
 	if !der.config.IsTest {
-		// 尝试修剪文件
-		if fder, ok := der.writer.(Fder); ok {
-			err = prealloc.PreAlloc(fder.Fd(), status.TotalSize())
-			if err != nil {
-				pcsverbose.Verbosef("DEBUG: truncate file error: %s\n", err)
-			}
-		}
+		// 磁盘预分配逻辑, 现在固态硬盘已成主流因此废弃
+		//if fder, ok := der.writer.(Fder); ok {
+		//	err = prealloc.PreAlloc(fder.Fd(), status.TotalSize())
+		//	if err != nil {
+		//		pcsverbose.Verbosef("DEBUG: truncate file error: %s\n", err)
+		//	}
+		//}
 		writer = der.writer // 非测试模式, 赋值writer
 	}
 
