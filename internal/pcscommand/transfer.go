@@ -115,7 +115,6 @@ func RunShareTransfer(params []string, opt *baidupcs.TransferOption) {
 		fmt.Println("10s后开始下载")
 		time.Sleep(10 * time.Second)
 		paths := strings.Split(resp["filenames"], ",")
-		paths = paths[0 : len(paths)-1]
 		RunDownload(paths, nil)
 	}
 }
