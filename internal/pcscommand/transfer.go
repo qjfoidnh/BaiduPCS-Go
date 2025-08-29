@@ -113,6 +113,7 @@ func RunShareTransfer(params []string, opt *baidupcs.TransferOption) {
 	fmt.Printf("%s成功, 保存了%s到当前目录\n", baidupcs.OperationShareFileSavetoLocal, resp["filename"])
 	if opt.Download {
 		fmt.Println("10s后开始下载")
+		time.Sleep(10 * time.Second)
 		paths := strings.Split(resp["filenames"], ",")
 		paths = paths[0 : len(paths)-1]
 		RunDownload(paths, nil)
