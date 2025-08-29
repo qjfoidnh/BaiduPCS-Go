@@ -347,23 +347,15 @@ BaiduPCS-Go update
 BaiduPCS-Go login
 ```
 
-### 使用百度 BDUSS 来登录百度帐号
-
-[关于 获取百度 BDUSS](https://blog.csdn.net/ykiwmy/article/details/103730962)
-
-```
-BaiduPCS-Go login -bduss=<BDUSS>
-```
-
 ### 使用百度 BDUSS 和 百度网盘 STOKEN 来登录百度账号
 
-STOKEN 获取方式与 BDUSS 基本相同。注意 STOKEN 必须在百度网盘页面获取，否则无效.
+[关于 获取百度 BDUSS](https://blog.csdn.net/ykiwmy/article/details/103730962) STOKEN 获取方式与 BDUSS 基本相同。注意 STOKEN 必须在百度网盘页面获取，否则无效.
 
 ```
 BaiduPCS-Go login -bduss=<BDUSS> -stoken=<STOKEN>
 ```
 
-### 使用百度 Cookies 来登录百度账号
+### 使用百度 Cookies 来登录百度账号(推荐)
 
 [关于 获取百度 Cookies](https://jingyan.baidu.com/article/5553fa829a6a9e65a23934b0.html)
 教程中为百度经验的Cookies获取, 这里换成百度网盘首页即可.
@@ -374,10 +366,10 @@ BaiduPCS-Go login -cookies=<Cookies>
 
 #### 例子
 ```
-BaiduPCS-Go login -bduss=1234567
+BaiduPCS-Go login -bduss=1234567 -stoken=234567
 ```
 ```
-BaiduPCS-Go login
+BaiduPCS-Go login # 交互式login已不再维护，不推荐使用
 请输入百度用户名(手机号/邮箱/用户名), 回车键提交 > 1234567
 ```
 ```

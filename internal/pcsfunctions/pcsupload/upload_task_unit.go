@@ -82,11 +82,6 @@ func (utu *UploadTaskUnit) prepareFile() {
 		return
 	}
 
-	if utu.NoRapidUpload {
-		utu.Step = StepUploadUpload
-		return
-	}
-
 	// 秒传不分文件大小一律进行
 
 	//if utu.LocalFileChecksum.Length > baidupcs.MaxRapidUploadSize {
@@ -158,8 +153,6 @@ func (utu *UploadTaskUnit) rapidUpload() (isContinue bool, result *taskframework
 	if err != nil {
 		result.ResultMessage = "获取用户uk错误, 请确保登录信息包含了STOKEN"
 		result.Err = err
-		fmt.Printf("[%s] 秒传失败, 开始上传文件...\n\n", utu.taskInfo.Id())
-		isContinue = true
 		return
 	}
 	currentTime := time.Now().Unix()
