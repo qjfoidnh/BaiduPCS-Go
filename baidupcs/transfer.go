@@ -173,7 +173,6 @@ func (pcs *BaiduPCS) GenerateRequestQuery(mode string, params map[string]string)
 	postdata := make(map[string]string)
 	postdata["fsidlist"] = params["fs_id"]
 	postdata["path"] = params["path"]
-	fmt.Println(postdata["path"])
 	dataReadCloser, panError := pcs.sendReqReturnReadCloser(reqTypePan, OperationShareFileSavetoLocal, mode, params["shareUrl"], postdata, headers)
 	if panError != nil {
 		res["ErrNo"] = "1"
