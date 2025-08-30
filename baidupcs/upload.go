@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"path"
 	"strings"
+	"time"
 )
 
 const (
@@ -42,6 +43,9 @@ var (
 	ErrUploadMD5Unknown = errors.New("服务器无匹配文件/秒传未生效")
 	// ErrUploadFileExists 文件或目录已存在
 	ErrUploadFileExists = errors.New("文件已存在")
+
+	// FakeBlockListMD5 虚假秒传时的BlockList
+	fakeBlockListMD5 = []string{"5910a591dd8fc18c32a8f3df4fdc1761", "a5fc157d78e6ad1c7e114b056c92821e"}
 )
 
 type (
@@ -107,29 +111,33 @@ func (pcs *BaiduPCS) RapidUpload(targetPath, contentMD5, sliceMD5, dataContent, 
 	return
 }
 
-// APIRapidUpload openapi秒传文件
-func (pcs *BaiduPCS) APIRapidUpload(targetPath, contentMD5, sliceMD5, crc32 string, length int64) (pcsError pcserror.Error) {
+// FakeRapidUpload 只precreate不进行秒传
+func (pcs *BaiduPCS) FakeRapidUpload(targetPath string) (pcsError pcserror.Error, jsonData uploadPrecreateJSON) {
 	defer func() {
 		if pcsError == nil {
 			// 更新缓存
 			pcs.deleteCache([]string{path.Dir(targetPath)})
 		}
 	}()
-	pcsError = pcs.rapidUpload(targetPath, strings.ToLower(contentMD5), strings.ToLower(sliceMD5), "", length)
+	pcsError, jsonData = pcs.fakeRapidUploadV2(targetPath, time.Now().Unix(), fakeBlockListMD5)
 	return
-}
-
-func (pcs *BaiduPCS) rapidUpload(targetPath, contentMD5, sliceMD5, crc32 string, length int64) (pcsError pcserror.Error) {
-	dataReadCloser, pcsError := pcs.PrepareRapidUpload(targetPath, contentMD5, sliceMD5, crc32, length)
-	if pcsError != nil {
-		return
-	}
-	defer dataReadCloser.Close()
-	return pcserror.DecodePanJSONError(OperationRapidUpload, dataReadCloser)
 }
 
 func (pcs *BaiduPCS) rapidUploadV2(targetPath, contentMD5, sliceMD5, dataContent, crc32 string, offset, length, totalSize, dataTime int64, blockListMD5 []string) (pcsError pcserror.Error, jsonData uploadPrecreateJSON) {
 	dataReadCloser, pcsError := pcs.PrepareRapidUploadV2(targetPath, contentMD5, sliceMD5, dataContent, crc32, offset, length, totalSize, dataTime, blockListMD5)
+	if pcsError != nil {
+		return
+	}
+	defer dataReadCloser.Close()
+	jsonData = uploadPrecreateJSON{
+		PanErrorInfo: pcserror.NewPanErrorInfo(OperationRapidUpload),
+	}
+	pcsError = pcserror.HandleJSONParse(OperationUpload, dataReadCloser, &jsonData)
+	return pcsError, jsonData
+}
+
+func (pcs *BaiduPCS) fakeRapidUploadV2(targetPath string, dateTime int64, blockListMD5 []string) (pcsError pcserror.Error, jsonData uploadPrecreateJSON) {
+	dataReadCloser, pcsError := pcs.PrepareFakeRapidUploadV2(targetPath, dateTime, blockListMD5)
 	if pcsError != nil {
 		return
 	}

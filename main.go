@@ -1212,9 +1212,10 @@ func main() {
 
 				subArgs := c.Args()
 				pcscommand.RunUpload(subArgs[:c.NArg()-1], subArgs[c.NArg()-1], &pcscommand.UploadOptions{
-					Parallel: c.Int("p"),
-					MaxRetry: c.Int("retry"),
-					Load:     c.Int("l"),
+					Parallel:      c.Int("p"),
+					MaxRetry:      c.Int("retry"),
+					Load:          c.Int("l"),
+					NoRapidUpload: c.Bool("norapid"),
 				})
 				return nil
 			},
@@ -1231,6 +1232,10 @@ func main() {
 				cli.IntFlag{
 					Name:  "l",
 					Usage: "指定同时上传的最大文件数",
+				},
+				cli.BoolFlag{
+					Name:  "norapid",
+					Usage: "跳过秒传",
 				},
 			},
 		},

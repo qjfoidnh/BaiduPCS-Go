@@ -1,11 +1,9 @@
 package pcscommand
 
 import (
-	"encoding/base64"
 	"fmt"
 	"github.com/qjfoidnh/BaiduPCS-Go/baidupcs"
 	"path"
-	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -117,38 +115,4 @@ func RunShareTransfer(params []string, opt *baidupcs.TransferOption) {
 		paths := strings.Split(resp["filenames"], ",")
 		RunDownload(paths, nil)
 	}
-}
-
-// RunRapidTransfer 执行秒传链接解析及保存
-func RunRapidTransfer(link string, rnameOpt ...bool) {
-	if strings.Contains(link, "bdlink=") || strings.Contains(link, "bdpan://") {
-		r, _ := regexp.Compile(`(bdlink=|bdpan://)([^\s]+)`)
-		link1 := r.FindStringSubmatch(link)[2]
-		decodeBytes, err := base64.StdEncoding.DecodeString(link1)
-		if err != nil {
-			fmt.Printf("%s失败: %s\n", baidupcs.OperationRapidLinkSavetoLocal, "秒传链接格式错误")
-			return
-		}
-		link = string(decodeBytes)
-	}
-	rname := false
-	if len(rnameOpt) > 0 {
-		rname = rnameOpt[0]
-	}
-	link = strings.TrimSpace(link)
-	substrs := strings.SplitN(link, "#", 4)
-	if len(substrs) == 4 {
-		md5, slicemd5 := substrs[0], substrs[1]
-		size, _ := strconv.ParseInt(substrs[2], 10, 64)
-		filename := path.Join(GetActiveUser().Workdir, randReplaceStr(substrs[3], rname))
-		RunRapidUpload(filename, md5, slicemd5, size)
-	} else if len(substrs) == 3 {
-		md5 := substrs[0]
-		size, _ := strconv.ParseInt(substrs[1], 10, 64)
-		filename := path.Join(GetActiveUser().Workdir, randReplaceStr(substrs[2], rname))
-		RunRapidUpload(filename, md5, "", size)
-	} else {
-		fmt.Printf("%s失败: %s\n", baidupcs.OperationRapidLinkSavetoLocal, "秒传链接格式错误")
-	}
-	return
 }

@@ -371,6 +371,29 @@ func (pcs *BaiduPCS) prepareRapidUploadV2(targetPath, contentMD5, sliceMD5, data
 	return
 }
 
+func (pcs *BaiduPCS) prepareFakeRapidUploadV2(targetPath string, dateTime int64, blockListMD5 []string) (dataReadCloser io.ReadCloser, pcsError pcserror.Error) {
+	pcsURL := pcs.generatePanURL("precreate", map[string]string{
+		"app_id":  PanAppID,
+		"channel": "1",
+		"web":     "1",
+	})
+	post := map[string]string{
+		"path":        targetPath,
+		"target_path": path.Dir(targetPath) + "/",
+		"local_mtime": strconv.FormatInt(dateTime, 10),
+		"autoinit":    "1",
+		"block_list":  mergeStringList(blockListMD5...),
+	}
+	baiduPCSVerbose.Infof("%s URL: %s, Post: %v\n", OperationRapidUpload, pcsURL, post)
+
+	dataReadCloser, pcsError = pcs.sendReqReturnReadCloser(reqTypePan, OperationRapidUpload, http.MethodPost, pcsURL.String(), post, map[string]string{
+		"Content-Type": "application/x-www-form-urlencoded",
+		"Accept":       "*/*",
+		"Connection":   "keep-alive",
+	})
+	return
+}
+
 // PrepareRapidUpload 秒传文件旧接口, 只返回服务器响应数据和错误信息
 func (pcs *BaiduPCS) PrepareRapidUpload(targetPath, contentMD5, sliceMD5, crc32 string, length int64) (dataReadCloser io.ReadCloser, pcsError pcserror.Error) {
 	pcs.lazyInit()
@@ -390,6 +413,15 @@ func (pcs *BaiduPCS) PrepareRapidUploadV2(targetPath, contentMD5, sliceMD5, data
 		return nil, pcsError
 	}
 	return pcs.prepareRapidUploadV2(targetPath, contentMD5, sliceMD5, dataContent, crc32, offset, length, totalSize, dataTime, blockListMD5)
+}
+
+func (pcs *BaiduPCS) PrepareFakeRapidUploadV2(targetPath string, dataTime int64, blockListMD5 []string) (dataReadCloser io.ReadCloser, pcsError pcserror.Error) {
+	pcs.lazyInit()
+	pcsError = pcs.CheckIsdir(OperationRapidUpload, targetPath, "", 0)
+	if pcsError != nil {
+		return nil, pcsError
+	}
+	return pcs.prepareFakeRapidUploadV2(targetPath, dataTime, blockListMD5)
 }
 
 // PrepareLocateDownload 获取下载链接, 只返回服务器响应数据和错误信息

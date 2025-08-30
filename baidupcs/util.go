@@ -34,7 +34,7 @@ func (pcs *BaiduPCS) Isdir(pcspath string) (fileSize int64, isdir bool, pcsError
 func (pcs *BaiduPCS) CheckIsdir(op string, targetPath string, policy string, fileSize int64) pcserror.Error {
 	// 检测文件是否存在于网盘路径
 	// 很重要, 如果文件存在会直接覆盖!!! 即使是根目录!
-	onlineSize, isdir, pcsError := pcs.Isdir(targetPath)
+	_, isdir, pcsError := pcs.Isdir(targetPath)
 	if pcsError != nil {
 		// 忽略远程服务端返回的错误
 		if pcsError.GetErrType() != pcserror.ErrTypeRemoteError {
@@ -61,13 +61,6 @@ func (pcs *BaiduPCS) CheckIsdir(op string, targetPath string, policy string, fil
 			errInfo.ErrMsg = "目标位置存在同名文件"
 			errInfo.ErrType = pcserror.ErrTypeRemoteError
 			return errInfo
-		case "rsync":
-			if onlineSize == fileSize {
-				errInfo.ErrCode = 1919810
-				errInfo.ErrMsg = "目标位置文件大小与源文件一致"
-				errInfo.ErrType = pcserror.ErrTypeRemoteError
-				return errInfo
-			}
 		default:
 			return nil
 		}
