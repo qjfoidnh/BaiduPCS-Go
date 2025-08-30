@@ -11,7 +11,7 @@ require (
 	github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0
 	github.com/mattn/go-runewidth v0.0.9
 	github.com/oleiade/lane v1.0.1
-	github.com/olekukonko/tablewriter v0.0.4
+	github.com/olekukonko/tablewriter v0.0.5
 	github.com/peterh/liner v1.2.2
 	github.com/qjfoidnh/Baidu-Login v1.4.1
 	github.com/qjfoidnh/baidu-tools v1.2.0 //dfa5778abeed
