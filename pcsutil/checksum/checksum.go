@@ -14,7 +14,7 @@ import (
 
 const (
 	// DefaultBufSize 默认的bufSize
-	DefaultBufSize = int(256 * converter.KB)
+	DefaultBufSize = int(1 * converter.MB)
 )
 
 const (
@@ -260,7 +260,7 @@ func (lfc *LocalFileChecksum) CalculateChunkedSum(chunkSize int64) (err error) {
 	lfc.BlocksList = make([]string, 0, chunkCount)
 
 	// 分块处理
-	buffer := make([]byte, 64*1024) // 64KB读取缓冲区
+	buffer := make([]byte, 4*converter.MB) // 4MB读取缓冲区
 	chunkMD5 := md5.New()
 	for offset := int64(0); offset < fileSize; offset += chunkSize {
 		// 计算当前分块的实际大小（最后一块可能较小）

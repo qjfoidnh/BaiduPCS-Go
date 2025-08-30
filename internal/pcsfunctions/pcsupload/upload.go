@@ -23,13 +23,9 @@ type (
 	}
 )
 
-type PCSInfo struct {
-	*pcserror.PCSErrInfo
-	Host   string   `json:"host"`
-	Server []string `json:"server"`
-}
-
 var client = pcsconfig.Config.PCSHTTPClient()
+
+var pcsPeriod = 256 // 上传多少个分片更换一次pcsHost
 
 func (e EmptyReaderLen64) Read(p []byte) (n int, err error) {
 	return 0, io.EOF
@@ -53,43 +49,29 @@ func (pu *PCSUpload) lazyInit() {
 }
 
 // Precreate 检查网盘的目标路径是否已存在同名文件及路径合法性, 顺便获取本次上传用的pcs服务器
-func (pu *PCSUpload) Precreate(fileSize int64, policy string) (pcsHost string, pcsError pcserror.Error) {
+func (pu *PCSUpload) Precreate(fileSize int64, policy string) (originPCSHost string, pcsError pcserror.Error) {
 	pcsError = pu.pcs.CheckIsdir(baidupcs.OperationUpload, pu.targetPath, policy, fileSize)
 	if pcsError != nil {
 		return
 	}
-
-	dataReadCloser, pcsError := pu.pcs.PreparePCSServers()
-	if pcsError != nil {
-		return
-	}
-	defer dataReadCloser.Close()
-	pcsInfo := &PCSInfo{
-		PCSErrInfo: pcserror.NewPCSErrorInfo(baidupcs.OperationGetPCSServer),
-	}
-	pcsError = pcserror.HandleJSONParse(baidupcs.OperationGetPCSServer, dataReadCloser, pcsInfo)
-	if pcsError != nil {
-		return
-	}
-	if len(pcsInfo.Server) > 0 {
-		pcsHost = pcsInfo.Server[0]
-	} else {
-		pcsHost = pcsInfo.Host
-	}
-
+	originPCSHost = pu.pcs.GetPCSAddr()
+	_, newPCSHost := pu.pcs.GetRandomPCSHost()
+	pu.pcs.SetPCSAddr(newPCSHost)
 	return
-
 }
 
-func (pu *PCSUpload) TmpFile(ctx context.Context, pcsHost, uploadId, targetPath string, partSeq int, partOffset int64, r rio.ReaderLen64) (checksum string, uperr error) {
+func (pu *PCSUpload) TmpFile(ctx context.Context, uploadId, targetPath string, partSeq int, partOffset int64, r rio.ReaderLen64) (checksum string, uperr error) {
 	pu.lazyInit()
 
 	var respErr *uploader.MultiError
 
 	// 临时切换为动态pcs addr
-	originPCSHost := pu.pcs.GetPCSAddr()
-	defer pu.pcs.SetPCSAddr(originPCSHost)
-	pu.pcs.SetPCSAddr(pcsHost)
+	if partSeq%pcsPeriod == pcsPeriod-1 {
+		go func() {
+			_, newPCSHost := pu.pcs.GetRandomPCSHost()
+			pu.pcs.SetPCSAddr(newPCSHost)
+		}()
+	}
 
 	checksum, pcsError := pu.pcs.UploadTmpFile(uploadId, targetPath, partSeq, partOffset, func(uploadURL string, jar http.CookieJar) (resp *http.Response, err error) {
 		client.SetCookiejar(jar)
@@ -132,7 +114,8 @@ func (pu *PCSUpload) TmpFile(ctx context.Context, pcsHost, uploadId, targetPath 
 	return checksum, pcsError
 }
 
-func (pu *PCSUpload) CreateSuperFile(uploadId string, fileSize int64, checksumMap map[int]string) (err error) {
+func (pu *PCSUpload) CreateSuperFile(pcsHost, uploadId string, fileSize int64, checksumMap map[int]string) (err error) {
 	pu.lazyInit()
+	pu.pcs.SetPCSAddr(pcsHost) // 恢复默认pcs服务器
 	return pu.pcs.UploadCreateSuperFile(uploadId, fileSize, pu.targetPath, checksumMap)
 }

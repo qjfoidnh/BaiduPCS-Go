@@ -83,12 +83,10 @@ func (utu *UploadTaskUnit) prepareFile() {
 	}
 
 	// 秒传不分文件大小一律进行
+	if utu.LocalFileChecksum.Length >= baidupcs.RecommendedUploadSize {
+		fmt.Printf("[%s] 文件超过32GB, 上传有可能失败, 建议分割文件...\n", utu.taskInfo.Id())
+	}
 
-	//if utu.LocalFileChecksum.Length > baidupcs.MaxRapidUploadSize {
-	//	fmt.Printf("[%s] 文件超过20GB, 无法使用秒传功能, 跳过秒传...\n", utu.taskInfo.Id())
-	//	utu.Step = StepUploadUpload
-	//	return
-	//}
 	// 下一步: 秒传
 	utu.Step = StepUploadRapidUpload
 }
@@ -123,7 +121,7 @@ func (utu *UploadTaskUnit) rapidUpload() (isContinue bool, result *taskframework
 		}
 	}
 
-	fmt.Printf("[%s] 检测秒传中, 请稍候...\n", utu.taskInfo.Id())
+	fmt.Printf("[%s] 开始计算文件元信息, 请稍候...\n", utu.taskInfo.Id())
 
 	// 经测试, 文件的 crc32 值并非秒传文件所必需
 	err := utu.LocalFileChecksum.Sum(checksum.CHECKSUM_MD5 | checksum.CHECKSUM_SLICE_MD5)
@@ -170,9 +168,9 @@ func (utu *UploadTaskUnit) rapidUpload() (isContinue bool, result *taskframework
 	}
 	b64Content := strings.TrimRight(base64.StdEncoding.EncodeToString(dataContent), "=")
 
-	blockSize := getBlockSize()
+	blockSize := getBlockSize(utu.LocalFileChecksum.Length)
 
-	fmt.Printf("[%s] 开始计算文件分块md5...\n", utu.taskInfo.Id())
+	fmt.Printf("[%s] 开始计算文件分块md5, 请稍候...\n", utu.taskInfo.Id())
 	err = utu.LocalFileChecksum.CalculateChunkedSum(blockSize)
 	if err != nil {
 		// 不重试
@@ -206,7 +204,7 @@ func (utu *UploadTaskUnit) rapidUpload() (isContinue bool, result *taskframework
 		}
 	}
 
-	fmt.Printf("[%s] 秒传失败, 开始上传文件...\n\n", utu.taskInfo.Id())
+	fmt.Printf("[%s] 开始上传文件...\n\n", utu.taskInfo.Id())
 
 	// 保存秒传信息
 	utu.UploadingDatabase.UpdateUploading(&utu.LocalFileChecksum.LocalFileMeta, nil)
@@ -219,7 +217,7 @@ func (utu *UploadTaskUnit) rapidUpload() (isContinue bool, result *taskframework
 func (utu *UploadTaskUnit) upload() (result *taskframework.TaskUnitRunResult) {
 	utu.Step = StepUploadUpload
 
-	blockSize := getBlockSize()
+	blockSize := getBlockSize(utu.LocalFileChecksum.Length)
 
 	muer := uploader.NewMultiUploader(NewPCSUpload(utu.PCS, utu.SavePath), rio.NewFileReaderAtLen64(utu.LocalFileChecksum.GetFile()), &uploader.MultiUploaderConfig{
 		Parallel:  utu.Parallel,
@@ -371,6 +369,11 @@ func (utu *UploadTaskUnit) RetryWait() time.Duration {
 
 func (utu *UploadTaskUnit) Run() (result *taskframework.TaskUnitRunResult) {
 	fmt.Printf("[%s] 准备上传: %s\n", utu.taskInfo.Id(), utu.LocalFileChecksum.Path)
+
+	if utu.LocalFileChecksum.Length > baidupcs.MaxUploadSize {
+		fmt.Printf("[%s] 文件大小超过128G, 无法上传, 跳过...\n", utu.taskInfo.Id())
+		return
+	}
 
 	err := utu.LocalFileChecksum.OpenPath()
 	if err != nil {

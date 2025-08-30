@@ -146,6 +146,7 @@ type (
 		pcsAddr     string
 		panUA       string
 		isSetPanUA  bool
+		fixPCSAddr  bool
 		ph          *panhome.PanHome
 		cacheOpMap  cachemap.CacheOpMap
 	}
@@ -375,6 +376,10 @@ func (pcs *BaiduPCS) SetPanUserAgent(ua string) {
 // SetHTTPS 是否启用https连接
 func (pcs *BaiduPCS) SetHTTPS(https bool) {
 	pcs.isHTTPS = https
+}
+
+func (pcs *BaiduPCS) SetStaticPCSAddr(static bool) {
+	pcs.fixPCSAddr = static
 }
 
 // URL 返回 url

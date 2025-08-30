@@ -5,19 +5,30 @@ import (
 	"github.com/qjfoidnh/BaiduPCS-Go/baidupcs/pcserror"
 	"github.com/qjfoidnh/BaiduPCS-Go/pcsutil/converter"
 	"net/http"
+	"net/url"
 	"path"
 	"strings"
 )
 
 const (
-	// MinUploadBlockSize 最小的上传的文件分片大小
+	// MaxUploadBlockSize 上传的文件分片最大大小
+	MaxUploadBlockSize = 64 * converter.MB
+	// MiddleUploadBlockSize 上传的文件分片中等大小
+	MiddleUploadBlockSize = 16 * converter.MB
+	// MinUploadBlockSize 上传的文件分片最小大小
 	MinUploadBlockSize = 4 * converter.MB
-	// MaxRapidUploadSize 秒传文件支持的最大文件大小
-	MaxRapidUploadSize = 20 * converter.GB
+	// RecommendedUploadSize 推荐的最高文件上传大小
+	RecommendedUploadSize = 32 * converter.GB
+	// MaxUploadSize 目前支持的最大文件大小
+	MaxUploadSize = 128 * converter.GB
 	// SliceMD5Size 计算 slice-md5 所需的长度
 	SliceMD5Size = 256 * converter.KB
 	// EmptyContentMD5 空串的md5
 	EmptyContentMD5 = "d41d8cd98f00b204e9800998ecf8427e"
+	// MiddleUploadThreshold 中等分片对应的文件大小
+	MiddleUploadThreshold = 8 * converter.GB
+	// MaxUploadThreshold 最大分片对应的文件大小
+	MaxUploadThreshold = 32 * converter.GB
 )
 
 var (
@@ -70,6 +81,17 @@ type (
 		IsRapidUpload bool
 		UploadID      string
 		UploadSeqList []*UploadSeq
+	}
+
+	PCSServer struct {
+		ServerAddr string `json:"server"`
+	}
+
+	PCSInfo struct {
+		*pcserror.PCSErrInfo
+		Host    string       `json:"host"`
+		Server  []string     `json:"server"`
+		Servers []*PCSServer `json:"servers"`
 	}
 )
 
@@ -234,4 +256,39 @@ func (pcs *BaiduPCS) UploadPrecreate(targetPath, contentMD5, sliceMD5, crc32 str
 	default:
 		panic("unknown returntype")
 	}
+}
+
+// GetRandomPCSHost 随机获取一个可用的pcs地址
+func (pcs *BaiduPCS) GetRandomPCSHost() (pcsError pcserror.Error, pcsHost string) {
+	if pcs.fixPCSAddr {
+		return
+	}
+	dataReadCloser, pcsError := pcs.PreparePCSServers()
+	if pcsError != nil {
+		return
+	}
+	defer dataReadCloser.Close()
+	pcsInfo := &PCSInfo{
+		PCSErrInfo: pcserror.NewPCSErrorInfo(OperationGetPCSServer),
+	}
+	pcsError = pcserror.HandleJSONParse(OperationGetPCSServer, dataReadCloser, pcsInfo)
+	if pcsError != nil {
+		return
+	}
+	pcsHostList := make([]string, 0)
+	if len(pcsInfo.Servers) > 0 {
+		for _, server := range pcsInfo.Servers {
+			if strings.Contains(server.ServerAddr, "-") {
+				parsedURL, err := url.Parse(server.ServerAddr)
+				if err != nil {
+					continue
+				}
+				pcsHostList = append(pcsHostList, parsedURL.Hostname())
+			}
+		}
+	} else if len(pcsInfo.Server) > 0 {
+		pcsHostList = pcsInfo.Server
+	}
+	pcsHost = RandomElement(pcsHostList)
+	return
 }

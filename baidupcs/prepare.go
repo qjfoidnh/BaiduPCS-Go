@@ -118,7 +118,10 @@ func (pcs *BaiduPCS) PrepareUK() (dataReadCloser io.ReadCloser, pcsError pcserro
 // PreparePCSServers 获取推荐的pcs服务器URL
 func (pcs *BaiduPCS) PreparePCSServers() (dataReadCloser io.ReadCloser, pcsError pcserror.Error) {
 	pcs.lazyInit()
-	pcsURL := pcs.generatePCSURL("file", "locateupload")
+	pcsURL := pcs.generatePCSURL("file", "locateupload", map[string]string{
+		"upload_version": "2.0",
+		"app_id":         PanAppID,
+	})
 	baiduPCSVerbose.Infof("%s URL: %s\n", OperationGetPCSServer, pcsURL)
 
 	dataReadCloser, pcsError = pcs.sendReqReturnReadCloser(reqTypePCS, OperationGetPCSServer, http.MethodGet, pcsURL.String(), nil, nil)

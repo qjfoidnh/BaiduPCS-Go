@@ -16,8 +16,8 @@ type (
 	// MultiUpload 支持多线程的上传, 可用于断点续传
 	MultiUpload interface {
 		Precreate(fileSize int64, policy string) (pcsHost string, err pcserror.Error)
-		TmpFile(ctx context.Context, pcsHost, uploadid, targetPath string, partseq int, partOffset int64, readerlen64 rio.ReaderLen64) (checksum string, terr error)
-		CreateSuperFile(uploadId string, fileSize int64, checksumMap map[int]string) (cerr error)
+		TmpFile(ctx context.Context, uploadid, targetPath string, partseq int, partOffset int64, readerlen64 rio.ReaderLen64) (checksum string, terr error)
+		CreateSuperFile(pcsHost, uploadId string, fileSize int64, checksumMap map[int]string) (cerr error)
 	}
 
 	// MultiUploader 多线程上传

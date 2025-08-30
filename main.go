@@ -55,7 +55,7 @@ const (
 
 var (
 	// Version 版本号
-	Version = "v3.9.8-devel"
+	Version = "v3.9.9-devel"
 
 	historyFilePath = filepath.Join(pcsconfig.GetConfigDir(), "pcs_command_history.txt")
 	reloadFn        = func(c *cli.Context) error {
@@ -154,7 +154,7 @@ func main() {
 				lineArgs                   = args.Parse(line)
 				numArgs                    = len(lineArgs)
 				acceptCompleteFileCommands = []string{
-					"cd", "cp", "download", "export", "fixmd5", "locate", "ls", "meta", "mkdir", "mv", "rapidupload", "rm", "setastoken", "share", "transfer", "tree", "upload",
+					"cd", "cp", "download", "export", "locate", "ls", "meta", "mkdir", "mv", "rm", "setastoken", "share", "transfer", "tree", "upload",
 				}
 				closed = strings.LastIndex(line, " ") == len(line)-1
 			)
@@ -1802,6 +1802,9 @@ func main() {
 								fmt.Println("设置 pcs_addr 错误: pcs服务器地址不合法")
 								return nil
 							}
+						}
+						if c.IsSet("fix_pcs_addr") {
+							pcsconfig.Config.SetStaticPCSAddr(c.Bool("fix_pcs_addr"))
 						}
 						if c.IsSet("pan_ua") {
 							pcsconfig.Config.SetPanUA(c.String("pan_ua"))

@@ -52,6 +52,7 @@ type PCSConfig struct {
 	PanUA         string `json:"pan_ua"`               // PAN浏览器标识
 	SaveDir       string `json:"savedir"`              // 下载储存路径
 	EnableHTTPS   bool   `json:"enable_https"`         // 启用https
+	FixPCSAddr    bool   `json:"fix_pcs_addr"`         //上传不使用动态PCS服务器域名
 	ForceLogin    string `json:"force_login_username"` // 强制登录
 	Proxy         string `json:"proxy"`                // 代理
 	LocalAddrs    string `json:"local_addrs"`          // 本地网卡地址

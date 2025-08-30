@@ -39,7 +39,7 @@ func (werl *workerList) Readed() int64 {
 }
 
 func (muer *MultiUploader) upload() (uperr error) {
-	pcsHost, err := muer.multiUpload.Precreate(muer.file.Len(), muer.config.Policy)
+	originPCSHost, err := muer.multiUpload.Precreate(muer.file.Len(), muer.config.Policy)
 	if err != nil {
 		return err
 	}
@@ -79,7 +79,7 @@ func (muer *MultiUploader) upload() (uperr error) {
 					terr        error
 				)
 				go func() {
-					checksum, terr = muer.multiUpload.TmpFile(ctx, pcsHost, muer.uploadid, muer.targetPath, wer.id, wer.partOffset, wer.splitUnit)
+					checksum, terr = muer.multiUpload.TmpFile(ctx, muer.uploadid, muer.targetPath, wer.id, wer.partOffset, wer.splitUnit)
 					close(doneChan)
 				}()
 				select {
@@ -135,7 +135,7 @@ func (muer *MultiUploader) upload() (uperr error) {
 	default:
 	}
 
-	cerr := muer.multiUpload.CreateSuperFile(muer.uploadid, muer.file.Len(), checksumMap)
+	cerr := muer.multiUpload.CreateSuperFile(originPCSHost, muer.uploadid, muer.file.Len(), checksumMap)
 	if cerr != nil {
 		return cerr
 	}

@@ -8,8 +8,15 @@ import (
 	"strconv"
 )
 
-func getBlockSize() int64 {
-	return baidupcs.MinUploadBlockSize
+func getBlockSize(fileSize int64) int64 {
+	blockSize := baidupcs.MinUploadBlockSize
+	if fileSize >= baidupcs.MiddleUploadThreshold {
+		blockSize = baidupcs.MiddleUploadBlockSize
+	}
+	if fileSize >= baidupcs.MaxUploadThreshold {
+		blockSize = baidupcs.MaxUploadBlockSize
+	}
+	return blockSize
 }
 
 func creaetDataOffset(contentMD5 string, uk, dataTime, fileSize, subSize int64) (offset int64, err error) {

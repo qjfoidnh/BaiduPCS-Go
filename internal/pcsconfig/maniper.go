@@ -83,7 +83,7 @@ func (c *PCSConfig) manipUser(op string, baiduBase *BaiduBase) (*Baidu, error) {
 	return nil, ErrBaiduUserNotFound
 }
 
-//setupNewUser 从已有用户中, 设置新的当前登录用户
+// setupNewUser 从已有用户中, 设置新的当前登录用户
 func (c *PCSConfig) setupNewUser(user *Baidu) {
 	if user == nil {
 		return
@@ -214,6 +214,14 @@ func (c *PCSConfig) SETPCSAddr(pcsaddr string) bool {
 		}
 	}
 	return match
+}
+
+// SetStaticPCSAddr 设置上传时是否关闭动态PCS域名
+func (c *PCSConfig) SetStaticPCSAddr(static bool) {
+	c.FixPCSAddr = static
+	if c.pcs != nil {
+		c.pcs.SetStaticPCSAddr(static)
+	}
 }
 
 // SetEnableHTTPS 设置是否启用https

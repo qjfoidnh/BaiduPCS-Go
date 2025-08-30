@@ -8,6 +8,7 @@ import (
 	"github.com/qjfoidnh/BaiduPCS-Go/pcsutil"
 	"github.com/qjfoidnh/BaiduPCS-Go/pcsutil/converter"
 	"io"
+	"math/rand"
 	"path"
 	"regexp"
 	"sort"
@@ -151,4 +152,12 @@ func DecryptMD5(rawMD5 string) string {
 		sliceThird += fmt.Sprintf("%x", int(num)^(15&i))
 	}
 	return sliceThird[8:16] + sliceThird[0:8] + sliceThird[24:32] + sliceThird[16:24]
+}
+
+func RandomElement[T any](s []T) T {
+	if len(s) == 0 {
+		var zero T // 对于空slice，返回类型的零值
+		return zero
+	}
+	return s[rand.Intn(len(s))]
 }
