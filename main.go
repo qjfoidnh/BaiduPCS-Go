@@ -16,6 +16,7 @@ import (
 	"github.com/olekukonko/tablewriter"
 	"github.com/peterh/liner"
 	"github.com/qjfoidnh/BaiduPCS-Go/baidupcs"
+	"github.com/qjfoidnh/BaiduPCS-Go/internal/pcsapi"
 	"github.com/qjfoidnh/BaiduPCS-Go/internal/pcscommand"
 	"github.com/qjfoidnh/BaiduPCS-Go/internal/pcsconfig"
 	"github.com/qjfoidnh/BaiduPCS-Go/internal/pcsfunctions/pcsdownload"
@@ -2114,6 +2115,43 @@ func main() {
 			Action: func(c *cli.Context) error {
 				pcsliner.ClearScreen()
 				return nil
+			},
+		},
+		{
+			Name:        "serve",
+			Aliases:     []string{"srv"},
+			Usage:       "开启api服务",
+			UsageText:   app.Name + " serve",
+			Description: "开启api服务，并监听端口",
+			Category:    "其他",
+			Action: func(c *cli.Context) error {
+				fmt.Print("test serve\n")
+				port := c.Int("port")
+				auth := c.IsSet("auth")
+				username, password := c.String("username"), c.String("password")
+				pcsapi.Init_api(port, auth, username, password)
+				return nil
+			},
+			Flags: []cli.Flag{
+				cli.IntFlag{
+					Name:  "port",
+					Usage: "指定监听的端口，默认为8080",
+					Value: 8080,
+				},
+				cli.BoolFlag{
+					Name:  "auth",
+					Usage: "是否开启basic auth验证",
+				},
+				cli.StringFlag{
+					Name:  "username",
+					Usage: "basic auth用户名",
+					Value: "admin",
+				},
+				cli.StringFlag{
+					Name:  "password",
+					Usage: "basic auth密码",
+					Value: "adminadmin",
+				},
 			},
 		},
 		{

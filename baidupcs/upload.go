@@ -85,6 +85,10 @@ func (pcs *BaiduPCS) RapidUpload(targetPath, contentMD5, sliceMD5, dataContent, 
 	return
 }
 
+func (pcs *BaiduPCS) RapidUpload4Run(targetPath, contentMD5, sliceMD5, crc32 string, length int64) (pcsError pcserror.Error) {
+	return pcs.rapidUpload(targetPath, contentMD5, sliceMD5, crc32, length)
+}
+
 // APIRapidUpload openapi秒传文件
 func (pcs *BaiduPCS) APIRapidUpload(targetPath, contentMD5, sliceMD5, crc32 string, length int64) (pcsError pcserror.Error) {
 	defer func() {
