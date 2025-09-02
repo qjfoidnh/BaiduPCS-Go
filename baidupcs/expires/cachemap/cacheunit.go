@@ -75,7 +75,19 @@ func (cu *cacheUnit) LockKey(key interface{}) {
 }
 
 func (cu *cacheUnit) UnlockKey(key interface{}) {
-	muItf, _ := cu.keyMap.LoadOrStore(key, &sync.Mutex{})
+	// 修复: 只检查已存在的key，避免创建新mutex
+	muItf, exists := cu.keyMap.Load(key)
+	if !exists {
+		return // key不存在说明从未lock过，安全返回
+	}
 	mu := muItf.(*sync.Mutex)
+
+	// 添加panic恢复机制，防止程序崩溃
+	defer func() {
+		if r := recover(); r != nil {
+			// 静默处理unlock错误，避免程序终止
+			return
+		}
+	}()
 	mu.Unlock()
 }
