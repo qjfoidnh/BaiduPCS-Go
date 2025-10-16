@@ -81,7 +81,7 @@ const (
 	DownloadModeStreaming
 )
 
-//var client *requester.HTTPClient
+var client *requester.HTTPClient
 
 func (dtu *DownloadTaskUnit) SetTaskInfo(info *taskframework.TaskInfo) {
 	dtu.taskInfo = info
@@ -233,9 +233,9 @@ func (dtu *DownloadTaskUnit) download(downloadURL string, client *requester.HTTP
 
 // panHTTPClient 获取包含特定User-Agent的HTTPClient
 func (dtu *DownloadTaskUnit) panHTTPClient() *requester.HTTPClient {
-	//if client == nil {
-	client := pcsconfig.Config.PanHTTPClient()
-	//}
+	if client == nil {
+		client = pcsconfig.Config.PanHTTPClient()
+	}
 	client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
 		// 去掉 Referer
 		if !pcsconfig.Config.EnableHTTPS {
