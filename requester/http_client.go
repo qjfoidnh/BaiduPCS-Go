@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"net/http/cookiejar"
 	"time"
+
+	"github.com/rs/dnscache"
 )
 
 // HTTPClient http client
@@ -40,22 +42,46 @@ func dialTrace(ctx context.Context, network, addr string) (net.Conn, error) {
 	return traceConn{Conn: raw, id: id}, nil
 }
 
+func cacheDNS() *http.Transport {
+	resolver := &dnscache.Resolver{}
+
+	// 2. 自定义 DialContext：先查缓存，再拨号
+	dialer := &net.Dialer{
+		Timeout:   30 * time.Second,
+		KeepAlive: 30 * time.Second,
+	}
+	tr := &http.Transport{
+		DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
+			host, port, _ := net.SplitHostPort(addr)
+			// 缓存解析
+			ips, err := resolver.LookupHost(ctx, host)
+			if err != nil {
+				return nil, err
+			}
+			// 简单轮询 IP
+			ip := ips[0]
+			conn, err := dialer.DialContext(ctx, network, net.JoinHostPort(ip, port))
+			if err == nil {
+				return conn, nil
+			}
+
+			return nil, err
+		},
+		MaxIdleConns:        100,
+		IdleConnTimeout:     90 * time.Second,
+		TLSHandshakeTimeout: 10 * time.Second,
+	}
+	return tr
+}
+
 // NewHTTPClient 返回 HTTPClient 的指针,
 // 预设了一些配置
 func NewHTTPClient() *HTTPClient {
 	fmt.Println("new one")
 	h := &HTTPClient{
 		Client: http.Client{
-			Timeout: 50 * time.Second,
-			Transport: &http.Transport{
-				DialContext:           dialTrace,
-				MaxIdleConns:          20,
-				IdleConnTimeout:       90 * time.Second,
-				TLSHandshakeTimeout:   10 * time.Second,
-				ExpectContinueTimeout: 1 * time.Second,
-				// 关键：打开状态回调
-				DisableKeepAlives: false,
-			},
+			Timeout:   50 * time.Second,
+			Transport: cacheDNS(),
 		},
 		UserAgent: UserAgent,
 	}

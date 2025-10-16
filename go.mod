@@ -21,7 +21,10 @@ require (
 	golang.org/x/sys v0.25.0
 )
 
-require golang.org/x/net v0.0.0-20190620200207-3b0461eec859
+require (
+	github.com/rs/dnscache v0.0.0-20230804202142-fc85eb664529
+	golang.org/x/net v0.0.0-20190620200207-3b0461eec859
+)
 
 require (
 	github.com/GeertJohan/go.rice v1.0.2 // indirect
@@ -38,5 +41,6 @@ require (
 	github.com/shurcooL/sanitized_anchor_name v1.0.0 // indirect
 	github.com/tidwall/match v1.1.1 // indirect
 	github.com/tidwall/pretty v1.2.0 // indirect
+	golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e // indirect
 	google.golang.org/protobuf v1.33.0 // indirect
 )
