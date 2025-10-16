@@ -1,7 +1,10 @@
 package requester
 
 import (
+	"context"
 	"crypto/tls"
+	"fmt"
+	"net"
 	"net/http"
 	"net/http/cookiejar"
 	"time"
@@ -15,12 +18,44 @@ type HTTPClient struct {
 	UserAgent string
 }
 
+type traceConn struct {
+	net.Conn
+	id string
+}
+
+func (c traceConn) Close() error {
+	fmt.Printf("CONN[%s] Close() called, going to FIN -> TIME_WAIT", c.id)
+	return c.Conn.Close()
+}
+
+// 拨号时包装
+func dialTrace(ctx context.Context, network, addr string) (net.Conn, error) {
+	d := net.Dialer{}
+	raw, err := d.DialContext(ctx, network, addr)
+	if err != nil {
+		return nil, err
+	}
+	id := fmt.Sprintf("%s->%s@%d", raw.LocalAddr(), raw.RemoteAddr(), time.Now().UnixNano())
+	fmt.Printf("CONN[%s] DialContext success", id)
+	return traceConn{Conn: raw, id: id}, nil
+}
+
 // NewHTTPClient 返回 HTTPClient 的指针,
 // 预设了一些配置
 func NewHTTPClient() *HTTPClient {
+	fmt.Println("new one")
 	h := &HTTPClient{
 		Client: http.Client{
 			Timeout: 50 * time.Second,
+			Transport: &http.Transport{
+				DialContext:           dialTrace,
+				MaxIdleConns:          20,
+				IdleConnTimeout:       90 * time.Second,
+				TLSHandshakeTimeout:   10 * time.Second,
+				ExpectContinueTimeout: 1 * time.Second,
+				// 关键：打开状态回调
+				DisableKeepAlives: false,
+			},
 		},
 		UserAgent: UserAgent,
 	}
@@ -81,13 +116,13 @@ func (h *HTTPClient) ResetCookiejar() {
 func (h *HTTPClient) SetHTTPSecure(b bool) {
 	h.https = b
 	h.lazyInit()
-// 	if b {
-// 		h.transport.TLSClientConfig = nil
-// 	} else {
-    h.transport.TLSClientConfig = &tls.Config{
-        InsecureSkipVerify: true,
-    }
-// 	}
+	// 	if b {
+	// 		h.transport.TLSClientConfig = nil
+	// 	} else {
+	h.transport.TLSClientConfig = &tls.Config{
+		InsecureSkipVerify: true,
+	}
+	// 	}
 }
 
 // SetKeepAlive 设置 Keep-Alive
