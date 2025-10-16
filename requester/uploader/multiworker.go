@@ -3,9 +3,11 @@ package uploader
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/oleiade/lane"
 	"github.com/qjfoidnh/BaiduPCS-Go/pcsutil/waitgroup"
 	"os"
+	"slices"
 	"sync"
 )
 
@@ -39,7 +41,7 @@ func (werl *workerList) Readed() int64 {
 }
 
 func (muer *MultiUploader) upload() (uperr error) {
-	originPCSHost, err := muer.multiUpload.Precreate(muer.file.Len(), muer.config.Policy)
+	originPCSHost, err := muer.multiUpload.Precreate()
 	if err != nil {
 		return err
 	}
@@ -55,7 +57,12 @@ func (muer *MultiUploader) upload() (uperr error) {
 	// 加入队列
 	for _, wer := range muer.workers {
 		if wer.checksum == "" {
-			uploadDeque.Append(wer)
+			if muer.instanceState.PendingBlockIndex == nil || slices.Contains(*muer.instanceState.PendingBlockIndex, wer.id) {
+				uploadDeque.Append(wer)
+			} else {
+				checksumMap[wer.id] = muer.instanceState.BlockList[wer.id].CheckSum
+				fmt.Println("checksum", muer.instanceState.BlockList[wer.id].CheckSum)
+			}
 		}
 	}
 
@@ -79,7 +86,12 @@ func (muer *MultiUploader) upload() (uperr error) {
 					terr        error
 				)
 				go func() {
-					checksum, terr = muer.multiUpload.TmpFile(ctx, muer.uploadid, muer.targetPath, wer.id, wer.partOffset, wer.splitUnit)
+					select {
+					case <-ctx.Done():
+						return
+					default:
+						checksum, terr = muer.multiUpload.TmpFile(ctx, muer.instanceState.Uploadid, muer.targetPath, wer.id, wer.partOffset, wer.splitUnit)
+					}
 					close(doneChan)
 				}()
 				select {
@@ -135,7 +147,7 @@ func (muer *MultiUploader) upload() (uperr error) {
 	default:
 	}
 
-	cerr := muer.multiUpload.CreateSuperFile(originPCSHost, muer.uploadid, muer.file.Len(), checksumMap)
+	cerr := muer.multiUpload.CreateSuperFile(originPCSHost, muer.config.Policy, muer.instanceState.Uploadid, muer.file.Len(), checksumMap)
 	if cerr != nil {
 		return cerr
 	}

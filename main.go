@@ -1216,6 +1216,7 @@ func main() {
 					MaxRetry:      c.Int("retry"),
 					Load:          c.Int("l"),
 					NoRapidUpload: c.Bool("norapid"),
+					Policy:        c.String("policy"),
 				})
 				return nil
 			},
@@ -1236,6 +1237,10 @@ func main() {
 				cli.BoolFlag{
 					Name:  "norapid",
 					Usage: "跳过秒传",
+				},
+				cli.StringFlag{
+					Name:  "policy",
+					Usage: fmt.Sprintf("对同名文件的处理策略 (default: %s), %s, %s", baidupcs.SkipPolicy, baidupcs.OverWritePolicy, baidupcs.RsyncPolicy),
 				},
 			},
 		},
@@ -1811,6 +1816,9 @@ func main() {
 						if c.IsSet("fix_pcs_addr") {
 							pcsconfig.Config.SetStaticPCSAddr(c.Bool("fix_pcs_addr"))
 						}
+						if c.IsSet("upload_policy") {
+							pcsconfig.Config.SetUploadPolicy(c.String("upload_policy"))
+						}
 						if c.IsSet("pan_ua") {
 							pcsconfig.Config.SetPanUA(c.String("pan_ua"))
 						}
@@ -1936,6 +1944,10 @@ func main() {
 						cli.StringFlag{
 							Name:  "pcs_addr",
 							Usage: "PCS 服务器地址",
+						},
+						cli.BoolFlag{
+							Name:  "fix_pcs_addr",
+							Usage: "使用静态PCS 服务器",
 						},
 						cli.StringFlag{
 							Name:  "pan_ua",

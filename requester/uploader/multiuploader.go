@@ -15,9 +15,9 @@ import (
 type (
 	// MultiUpload 支持多线程的上传, 可用于断点续传
 	MultiUpload interface {
-		Precreate(fileSize int64, policy string) (pcsHost string, err pcserror.Error)
+		Precreate() (pcsHost string, err pcserror.Error)
 		TmpFile(ctx context.Context, uploadid, targetPath string, partseq int, partOffset int64, readerlen64 rio.ReaderLen64) (checksum string, terr error)
-		CreateSuperFile(pcsHost, uploadId string, fileSize int64, checksumMap map[int]string) (cerr error)
+		CreateSuperFile(pcsHost, policy, uploadId string, fileSize int64, checksumMap map[int]string) (cerr error)
 	}
 
 	// MultiUploader 多线程上传
@@ -37,7 +37,6 @@ type (
 		workers     workerList
 		speedsStat  *speeds.Speeds
 		rateLimit   *speeds.RateLimit
-		uploadid    string
 		targetPath  string
 
 		executeTime             time.Time
@@ -57,12 +56,11 @@ type (
 )
 
 // NewMultiUploader 初始化上传
-func NewMultiUploader(multiUpload MultiUpload, file rio.ReaderAtLen64, config *MultiUploaderConfig, uploadid, targetPath string) *MultiUploader {
+func NewMultiUploader(multiUpload MultiUpload, file rio.ReaderAtLen64, config *MultiUploaderConfig, targetPath string) *MultiUploader {
 	return &MultiUploader{
 		multiUpload: multiUpload,
 		file:        file,
 		config:      config,
-		uploadid:    uploadid,
 		targetPath:  targetPath,
 	}
 }
@@ -116,16 +114,16 @@ func (muer *MultiUploader) Execute() {
 	}
 
 	// 分配任务
-	if muer.instanceState != nil {
-		muer.workers = muer.getWorkerListByInstanceState(muer.instanceState)
-		uploaderVerbose.Infof("upload task CREATED from instance state\n")
-	} else {
-		muer.workers = muer.getWorkerListByInstanceState(&InstanceState{
-			BlockList: SplitBlock(muer.file.Len(), muer.config.BlockSize),
-		})
+	//if muer.instanceState != nil {
+	//	muer.workers = muer.getWorkerListByInstanceState(muer.instanceState)
+	//	uploaderVerbose.Infof("upload task CREATED from instance state\n")
+	//} else {
+	muer.workers = muer.getWorkerListByInstanceState(&InstanceState{
+		BlockList: SplitBlock(muer.file.Len(), muer.config.BlockSize),
+	})
 
-		uploaderVerbose.Infof("upload task CREATED: block size: %d, num: %d\n", muer.config.BlockSize, len(muer.workers))
-	}
+	uploaderVerbose.Infof("upload task CREATED: block size: %d, num: %d\n", muer.config.BlockSize, len(muer.workers))
+	//}
 
 	// 开始上传
 	muer.executeTime = time.Now()
@@ -162,7 +160,9 @@ func (muer *MultiUploader) InstanceState() *InstanceState {
 		})
 	}
 	return &InstanceState{
-		BlockList: blockStates,
+		BlockList:         blockStates,
+		Uploadid:          muer.instanceState.Uploadid,
+		PendingBlockIndex: muer.instanceState.PendingBlockIndex,
 	}
 }
 

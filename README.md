@@ -357,6 +357,7 @@ BaiduPCS-Go login
 ### 使用百度 BDUSS 和 百度网盘 STOKEN 来登录百度账号
 
 [关于 获取百度 BDUSS](https://blog.csdn.net/ykiwmy/article/details/103730962) STOKEN 获取方式与 BDUSS 基本相同。注意 STOKEN 必须在百度网盘页面获取，否则无效.
+STOKEN是cookie中的一个字段, 注意不是bdstoken, 如果拿到的STOKEN里没有大写字母多半是拿错了
 
 ```
 BaiduPCS-Go login -bduss=<BDUSS> -stoken=<STOKEN>

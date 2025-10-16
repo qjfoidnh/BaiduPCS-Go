@@ -238,7 +238,12 @@ func (c *PCSConfig) InitDefaultConfig() {
 	c.PanUA = baidupcs.NetdiskUA
 	c.EnableHTTPS = true
 	c.NoCheck = true
-	c.UPolicy = "fail"
+	c.UPolicy = baidupcs.SkipPolicy
+	c.Proxy = ""
+	c.LocalAddrs = ""
+	c.IgnoreIllegal = true
+	c.ForceLogin = ""
+	c.EnableHTTPS = true
 
 	// 设置默认的下载路径
 	switch runtime.GOOS {
@@ -320,7 +325,7 @@ func (c *PCSConfig) fix() {
 	if c.MaxUploadLoad < 1 {
 		c.MaxUploadLoad = 1
 	}
-	if c.UPolicy != "fail" && c.UPolicy != "newcopy" && c.UPolicy != "overwrite" && c.UPolicy != "skip" && c.UPolicy != "rsync" {
-		c.UPolicy = "fail"
+	if c.UPolicy != baidupcs.SkipPolicy && c.UPolicy != baidupcs.OverWritePolicy && c.UPolicy != baidupcs.RsyncPolicy {
+		c.UPolicy = baidupcs.SkipPolicy
 	}
 }

@@ -17,6 +17,22 @@ import (
 	"time"
 )
 
+var (
+	SkipPolicy      = "skip"
+	OverWritePolicy = "overwrite"
+	RsyncPolicy     = "rsync"
+)
+
+func (pcs *BaiduPCS) policyTortype(policy string) string {
+	switch policy {
+	case SkipPolicy:
+		return "2"
+	}
+
+	// 兜底为覆盖逻辑
+	return "3"
+}
+
 // Isdir 检查路径在网盘中是否为目录
 func (pcs *BaiduPCS) Isdir(pcspath string) (fileSize int64, isdir bool, pcsError pcserror.Error) {
 	if path.Clean(pcspath) == PathSeparator {
@@ -34,7 +50,7 @@ func (pcs *BaiduPCS) Isdir(pcspath string) (fileSize int64, isdir bool, pcsError
 func (pcs *BaiduPCS) CheckIsdir(op string, targetPath string, policy string, fileSize int64) pcserror.Error {
 	// 检测文件是否存在于网盘路径
 	// 很重要, 如果文件存在会直接覆盖!!! 即使是根目录!
-	_, isdir, pcsError := pcs.Isdir(targetPath)
+	targetFileSize, isdir, pcsError := pcs.Isdir(targetPath)
 	if pcsError != nil {
 		// 忽略远程服务端返回的错误
 		if pcsError.GetErrType() != pcserror.ErrTypeRemoteError {
@@ -51,16 +67,18 @@ func (pcs *BaiduPCS) CheckIsdir(op string, targetPath string, policy string, fil
 	// 如果存在文件, 则根据upload策略选择返回的错误码
 	if pcsError == nil {
 		switch policy {
-		case "fail":
+		case SkipPolicy:
 			errInfo.ErrCode = 114514
 			errInfo.ErrType = pcserror.ErrTypeRemoteError
 			errInfo.ErrMsg = "目标位置存在同名文件"
 			return errInfo
-		case "skip":
-			errInfo.ErrCode = 114514
-			errInfo.ErrMsg = "目标位置存在同名文件"
-			errInfo.ErrType = pcserror.ErrTypeRemoteError
-			return errInfo
+		case RsyncPolicy:
+			if targetFileSize == fileSize {
+				errInfo.ErrCode = 1919810
+				errInfo.ErrType = pcserror.ErrTypeRemoteError
+				errInfo.ErrMsg = "目标位置存在相同文件"
+				return errInfo
+			}
 		default:
 			return nil
 		}

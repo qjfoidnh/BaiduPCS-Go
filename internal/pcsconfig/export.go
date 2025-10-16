@@ -78,6 +78,8 @@ func (c *PCSConfig) PrintTable() {
 		[]string{"enable_https", fmt.Sprint(c.EnableHTTPS), "true", "启用 https"},
 		[]string{"force_login_username", fmt.Sprint(c.ForceLogin), "留空", "强制登录指定用户名, 适用于tieba用户信息接口不可用的情况, 如登录正常请留空"},
 		[]string{"ignore_illegal", fmt.Sprint(c.IgnoreIllegal), "false", "关闭上传文件的文件名非法字符检查"},
+		[]string{"upload_policy", fmt.Sprint(c.UPolicy), baidupcs.SkipPolicy, fmt.Sprintf("上传遇到重名文件时的处理策略, %s(默认，跳过)、%s(覆盖)、%s(仅跳过大小未变化的文件其余覆盖)",
+			baidupcs.SkipPolicy, baidupcs.OverWritePolicy, baidupcs.RsyncPolicy)},
 		[]string{"user_agent", c.UserAgent, requester.DefaultUserAgent, "浏览器标识"},
 		[]string{"pcs_ua", c.PCSUA, "", "PCS 浏览器标识"},
 		[]string{"pcs_addr", c.PCSAddr, "pcs.baidu.com", "PCS 服务器地址"},

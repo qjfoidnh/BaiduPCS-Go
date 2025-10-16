@@ -21,6 +21,8 @@ require (
 	golang.org/x/sys v0.25.0
 )
 
+require golang.org/x/net v0.0.0-20190620200207-3b0461eec859
+
 require (
 	github.com/GeertJohan/go.rice v1.0.2 // indirect
 	github.com/astaxie/beego v1.12.3 // indirect

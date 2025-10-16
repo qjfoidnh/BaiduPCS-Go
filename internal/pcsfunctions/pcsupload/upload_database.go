@@ -26,7 +26,6 @@ type (
 		lock          sync.RWMutex
 		UploadingList []*Uploading `json:"upload_state"`
 		Timestamp     int64        `json:"timestamp"`
-		Uploadid      string       `json:"upoadid"`
 
 		dataFile *os.File
 	}
@@ -116,6 +115,30 @@ func (ud *UploadingDatabase) UpdateUploading(meta *checksum.LocalFileMeta, state
 	})
 }
 
+// UpdateFullBlock 一次性更新全部block的md5值
+func (ud *UploadingDatabase) UpdateFullBlock(meta *checksum.LocalFileMeta, state *uploader.InstanceState) {
+	ud.lock.RLock()
+	defer ud.lock.RUnlock()
+	if meta == nil {
+		return
+	}
+	meta.CompleteAbsPath()
+	for k, uploading := range ud.UploadingList {
+		if uploading.LocalFileMeta == nil {
+			continue
+		}
+		if uploading.LocalFileMeta.EqualLengthMD5(meta) || uploading.LocalFileMeta.Path == meta.Path {
+			if len(meta.BlocksList) > 0 {
+				for index, md5 := range meta.BlocksList {
+					state.BlockList[index].CheckSum = md5
+				}
+			}
+			ud.UploadingList[k].State = state
+			return
+		}
+	}
+}
+
 func (ud *UploadingDatabase) deleteIndex(k int) {
 	ud.UploadingList = append(ud.UploadingList[:k], ud.UploadingList[k+1:]...)
 }
@@ -152,6 +175,9 @@ func (ud *UploadingDatabase) Search(meta *checksum.LocalFileMeta) *uploader.Inst
 		if uploading.LocalFileMeta == nil {
 			continue
 		}
+		if uploading.BlocksList == nil {
+			continue
+		}
 		if uploading.LocalFileMeta.EqualLengthMD5(meta) {
 			return uploading.State
 		}
@@ -165,6 +191,7 @@ func (ud *UploadingDatabase) Search(meta *checksum.LocalFileMeta) *uploader.Inst
 
 			meta.MD5 = uploading.LocalFileMeta.MD5
 			meta.SliceMD5 = uploading.LocalFileMeta.SliceMD5
+			meta.BlocksList = uploading.LocalFileMeta.BlocksList
 			return uploading.State
 		}
 	}

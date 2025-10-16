@@ -48,12 +48,8 @@ func (pu *PCSUpload) lazyInit() {
 	}
 }
 
-// Precreate 检查网盘的目标路径是否已存在同名文件及路径合法性, 顺便获取本次上传用的pcs服务器
-func (pu *PCSUpload) Precreate(fileSize int64, policy string) (originPCSHost string, pcsError pcserror.Error) {
-	pcsError = pu.pcs.CheckIsdir(baidupcs.OperationUpload, pu.targetPath, policy, fileSize)
-	if pcsError != nil {
-		return
-	}
+// Precreate 上传前准备, 获取本次上传用的pcs服务器
+func (pu *PCSUpload) Precreate() (originPCSHost string, pcsError pcserror.Error) {
 	originPCSHost = pu.pcs.GetPCSAddr()
 	_, newPCSHost := pu.pcs.GetRandomPCSHost()
 	pu.pcs.SetPCSAddr(newPCSHost)
@@ -65,7 +61,7 @@ func (pu *PCSUpload) TmpFile(ctx context.Context, uploadId, targetPath string, p
 
 	var respErr *uploader.MultiError
 
-	// 临时切换为动态pcs addr
+	// 每上传一定量分片切换一次动态pcs addr
 	if partSeq%pcsPeriod == pcsPeriod-1 {
 		go func() {
 			_, newPCSHost := pu.pcs.GetRandomPCSHost()
@@ -114,8 +110,8 @@ func (pu *PCSUpload) TmpFile(ctx context.Context, uploadId, targetPath string, p
 	return checksum, pcsError
 }
 
-func (pu *PCSUpload) CreateSuperFile(pcsHost, uploadId string, fileSize int64, checksumMap map[int]string) (err error) {
+func (pu *PCSUpload) CreateSuperFile(pcsHost, policy, uploadId string, fileSize int64, checksumMap map[int]string) (err error) {
 	pu.lazyInit()
 	pu.pcs.SetPCSAddr(pcsHost) // 恢复默认pcs服务器
-	return pu.pcs.UploadCreateSuperFile(uploadId, fileSize, pu.targetPath, checksumMap)
+	return pu.pcs.UploadCreateSuperFile(uploadId, policy, fileSize, pu.targetPath, checksumMap)
 }

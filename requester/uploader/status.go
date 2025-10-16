@@ -76,7 +76,6 @@ func (u *Uploader) GetStatusChan() <-chan Status {
 	return c
 }
 
-
 // 使用中的速度状态
 func (muer *MultiUploader) uploadStatusEvent() {
 	if muer.onUploadStatusEvent == nil {

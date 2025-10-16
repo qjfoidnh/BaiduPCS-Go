@@ -23,7 +23,7 @@ const (
 	DefaultAcceptRanges = "bytes"
 )
 
-var BlockSizeList = [6]int64{128 * converter.KB, 256 * converter.KB, 1024 * converter.KB, 2 * converter.MB, 999 * converter.GB}
+var BlockSizeList = [5]int64{256 * converter.KB, 512 * converter.KB, 1 * converter.MB, 2 * converter.MB, 999 * converter.GB}
 
 type (
 	// Downloader 下载
@@ -110,7 +110,7 @@ func (der *Downloader) lazyInit() {
 	}
 	if der.client == nil {
 		der.client = requester.NewHTTPClient()
-		der.client.SetTimeout(5 * time.Minute)
+		der.client.SetTimeout(2 * time.Minute)
 	}
 	if der.monitor == nil {
 		der.monitor = NewMonitor()
@@ -164,9 +164,11 @@ func (der *Downloader) SelectBlockSizeAndInitRangeGen(single bool, status *trans
 			//	blockSize = b2
 			//}
 			totalSize := status.TotalSize()
-			if totalSize < 2*converter.MB {
-				blockSize = BlockSizeList[1]
+			if totalSize < 5*converter.MB {
+				blockSize = BlockSizeList[0]
 			} else if totalSize < 10*converter.MB {
+				blockSize = BlockSizeList[1]
+			} else if totalSize < 15*converter.MB {
 				blockSize = BlockSizeList[2]
 			} else {
 				blockSize = BlockSizeList[3]

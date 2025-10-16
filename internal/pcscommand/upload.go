@@ -62,7 +62,7 @@ func RunUpload(localPaths []string, savePath string, opt *UploadOptions) {
 		opt.Load = pcsconfig.Config.MaxUploadLoad
 	}
 
-	if opt.Policy != "fail" && opt.Policy != "newcopy" && opt.Policy != "overwrite" && opt.Policy != "skip" && opt.Policy != "rsync" {
+	if opt.Policy != baidupcs.SkipPolicy && opt.Policy != baidupcs.OverWritePolicy && opt.Policy != baidupcs.RsyncPolicy {
 		opt.Policy = pcsconfig.Config.UPolicy
 	}
 

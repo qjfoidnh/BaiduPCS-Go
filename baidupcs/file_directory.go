@@ -48,10 +48,10 @@ type (
 		Mtime    int64  // 修改日期
 		MD5      string // md5 值
 		BlockListJSON
-		Size        int64 // 文件大小 (目录为0)
-		Isdir       bool  // 是否为目录
-		Ifhassubdir bool  // 是否含有子目录 (只对目录有效)
-		PreBase   string  // 真正的base目录
+		Size        int64  // 文件大小 (目录为0)
+		Isdir       bool   // 是否为目录
+		Ifhassubdir bool   // 是否含有子目录 (只对目录有效)
+		PreBase     string // 真正的base目录
 
 		Parent   *FileDirectory    // 父目录信息
 		Children FileDirectoryList // 子目录信息

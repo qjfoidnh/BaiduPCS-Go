@@ -340,9 +340,10 @@ func (pcs *BaiduPCS) prepareRapidUpload(targetPath, contentMD5, sliceMD5, crc32 
 }
 
 // prepareRapidUploadV2 秒传文件接口2, 不进行文件夹检查
-func (pcs *BaiduPCS) prepareRapidUploadV2(targetPath, contentMD5, sliceMD5, dataContent, crc32 string, offset, length, totalSize, dataTime int64, blockListMD5 []string) (dataReadCloser io.ReadCloser, pcsError pcserror.Error) {
+func (pcs *BaiduPCS) prepareRapidUploadV2(targetPath, uploadid, policy, contentMD5, sliceMD5, dataContent, crc32 string, offset, length, totalSize, dataTime int64, blockListMD5 []string) (dataReadCloser io.ReadCloser, pcsError pcserror.Error) {
 	pcsURL := pcs.generatePanURL("precreate", nil)
 	post := map[string]string{
+		"uploadid":     uploadid,
 		"path":         targetPath,
 		"target_path":  path.Dir(targetPath) + "/",
 		"size":         strconv.FormatInt(totalSize, 10),
@@ -350,7 +351,7 @@ func (pcs *BaiduPCS) prepareRapidUploadV2(targetPath, contentMD5, sliceMD5, data
 		"isdir":        "0",
 		"local_mtime":  strconv.FormatInt(dataTime, 10),
 		"local_ctime":  strconv.FormatInt(dataTime, 10),
-		"rtype":        "2",
+		"rtype":        policy,
 		"checkexist":   "0",
 		"autoinit":     "1",
 		"content-md5":  contentMD5,
@@ -363,6 +364,10 @@ func (pcs *BaiduPCS) prepareRapidUploadV2(targetPath, contentMD5, sliceMD5, data
 	}
 	baiduPCSVerbose.Infof("%s URL: %s, Post: %v\n", OperationRapidUpload, pcsURL, post)
 
+	if uploadid == "" {
+		delete(post, "uploadid")
+	}
+
 	dataReadCloser, pcsError = pcs.sendReqReturnReadCloser(reqTypePan, OperationRapidUpload, http.MethodPost, pcsURL.String(), post, map[string]string{
 		"Content-Type": "application/x-www-form-urlencoded",
 		"Accept":       "*/*",
@@ -371,7 +376,7 @@ func (pcs *BaiduPCS) prepareRapidUploadV2(targetPath, contentMD5, sliceMD5, data
 	return
 }
 
-func (pcs *BaiduPCS) prepareFakeRapidUploadV2(targetPath string, dateTime int64, blockListMD5 []string) (dataReadCloser io.ReadCloser, pcsError pcserror.Error) {
+func (pcs *BaiduPCS) prepareFakeRapidUploadV2(targetPath, policy string, dateTime int64, blockListMD5 []string) (dataReadCloser io.ReadCloser, pcsError pcserror.Error) {
 	pcsURL := pcs.generatePanURL("precreate", map[string]string{
 		"app_id":  PanAppID,
 		"channel": "1",
@@ -382,6 +387,7 @@ func (pcs *BaiduPCS) prepareFakeRapidUploadV2(targetPath string, dateTime int64,
 		"target_path": path.Dir(targetPath) + "/",
 		"local_mtime": strconv.FormatInt(dateTime, 10),
 		"autoinit":    "1",
+		"rtype":       policy,
 		"block_list":  mergeStringList(blockListMD5...),
 	}
 	baiduPCSVerbose.Infof("%s URL: %s, Post: %v\n", OperationRapidUpload, pcsURL, post)
@@ -406,22 +412,24 @@ func (pcs *BaiduPCS) PrepareRapidUpload(targetPath, contentMD5, sliceMD5, crc32 
 }
 
 // PrepareRapidUploadV2 秒传文件新接口, 只返回服务器响应数据和错误信息
-func (pcs *BaiduPCS) PrepareRapidUploadV2(targetPath, contentMD5, sliceMD5, dataContent, crc32 string, offset, length, totalSize, dataTime int64, blockListMD5 []string) (dataReadCloser io.ReadCloser, pcsError pcserror.Error) {
+func (pcs *BaiduPCS) PrepareRapidUploadV2(targetPath, policy, uploadid, contentMD5, sliceMD5, dataContent, crc32 string, offset, length, totalSize, dataTime int64, blockListMD5 []string) (dataReadCloser io.ReadCloser, pcsError pcserror.Error) {
 	pcs.lazyInit()
-	pcsError = pcs.CheckIsdir(OperationRapidUpload, targetPath, "", totalSize)
+	pcsError = pcs.CheckIsdir(OperationRapidUpload, targetPath, policy, totalSize)
 	if pcsError != nil {
 		return nil, pcsError
 	}
-	return pcs.prepareRapidUploadV2(targetPath, contentMD5, sliceMD5, dataContent, crc32, offset, length, totalSize, dataTime, blockListMD5)
+	rtype := pcs.policyTortype(policy)
+	return pcs.prepareRapidUploadV2(targetPath, uploadid, rtype, contentMD5, sliceMD5, dataContent, crc32, offset, length, totalSize, dataTime, blockListMD5)
 }
 
-func (pcs *BaiduPCS) PrepareFakeRapidUploadV2(targetPath string, dataTime int64, blockListMD5 []string) (dataReadCloser io.ReadCloser, pcsError pcserror.Error) {
+func (pcs *BaiduPCS) PrepareFakeRapidUploadV2(targetPath, policy string, length, dataTime int64, blockListMD5 []string) (dataReadCloser io.ReadCloser, pcsError pcserror.Error) {
 	pcs.lazyInit()
-	pcsError = pcs.CheckIsdir(OperationRapidUpload, targetPath, "", 0)
+	pcsError = pcs.CheckIsdir(OperationRapidUpload, targetPath, policy, length)
 	if pcsError != nil {
 		return nil, pcsError
 	}
-	return pcs.prepareFakeRapidUploadV2(targetPath, dataTime, blockListMD5)
+	rtype := pcs.policyTortype(policy)
+	return pcs.prepareFakeRapidUploadV2(targetPath, rtype, dataTime, blockListMD5)
 }
 
 // PrepareLocateDownload 获取下载链接, 只返回服务器响应数据和错误信息
@@ -447,6 +455,7 @@ func (pcs *BaiduPCS) PrepareLocateDownload(pcspath string) (dataReadCloser io.Re
 		Host:   pcs.URL().Host,
 		Path:   "/rest/2.0/pcs/file",
 		RawQuery: (url.Values{
+			"ant":        []string{"1"},
 			"check_blue": []string{"1"},
 			"es":         []string{"1"},
 			"esl":        []string{"1"},
@@ -464,7 +473,7 @@ func (pcs *BaiduPCS) PrepareLocateDownload(pcspath string) (dataReadCloser io.Re
 	}
 	baiduPCSVerbose.Infof("%s URL: %s\n", OperationLocateDownload, pcsURL)
 
-	dataReadCloser, pcsError = pcs.sendReqReturnReadCloser(reqTypePCS, OperationLocateDownload, http.MethodGet, pcsURL.String(), nil, pcs.getPanUAHeader())
+	dataReadCloser, pcsError = pcs.sendReqReturnReadCloser(reqTypePCS, OperationLocateDownload, http.MethodPost, pcsURL.String(), nil, pcs.getPanUAHeader())
 	return
 }
 
@@ -551,7 +560,7 @@ func (pcs *BaiduPCS) PrepareUploadTmpFile(uploadFunc UploadFunc) (dataReadCloser
 }
 
 // PrepareUploadCreateSuperFile 分片上传—合并分片文件, 只返回服务器响应数据和错误信息
-func (pcs *BaiduPCS) PrepareUploadCreateSuperFile(uploadid string, fileSize int64, targetPath string, blockList []string) (dataReadCloser io.ReadCloser, pcsError pcserror.Error) {
+func (pcs *BaiduPCS) PrepareUploadCreateSuperFile(uploadid, rtype string, fileSize int64, targetPath string, blockList []string) (dataReadCloser io.ReadCloser, pcsError pcserror.Error) {
 	pcs.lazyInit()
 
 	panURL := pcs.generatePanURL("create", nil)
@@ -563,12 +572,15 @@ func (pcs *BaiduPCS) PrepareUploadCreateSuperFile(uploadid string, fileSize int6
 		"path":     targetPath,
 		"size":     strconv.FormatInt(fileSize, 10),
 		"isdir":    "0",
+		"rtype":    rtype,
 		//"local_mtime": strconv.FormatInt(dataTime, 10),
 		//"local_ctime": strconv.FormatInt(dataTime, 10),
 		"block_list":  mergeStringList(blockList...),
 		"target_path": path.Dir(targetPath),
 		//"bdstoken":    bdstoken,
-	}, nil)
+	}, map[string]string{
+		"Content-Type": "application/x-www-form-urlencoded",
+	})
 	return
 }
 

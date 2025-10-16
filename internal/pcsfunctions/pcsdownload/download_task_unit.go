@@ -81,7 +81,7 @@ const (
 	DownloadModeStreaming
 )
 
-var client *requester.HTTPClient
+//var client *requester.HTTPClient
 
 func (dtu *DownloadTaskUnit) SetTaskInfo(info *taskframework.TaskInfo) {
 	dtu.taskInfo = info
@@ -150,7 +150,7 @@ func (dtu *DownloadTaskUnit) download(downloadURL string, client *requester.HTTP
 		if dtu.IsPrintStatus {
 			// 输出所有的worker状态
 			var (
-				tb      = pcstable.NewTable(builder)
+				tb = pcstable.NewTable(builder)
 			)
 			tb.SetHeader([]string{"#", "status", "range", "left", "speeds", "error"})
 			workersCallback(func(key int, worker *downloader.Worker) bool {
@@ -173,7 +173,7 @@ func (dtu *DownloadTaskUnit) download(downloadURL string, client *requester.HTTP
 			leftStr = left.String()
 		}
 
-		fmt.Fprintf(builder,dtu.PrintFormat, dtu.taskInfo.Id(),
+		fmt.Fprintf(builder, dtu.PrintFormat, dtu.taskInfo.Id(),
 			converter.ConvertFileSize(status.Downloaded(), 2),
 			converter.ConvertFileSize(status.TotalSize(), 2),
 			converter.ConvertFileSize(status.SpeedsPerSecond(), 2),
@@ -231,12 +231,11 @@ func (dtu *DownloadTaskUnit) download(downloadURL string, client *requester.HTTP
 	return nil
 }
 
-//panHTTPClient 获取包含特定User-Agent的HTTPClient
-func (dtu *DownloadTaskUnit) panHTTPClient() (*requester.HTTPClient) {
-	if client == nil {
-		client = pcsconfig.Config.PanHTTPClient()
-	}
-	//client = pcsconfig.Config.PanHTTPClient() // 此处将client 设为全局变量，理论上可优化TCP连接数
+// panHTTPClient 获取包含特定User-Agent的HTTPClient
+func (dtu *DownloadTaskUnit) panHTTPClient() *requester.HTTPClient {
+	//if client == nil {
+	client := pcsconfig.Config.PanHTTPClient()
+	//}
 	client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
 		// 去掉 Referer
 		if !pcsconfig.Config.EnableHTTPS {
@@ -247,7 +246,7 @@ func (dtu *DownloadTaskUnit) panHTTPClient() (*requester.HTTPClient) {
 		}
 		return nil
 	}
-	client.SetTimeout(4 * time.Minute)
+	client.SetTimeout(2 * time.Minute)
 	client.SetKeepAlive(true)
 	return client
 }
@@ -284,6 +283,10 @@ func (dtu *DownloadTaskUnit) execPanDownload(dlink string, result *taskframework
 	dtu.verboseInfof("[%s] 获取到下载链接: %s\n", dtu.taskInfo.Id(), dlink)
 
 	client := dtu.panHTTPClient()
+	activePCS := pcsconfig.Config.ActiveUserBaiduPCS()
+	cookieJar := activePCS.GetClient().Jar
+	newCookieJar, _ := CloneJarWithDomain(cookieJar, dlink)
+	client.SetCookiejar(newCookieJar)
 	err := dtu.download(dlink, client)
 	if err != nil {
 		result.ResultMessage = StrDownloadFailed
@@ -305,12 +308,12 @@ func (dtu *DownloadTaskUnit) locateDownload(result *taskframework.TaskUnitRunRes
 
 	// 更新链接的协议
 	// 跳过nb.cache这种还没有证书的
-	if len(rawDlinks) < dtu.DlinkPrefer + 1 {
+	if len(rawDlinks) < dtu.DlinkPrefer+1 {
 		dtu.DlinkPrefer = len(rawDlinks) - 1
 	}
 	raw_dlink := rawDlinks[dtu.DlinkPrefer]
-	if strings.HasPrefix(raw_dlink.Host, "nb.cache") && len(rawDlinks) > dtu.DlinkPrefer + 1 {
-		raw_dlink = rawDlinks[dtu.DlinkPrefer + 1]
+	if strings.HasPrefix(raw_dlink.Host, "nb.cache") && len(rawDlinks) > dtu.DlinkPrefer+1 {
+		raw_dlink = rawDlinks[dtu.DlinkPrefer+1]
 	}
 	FixHTTPLinkURL(raw_dlink)
 	dlink := raw_dlink.String()
@@ -348,7 +351,7 @@ func (dtu *DownloadTaskUnit) pcsOrStreamingDownload(mode DownloadMode, result *t
 	return true // 下载成功
 }
 
-//checkFileValid 检测文件有效性
+// checkFileValid 检测文件有效性
 func (dtu *DownloadTaskUnit) checkFileValid(result *taskframework.TaskUnitRunResult) (ok bool) {
 	fi, err := os.Stat(dtu.SavePath)
 	if err == nil {
@@ -486,7 +489,7 @@ func (dtu *DownloadTaskUnit) Run() (result *taskframework.TaskUnitRunResult) {
 		result.Succeed = true // 执行成功
 		return
 	}
-	
+
 	if dtu.FileInfo.Size == 0 {
 		if !dtu.Cfg.IsTest {
 			os.Create(dtu.SavePath)

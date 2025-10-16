@@ -1,6 +1,8 @@
 package pcsfunctions
 
-import "time"
+import (
+	"time"
+)
 
 // RetryWait 失败重试等待事件
 func RetryWait(retry int) time.Duration {

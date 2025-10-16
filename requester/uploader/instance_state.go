@@ -14,7 +14,9 @@ type (
 
 	// InstanceState 上传断点续传信息
 	InstanceState struct {
-		BlockList []*BlockState `json:"block_list"`
+		BlockList         []*BlockState `json:"block_list"`
+		Uploadid          string        `json:"uploadid"`
+		PendingBlockIndex *[]int        `json:"pending_block_index"`
 	}
 )
 

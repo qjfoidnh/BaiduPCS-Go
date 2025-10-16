@@ -2,9 +2,13 @@ package pcsdownload
 
 import (
 	"encoding/hex"
+	"fmt"
 	"github.com/qjfoidnh/BaiduPCS-Go/baidupcs"
 	"github.com/qjfoidnh/BaiduPCS-Go/internal/pcsconfig"
 	"github.com/qjfoidnh/BaiduPCS-Go/pcsutil/checksum"
+	"golang.org/x/net/publicsuffix"
+	"net/http"
+	"net/http/cookiejar"
 	"net/url"
 	"os"
 )
@@ -53,11 +57,33 @@ func FileExist(path string) bool {
 	return false
 }
 
-//FixHTTPLinkURL 通过配置, 确定链接使用的协议(http,https)
+// FixHTTPLinkURL 通过配置, 确定链接使用的协议(http,https)
 func FixHTTPLinkURL(linkURL *url.URL) {
 	if pcsconfig.Config.EnableHTTPS {
 		if linkURL.Scheme == "http" {
 			linkURL.Scheme = "https"
 		}
 	}
+}
+
+func CloneJarWithDomain(srcJar http.CookieJar, newURL string) (http.CookieJar, error) {
+	if srcJar == nil {
+		return nil, fmt.Errorf("srcJar is nil")
+	}
+	dstJar, err := cookiejar.New(&cookiejar.Options{PublicSuffixList: publicsuffix.List})
+	if err != nil {
+		return nil, err
+	}
+
+	u, _ := url.Parse(newURL)
+	newDomain := u.Hostname()
+	u, _ = url.Parse("https://" + pcsconfig.Config.PCSAddr + "/")
+	cookies := srcJar.Cookies(u)
+	for _, c := range cookies {
+		nc := *c
+		nc.Domain = newDomain
+		newURL, _ := url.Parse("https://" + newDomain + "/")
+		dstJar.SetCookies(newURL, []*http.Cookie{&nc})
+	}
+	return dstJar, nil
 }
