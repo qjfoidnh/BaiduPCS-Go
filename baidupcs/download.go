@@ -57,14 +57,14 @@ type (
 func (ui *URLInfo) URLStrings(https bool) (urls []*url.URL) {
 	urls = make([]*url.URL, 0, len(ui.URLs))
 	for _, urlInfo := range ui.URLs {
-		if urlInfo.Encrypt == 0 { // 只使用非加密链接
-			u, err := url.Parse(urlInfo.URL)
-			if err != nil {
-				continue // 如果解析失败，跳过当前 URL
-			}
-			u.Scheme = GetHTTPScheme(https)
-			urls = append(urls, u)
+		//if urlInfo.Encrypt == 0 { // 只使用非加密链接
+		u, err := url.Parse(urlInfo.URL)
+		if err != nil {
+			continue // 如果解析失败，跳过当前 URL
 		}
+		u.Scheme = GetHTTPScheme(https)
+		urls = append(urls, u)
+		//}
 	}
 	return urls
 }
