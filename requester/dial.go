@@ -158,10 +158,6 @@ func dialContext(ctx context.Context, network, address string) (conn net.Conn, e
 	return
 }
 
-func dial(network, address string) (conn net.Conn, err error) {
-	return dialContext(context.Background(), network, address)
-}
-
 func (h *HTTPClient) dialTLSFunc() func(network, address string) (tlsConn net.Conn, err error) {
 	return func(network, address string) (tlsConn net.Conn, err error) {
 		conn, err := dialContext(context.Background(), network, address)

@@ -1,15 +1,10 @@
 package requester
 
 import (
-	"context"
 	"crypto/tls"
-	"fmt"
-	"net"
 	"net/http"
 	"net/http/cookiejar"
 	"time"
-
-	"github.com/rs/dnscache"
 )
 
 // HTTPClient http client
@@ -20,68 +15,44 @@ type HTTPClient struct {
 	UserAgent string
 }
 
-type traceConn struct {
-	net.Conn
-	id string
-}
-
-func (c traceConn) Close() error {
-	fmt.Printf("CONN[%s] Close() called, going to FIN -> TIME_WAIT", c.id)
-	return c.Conn.Close()
-}
-
-// 拨号时包装
-func dialTrace(ctx context.Context, network, addr string) (net.Conn, error) {
-	d := net.Dialer{}
-	raw, err := d.DialContext(ctx, network, addr)
-	if err != nil {
-		return nil, err
-	}
-	id := fmt.Sprintf("%s->%s@%d", raw.LocalAddr(), raw.RemoteAddr(), time.Now().UnixNano())
-	fmt.Printf("CONN[%s] DialContext success", id)
-	return traceConn{Conn: raw, id: id}, nil
-}
-
-func cacheDNS() *http.Transport {
-	resolver := &dnscache.Resolver{}
-
-	// 2. 自定义 DialContext：先查缓存，再拨号
-	dialer := &net.Dialer{
-		Timeout:   30 * time.Second,
-		KeepAlive: 30 * time.Second,
-	}
-	tr := &http.Transport{
-		DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
-			host, port, _ := net.SplitHostPort(addr)
-			// 缓存解析
-			ips, err := resolver.LookupHost(ctx, host)
-			if err != nil {
-				return nil, err
-			}
-			// 简单轮询 IP
-			ip := ips[0]
-			conn, err := dialer.DialContext(ctx, network, net.JoinHostPort(ip, port))
-			if err == nil {
-				return conn, nil
-			}
-
-			return nil, err
-		},
-		MaxIdleConns:        100,
-		IdleConnTimeout:     90 * time.Second,
-		TLSHandshakeTimeout: 10 * time.Second,
-	}
-	return tr
-}
+//func cacheDNS() *http.Transport {
+//	resolver := &dnscache.Resolver{}
+//
+//	// 2. 自定义 DialContext：先查缓存，再拨号
+//	dialer := &net.Dialer{
+//		Timeout:   30 * time.Second,
+//		KeepAlive: 30 * time.Second,
+//	}
+//	tr := &http.Transport{
+//		DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
+//			host, port, _ := net.SplitHostPort(addr)
+//			// 缓存解析
+//			ips, err := resolver.LookupHost(ctx, host)
+//			if err != nil {
+//				return nil, err
+//			}
+//			// 顺序尝试ip
+//			for _, ip := range ips {
+//				conn, err := dialer.DialContext(ctx, network, net.JoinHostPort(ip, port))
+//				if err == nil {
+//					return conn, nil
+//				}
+//			}
+//			return nil, err
+//		},
+//		MaxIdleConns:        100,
+//		IdleConnTimeout:     90 * time.Second,
+//		TLSHandshakeTimeout: 10 * time.Second,
+//	}
+//	return tr
+//}
 
 // NewHTTPClient 返回 HTTPClient 的指针,
 // 预设了一些配置
 func NewHTTPClient() *HTTPClient {
-	fmt.Println("new one")
 	h := &HTTPClient{
 		Client: http.Client{
-			Timeout:   50 * time.Second,
-			Transport: cacheDNS(),
+			Timeout: 50 * time.Second,
 		},
 		UserAgent: UserAgent,
 	}
@@ -94,7 +65,6 @@ func (h *HTTPClient) lazyInit() {
 		h.transport = &http.Transport{
 			Proxy:       proxyFunc,
 			DialContext: dialContext,
-			Dial:        dial,
 			// DialTLS:     h.dialTLSFunc(),
 			TLSClientConfig: &tls.Config{
 				InsecureSkipVerify: true,

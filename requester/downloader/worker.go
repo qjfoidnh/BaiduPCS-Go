@@ -50,7 +50,7 @@ func (wl WorkerList) Duplicate() WorkerList {
 	return n
 }
 
-//NewWorker 初始化Worker
+// NewWorker 初始化Worker
 func NewWorker(id int, durl string, writerAt io.WriterAt) *Worker {
 	return &Worker{
 		id:       id,
@@ -59,7 +59,7 @@ func NewWorker(id int, durl string, writerAt io.WriterAt) *Worker {
 	}
 }
 
-//ID 返回worker ID
+// ID 返回worker ID
 func (wer *Worker) ID() int {
 	return wer.id
 }
@@ -89,17 +89,17 @@ func (wer *Worker) SetTotalSize(size int64) {
 	wer.totalSize = size
 }
 
-//SetClient 设置http客户端
+// SetClient 设置http客户端
 func (wer *Worker) SetClient(c *requester.HTTPClient) {
 	wer.client = c
 }
 
-//SetAcceptRange 设置AcceptRange
+// SetAcceptRange 设置AcceptRange
 func (wer *Worker) SetAcceptRange(acceptRanges string) {
 	wer.acceptRanges = acceptRanges
 }
 
-//SetRange 设置请求范围
+// SetRange 设置请求范围
 func (wer *Worker) SetRange(r *transfer.Range) {
 	if wer.wrange == nil {
 		wer.wrange = r
@@ -109,38 +109,38 @@ func (wer *Worker) SetRange(r *transfer.Range) {
 	wer.wrange.StoreEnd(r.LoadEnd())
 }
 
-//SetReferer 设置来源
+// SetReferer 设置来源
 func (wer *Worker) SetReferer(referer string) {
 	wer.referer = referer
 }
 
-//SetWriteMutex 设置数据写锁
+// SetWriteMutex 设置数据写锁
 func (wer *Worker) SetWriteMutex(mu *sync.Mutex) {
 	wer.writeMu = mu
 }
 
-//SetDownloadStatus 增加其他需要统计的数据
+// SetDownloadStatus 增加其他需要统计的数据
 func (wer *Worker) SetDownloadStatus(downloadStatus *transfer.DownloadStatus) {
 	wer.downloadStatus = downloadStatus
 }
 
-//GetStatus 返回下载状态
+// GetStatus 返回下载状态
 func (wer *Worker) GetStatus() WorkerStatuser {
 	// 空接口与空指针不等价
 	return &wer.status
 }
 
-//GetRange 返回worker范围
+// GetRange 返回worker范围
 func (wer *Worker) GetRange() *transfer.Range {
 	return wer.wrange
 }
 
-//GetSpeedsPerSecond 获取每秒的速度
+// GetSpeedsPerSecond 获取每秒的速度
 func (wer *Worker) GetSpeedsPerSecond() int64 {
 	return wer.speedsStat.GetSpeeds()
 }
 
-//Pause 暂停下载
+// Pause 暂停下载
 func (wer *Worker) Pause() {
 	wer.lazyInit()
 	if wer.acceptRanges == "" {
@@ -155,7 +155,7 @@ func (wer *Worker) Pause() {
 	wer.status.statusCode = StatusCodePaused
 }
 
-//Resume 恢复下载
+// Resume 恢复下载
 func (wer *Worker) Resume() {
 	if wer.status.statusCode != StatusCodePaused {
 		return
@@ -163,7 +163,7 @@ func (wer *Worker) Resume() {
 	go wer.Execute()
 }
 
-//Cancel 取消下载
+// Cancel 取消下载
 func (wer *Worker) Cancel() error {
 	if wer.workerCancelFunc == nil {
 		return errors.New("cancelFunc not set")
@@ -175,7 +175,7 @@ func (wer *Worker) Cancel() error {
 	return nil
 }
 
-//Reset 重设连接
+// Reset 重设连接
 func (wer *Worker) Reset() {
 	if wer.resetFunc == nil {
 		pcsverbose.Verbosef("DEBUG: worker: resetFunc not set")
@@ -194,7 +194,7 @@ func (wer *Worker) Canceled() bool {
 	return wer.status.statusCode == StatusCodeCanceled
 }
 
-//Completed 是否已经完成
+// Completed 是否已经完成
 func (wer *Worker) Completed() bool {
 	switch wer.status.statusCode {
 	case StatusCodeSucceeded, StatusCodeCanceled:
@@ -204,7 +204,7 @@ func (wer *Worker) Completed() bool {
 	}
 }
 
-//Failed 是否失败
+// Failed 是否失败
 func (wer *Worker) Failed() bool {
 	switch wer.status.statusCode {
 	case StatusCodeFailed, StatusCodeInternalError, StatusCodeTooManyConnections, StatusCodeNetError:
@@ -214,17 +214,17 @@ func (wer *Worker) Failed() bool {
 	}
 }
 
-//ClearStatus 清空状态
+// ClearStatus 清空状态
 func (wer *Worker) ClearStatus() {
 	wer.status.statusCode = StatusCodeInit
 }
 
-//Err 返回worker错误
+// Err 返回worker错误
 func (wer *Worker) Err() error {
 	return wer.err
 }
 
-//Execute 执行任务
+// Execute 执行任务
 func (wer *Worker) Execute() {
 	wer.lazyInit()
 
