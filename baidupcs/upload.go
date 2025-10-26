@@ -69,7 +69,7 @@ type (
 	uploadPrecreateJSON struct {
 		ReturnType int    `json:"return_type"` // 1上传, 2秒传
 		UploadID   string `json:"uploadid"`
-		BlockList  []int  `json:"block_list"`
+		//BlockList  []int  `json:"block_list"`
 		*pcserror.PanErrorInfo
 		fdJSON `json:"info"`
 	}

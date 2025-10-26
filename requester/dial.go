@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -24,6 +25,9 @@ var (
 
 	// ProxyAddr 代理地址
 	ProxyAddr string
+
+	// 指定走ProxyAddr的域名
+	ProxyHostnameRules string
 
 	// ErrProxyAddrEmpty 代理地址为空
 	ErrProxyAddrEmpty = errors.New("proxy addr is empty")
@@ -53,6 +57,13 @@ func proxyFunc(req *http.Request) (*url.URL, error) {
 		return http.ProxyFromEnvironment(req)
 	}
 
+	if ProxyHostnameRules != "" {
+		if strings.Contains(ProxyHostnameRules, req.URL.Hostname()) {
+			return u, err
+		} else {
+			return http.ProxyFromEnvironment(req)
+		}
+	}
 	return u, err
 }
 
@@ -97,6 +108,11 @@ func checkProxyAddr(proxyAddr string) (u *url.URL, err error) {
 // SetGlobalProxy 设置代理
 func SetGlobalProxy(proxyAddr string) {
 	ProxyAddr = proxyAddr
+}
+
+// SetProxyHostnameRules 设置走代理的域名列表
+func SetProxyHostnameRules(hostnames string) {
+	ProxyHostnameRules = hostnames
 }
 
 // SetTCPHostBind 设置host绑定ip

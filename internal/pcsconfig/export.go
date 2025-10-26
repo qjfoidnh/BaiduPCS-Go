@@ -68,7 +68,7 @@ func (c *PCSConfig) PrintTable() {
 	tb.AppendBulk([][]string{
 		[]string{"appid", fmt.Sprint(c.AppID), "", "百度 PCS 应用ID"},
 		[]string{"cache_size", converter.ConvertFileSize(int64(c.CacheSize), 2), "1KB ~ 256KB", "下载缓存, 如果硬盘占用高或下载速度慢, 请尝试调大此值"},
-		[]string{"max_parallel", strconv.Itoa(c.MaxParallel), "1 ~ 14", "下载总最大并发量, 非svip不可>1"},
+		[]string{"max_parallel", strconv.Itoa(c.MaxParallel), "1 ~ 20", "下载总最大并发量, 非svip不可>1"},
 		[]string{"max_upload_parallel", strconv.Itoa(c.MaxUploadParallel), "1 ~ 100", "上传单文件最大并发量"},
 		[]string{"max_download_load", strconv.Itoa(c.MaxDownloadLoad), "1 ~ 5", "同时进行下载文件的最大数量"},
 		[]string{"max_download_rate", showMaxRate(c.MaxDownloadRate), "", "限制最大下载速度, 0代表不限制"},
@@ -86,6 +86,7 @@ func (c *PCSConfig) PrintTable() {
 		[]string{"fix_pcs_addr", fmt.Sprint(c.FixPCSAddr), "false", "不使用动态PCS服务器地址, 通常情况保持默认即可"},
 		[]string{"pan_ua", c.PanUA, baidupcs.NetdiskUA, "Pan 浏览器标识"},
 		[]string{"proxy", c.Proxy, "", "设置代理, 支持 http/socks5 代理"},
+		[]string{"proxy_hostnames", c.ProxyHostnames, "", "设置走代理的域名范围, 多个域名以逗号分隔, 留空表示全部代理. 国外VPS遇上传问题可尝试代理pan.baidu.com回国"},
 		[]string{"local_addrs", c.LocalAddrs, "", "设置本地网卡地址, 多个地址用逗号隔开"},
 	})
 	tb.Render()

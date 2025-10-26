@@ -15,38 +15,6 @@ type HTTPClient struct {
 	UserAgent string
 }
 
-//func cacheDNS() *http.Transport {
-//	resolver := &dnscache.Resolver{}
-//
-//	// 2. 自定义 DialContext：先查缓存，再拨号
-//	dialer := &net.Dialer{
-//		Timeout:   30 * time.Second,
-//		KeepAlive: 30 * time.Second,
-//	}
-//	tr := &http.Transport{
-//		DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
-//			host, port, _ := net.SplitHostPort(addr)
-//			// 缓存解析
-//			ips, err := resolver.LookupHost(ctx, host)
-//			if err != nil {
-//				return nil, err
-//			}
-//			// 顺序尝试ip
-//			for _, ip := range ips {
-//				conn, err := dialer.DialContext(ctx, network, net.JoinHostPort(ip, port))
-//				if err == nil {
-//					return conn, nil
-//				}
-//			}
-//			return nil, err
-//		},
-//		MaxIdleConns:        100,
-//		IdleConnTimeout:     90 * time.Second,
-//		TLSHandshakeTimeout: 10 * time.Second,
-//	}
-//	return tr
-//}
-
 // NewHTTPClient 返回 HTTPClient 的指针,
 // 预设了一些配置
 func NewHTTPClient() *HTTPClient {

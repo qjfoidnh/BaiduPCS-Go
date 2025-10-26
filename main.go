@@ -1861,6 +1861,9 @@ func main() {
 						if c.IsSet("proxy") {
 							pcsconfig.Config.SetProxy(c.String("proxy"))
 						}
+						if c.IsSet("proxy_hostnames") {
+							pcsconfig.Config.SetProxyHostnames(c.String("proxy_hostnames"))
+						}
 						if c.IsSet("local_addrs") {
 							pcsconfig.Config.SetLocalAddrs(c.String("local_addrs"))
 						}
@@ -1956,6 +1959,10 @@ func main() {
 						cli.StringFlag{
 							Name:  "proxy",
 							Usage: "设置代理, 支持 http/socks5 代理",
+						},
+						cli.StringFlag{
+							Name:  "proxy_hostnames",
+							Usage: "设置走代理的域名范围, 多个域名用逗号隔开, 留空则所有域名均代理",
 						},
 						cli.StringFlag{
 							Name:  "local_addrs",

@@ -78,12 +78,13 @@ func (utu *UploadTaskUnit) prepareFile() {
 	utu.panFile = panFile
 
 	// 检测断点续传
-	utu.state = utu.UploadingDatabase.Search(&utu.LocalFileChecksum.LocalFileMeta)
-	if utu.state != nil || utu.LocalFileChecksum.LocalFileMeta.BlocksList != nil { // 读取到了md5分片信息
-		utu.Step = StepUploadRapidUpload
-		fmt.Printf("[%s] 检测到断点信息, 准备续传...\n", utu.taskInfo.Id())
-		return
-	}
+	// 2025.10.26 不再支持续传, 关闭检测
+	//utu.state = utu.UploadingDatabase.Search(&utu.LocalFileChecksum.LocalFileMeta)
+	//if utu.state != nil || utu.LocalFileChecksum.LocalFileMeta.BlocksList != nil { // 读取到了md5分片信息
+	//	utu.Step = StepUploadRapidUpload
+	//	fmt.Printf("[%s] 检测到断点信息, 准备续传...\n", utu.taskInfo.Id())
+	//	return
+	//}
 	utu.state = &uploader.InstanceState{}
 
 	if utu.LocalFileChecksum.Length >= baidupcs.RecommendedUploadSize {
@@ -91,7 +92,7 @@ func (utu *UploadTaskUnit) prepareFile() {
 	}
 
 	if utu.NoRapidUpload {
-		fmt.Printf("[%s] 注意: 跳过秒传将无法使用断点续传...\n", utu.taskInfo.Id())
+		//fmt.Printf("[%s] 注意: 跳过秒传将无法使用断点续传...\n", utu.taskInfo.Id())
 		pcsError, jsonData := utu.PCS.FakeRapidUpload(utu.SavePath, utu.Policy, utu.LocalFileChecksum.Length)
 		if pcsError != nil {
 			errcode := pcsError.GetRemoteErrCode()
@@ -258,7 +259,6 @@ func (utu *UploadTaskUnit) rapidUpload() (isContinue bool, result *taskframework
 		utu.state.Uploadid = jsonData.UploadID
 	} else {
 		utu.UploadingDatabase.UpdateFullBlock(&utu.LocalFileChecksum.LocalFileMeta, utu.state)
-		utu.state.PendingBlockIndex = &jsonData.BlockList
 	}
 
 	utu.UploadingDatabase.UpdateUploading(&utu.LocalFileChecksum.LocalFileMeta, utu.state)

@@ -247,6 +247,12 @@ func (c *PCSConfig) SetProxy(proxy string) {
 	requester.SetGlobalProxy(proxy)
 }
 
+// SetProxyHostnames 设置代理域名列表
+func (c *PCSConfig) SetProxyHostnames(proxyHostnames string) {
+	c.ProxyHostnames = proxyHostnames
+	requester.SetProxyHostnameRules(proxyHostnames)
+}
+
 // SetLocalAddrs 设置localAddrs
 func (c *PCSConfig) SetLocalAddrs(localAddrs string) {
 	c.LocalAddrs = localAddrs

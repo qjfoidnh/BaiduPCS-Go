@@ -3,11 +3,9 @@ package uploader
 import (
 	"context"
 	"errors"
-	"fmt"
 	"github.com/oleiade/lane"
 	"github.com/qjfoidnh/BaiduPCS-Go/pcsutil/waitgroup"
 	"os"
-	"slices"
 	"sync"
 )
 
@@ -57,12 +55,7 @@ func (muer *MultiUploader) upload() (uperr error) {
 	// 加入队列
 	for _, wer := range muer.workers {
 		if wer.checksum == "" {
-			if muer.instanceState.PendingBlockIndex == nil || slices.Contains(*muer.instanceState.PendingBlockIndex, wer.id) {
-				uploadDeque.Append(wer)
-			} else {
-				checksumMap[wer.id] = muer.instanceState.BlockList[wer.id].CheckSum
-				fmt.Println("checksum", muer.instanceState.BlockList[wer.id].CheckSum)
-			}
+			uploadDeque.Append(wer)
 		}
 	}
 
@@ -86,12 +79,7 @@ func (muer *MultiUploader) upload() (uperr error) {
 					terr        error
 				)
 				go func() {
-					select {
-					case <-ctx.Done():
-						return
-					default:
-						checksum, terr = muer.multiUpload.TmpFile(ctx, muer.instanceState.Uploadid, muer.targetPath, wer.id, wer.partOffset, wer.splitUnit)
-					}
+					checksum, terr = muer.multiUpload.TmpFile(ctx, muer.instanceState.Uploadid, muer.targetPath, wer.id, wer.partOffset, wer.splitUnit)
 					close(doneChan)
 				}()
 				select {

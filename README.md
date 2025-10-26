@@ -94,12 +94,20 @@ iikira/BaiduPCS-Go was largely inspired by [GangZhuo/BaiduPCS](https://github.co
 
 [离线下载](#离线下载), 支持http/https/ftp/电驴/磁力链协议.
 # 版本更新
+
+**2025.10.28** v4.0.0
+- 上传重新支持跳过秒传`--norapid`
+- 上传同名文件覆盖策略`--policy`支持`skip`,`overwrite`,`rsync`; 支持`config`配置全局默认策略
+- 因接口变化上传不再支持断点续传, 下载不受影响
+- 增加`config`配置`proxy_hostnames`, 国外VPS用户如遇上传问题可尝试为`pan.baidu.com`配置回国代理
+- 其他细节优化
+
 **2025.08.30** v3.9.9
 - 最大上传单文件支持至128G
 - 上传速度优化
 - 下载取消文件预分配
 - 因官方接口变动上传文件强制计算秒传
-- transfer命令修复--download参数
+- transfer命令修复`--download`参数
 
 **2025.08.29** v3.9.8
 - 全面修复了上传文件的问题
@@ -598,11 +606,13 @@ BaiduPCS-Go upload <本地文件/目录的路径1> <文件/目录2> <文件/目�
 BaiduPCS-Go u <本地文件/目录的路径1> <文件/目录2> <文件/目录3> ... <目标目录>
 ```
 
-* 上传默认采用分片上传的方式, 上传的文件将会保存到, <目标目录>.
+* 上传默认采用分片上传的方式, 上传的文件将会保存到, <目标目录>. 不支持断点续传
 
-* 遇到同名文件会自动跳过
+* 遇到同名文件会自动跳过, 也可配置`upload_policy`选择覆盖或者只跳过同大小文件
 
 * 当上传的文件名和网盘的目录名称相同时, 不会覆盖目录, 防止丢失数据.
+
+* 所有上传均默认检测秒传, 可添加参数`--norapid`跳过
 
 
 #### 例子:
@@ -611,11 +621,14 @@ BaiduPCS-Go u <本地文件/目录的路径1> <文件/目录2> <文件/目录3> 
 # 注意区别反斜杠 "\" 和 斜杠 "/" !!!
 BaiduPCS-Go upload C:/Users/Administrator/Desktop/1.mp4 /视频
 
+# 将本地的 C:\Users\Administrator\Desktop\1.mp4 上传到网盘 /视频 目录, 不检测秒传
+BaiduPCS-Go upload C:/Users/Administrator/Desktop/1.mp4 /视频 --norapid
+
 # 将本地的 C:\Users\Administrator\Desktop\1.mp4 和 C:\Users\Administrator\Desktop\2.mp4 上传到网盘 /视频 目录
 BaiduPCS-Go upload C:/Users/Administrator/Desktop/1.mp4 C:/Users/Administrator/Desktop/2.mp4 /视频
 
-# 将本地的 C:\Users\Administrator\Desktop 整个目录上传到网盘 /视频 目录
-BaiduPCS-Go upload C:/Users/Administrator/Desktop /视频
+# 将本地的 C:\Users\Administrator\Desktop 整个目录上传到网盘 /视频 目录, 只覆盖与本地大小不同的同名文件
+BaiduPCS-Go upload C:/Users/Administrator/Desktop /视频 --policy rsync
 ```
 
 ## 获取下载直链
@@ -623,9 +636,8 @@ BaiduPCS-Go upload C:/Users/Administrator/Desktop /视频
 BaiduPCS-Go locate <文件1> <文件2> ...
 ```
 
-#### 注意
+#### 例子:
 
-若该功能无法正常使用, 提示`user is not authorized, hitcode:xxx`, 尝试更换 User-Agent 为 `netdisk;2.2.51.6;netdisk;10.0.63;PC;android-android`:
 ```
 BaiduPCS-Go config set -user_agent "netdisk;2.2.51.6;netdisk;10.0.63;PC;android-android"
 ```

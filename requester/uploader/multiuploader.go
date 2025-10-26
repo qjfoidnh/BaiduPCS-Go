@@ -160,9 +160,8 @@ func (muer *MultiUploader) InstanceState() *InstanceState {
 		})
 	}
 	return &InstanceState{
-		BlockList:         blockStates,
-		Uploadid:          muer.instanceState.Uploadid,
-		PendingBlockIndex: muer.instanceState.PendingBlockIndex,
+		BlockList: blockStates,
+		Uploadid:  muer.instanceState.Uploadid,
 	}
 }
 

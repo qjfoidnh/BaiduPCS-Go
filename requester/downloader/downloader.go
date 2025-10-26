@@ -23,7 +23,7 @@ const (
 	DefaultAcceptRanges = "bytes"
 )
 
-var BlockSizeList = [5]int64{256 * converter.KB, 512 * converter.KB, 1 * converter.MB, 2 * converter.MB, 999 * converter.GB}
+var BlockSizeList = [4]int64{256 * converter.KB, 512 * converter.KB, 1 * converter.MB, 4 * converter.MB}
 
 type (
 	// Downloader 下载
@@ -132,8 +132,8 @@ func (der *Downloader) SelectParallel(single bool, maxParallel int, totalSize in
 		parallel = len(instanceRangeList)
 	} else {
 		parallel = der.config.MaxParallel
-		if int64(parallel) > totalSize/int64(MinParallelSize) {
-			parallel = int(totalSize/int64(MinParallelSize)) + 1
+		if int64(parallel) > totalSize/MinParallelSize {
+			parallel = int(totalSize/MinParallelSize) + 1
 		}
 	}
 
@@ -157,12 +157,6 @@ func (der *Downloader) SelectBlockSizeAndInitRangeGen(single bool, status *trans
 			gen = transfer.NewRangeListGenDefault(status.TotalSize(), 0, 0, parallel)
 			blockSize = gen.LoadBlockSize()
 		case transfer.RangeGenMode_BlockSize:
-			//b2 := status.TotalSize()/int64(parallel) + 1
-			//if b2 > der.config.BlockSize { // 选小的BlockSize, 以更高并发
-			//	blockSize = der.config.BlockSize
-			//} else {
-			//	blockSize = b2
-			//}
 			totalSize := status.TotalSize()
 			if totalSize < 5*converter.MB {
 				blockSize = BlockSizeList[0]
