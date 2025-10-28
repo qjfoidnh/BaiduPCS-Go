@@ -30,6 +30,8 @@ const (
 	MiddleUploadThreshold = 8 * converter.GB
 	// MaxUploadThreshold 最大分片对应的文件大小
 	MaxUploadThreshold = 32 * converter.GB
+	// MinCheckLeftSpaceThreshold 需要检查剩余空间是否足够的最小文件大小
+	MinCheckLeftSpaceThreshold = 64 * converter.MB
 )
 
 var (

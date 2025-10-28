@@ -30,3 +30,24 @@ func (pcs *BaiduPCS) QuotaInfo() (quota, used int64, pcsError pcserror.Error) {
 
 	return quotaInfo.Quota, quotaInfo.Used, nil
 }
+
+// SpaceLeftInfo 获取当前用户剩余空间
+func (pcs *BaiduPCS) SpaceLeftInfo() (free int64, pcsError pcserror.Error) {
+	dataReadCloser, pcsError := pcs.PrepareQuotaInfo()
+	if pcsError != nil {
+		return
+	}
+
+	defer dataReadCloser.Close()
+
+	quotaInfo := &quotaInfo{
+		PCSErrInfo: pcserror.NewPCSErrorInfo(OperationQuotaInfo),
+	}
+
+	pcsError = pcserror.HandleJSONParse(OperationQuotaInfo, dataReadCloser, quotaInfo)
+	if pcsError != nil {
+		return
+	}
+
+	return quotaInfo.Quota - quotaInfo.Used, nil
+}

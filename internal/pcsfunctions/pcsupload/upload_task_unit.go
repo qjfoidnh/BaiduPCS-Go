@@ -91,6 +91,15 @@ func (utu *UploadTaskUnit) prepareFile() {
 		fmt.Printf("[%s] 文件超过32GB, 上传有可能失败, 建议分割文件...\n", utu.taskInfo.Id())
 	}
 
+	if utu.LocalFileChecksum.Length > baidupcs.MinCheckLeftSpaceThreshold {
+		freeSpace, err := utu.PCS.SpaceLeftInfo()
+		if err == nil && freeSpace < utu.LocalFileChecksum.Length {
+			fmt.Printf("[%s] 目标文件大小超过剩余空间, 跳过...\n", utu.taskInfo.Id())
+			utu.Step = JustGoon
+			return
+		}
+	}
+
 	if utu.NoRapidUpload {
 		//fmt.Printf("[%s] 注意: 跳过秒传将无法使用断点续传...\n", utu.taskInfo.Id())
 		pcsError, jsonData := utu.PCS.FakeRapidUpload(utu.SavePath, utu.Policy, utu.LocalFileChecksum.Length)

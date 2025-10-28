@@ -1,15 +1,15 @@
 {
     "FixedFileInfo": {
         "FileVersion": {
-            "Major": 3,
-            "Minor": 9,
-            "Patch": 9,
+            "Major": 4,
+            "Minor": 0,
+            "Patch": 0,
             "Build": 0
         },
         "ProductVersion": {
-            "Major": 3,
-            "Minor": 9,
-            "Patch": 9,
+            "Major": 4,
+            "Minor": 0,
+            "Patch": 0,
             "Build": 0
         },
         "FileFlagsMask": "3f",
@@ -22,14 +22,14 @@
         "Comments": "",
         "CompanyName": "qjfoidnh",
         "FileDescription": "百度网盘客户端(加强版)",
-        "FileVersion": "v3.9.9",
+        "FileVersion": "v4.0.0",
         "InternalName": "",
         "LegalCopyright": "© 2018-2025 qjfoidnh.",
         "LegalTrademarks": "",
         "OriginalFilename": "",
         "PrivateBuild": "",
         "ProductName": "BaiduPCS-Go",
-        "ProductVersion": "v3.9.9",
+        "ProductVersion": "v4.0.0",
         "SpecialBuild": ""
     },
     "VarFileInfo": {
