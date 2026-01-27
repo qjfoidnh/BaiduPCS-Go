@@ -21,6 +21,7 @@ type (
 		Download bool // 是否直接开始下载
 		Collect  bool // 多文件整合
 		Rname    bool // 随机改文件名
+		FsID     string // 指定fs_id转存
 	}
 )
 
