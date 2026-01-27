@@ -84,6 +84,14 @@ func RunShareTransfer(params []string, opt *baidupcs.TransferOption) {
 		fmt.Printf("%s失败: %s\n", baidupcs.OperationShareFileSavetoLocal, transMetas["ErrMsg"])
 		return
 	}
+
+	// 如果指定了 fs_id, 覆盖解析结果
+	if opt.FsID != "" {
+		transMetas["fs_id"] = "[" + opt.FsID + "]"
+		transMetas["filename"] = "user_specified_file" // 名字可能不准确，但不影响转存
+		transMetas["item_num"] = "1"
+	}
+
 	transMetas["path"] = GetActiveUser().Workdir
 	if transMetas["item_num"] != "1" && opt.Collect {
 		transMetas["filename"] += "等文件"
