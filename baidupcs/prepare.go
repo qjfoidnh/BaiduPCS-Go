@@ -172,7 +172,6 @@ func (pcs *BaiduPCS) PrepareFilesDirectoriesList(path string, options *OrderOpti
 		"path":  path,
 		"by":    *(*string)(unsafe.Pointer(&options.By)),
 		"order": *(*string)(unsafe.Pointer(&options.Order)),
-		"limit": "0-2147483647",
 	})
 	baiduPCSVerbose.Infof("%s URL: %s\n", OperationFilesDirectoriesList, pcsURL)
 
