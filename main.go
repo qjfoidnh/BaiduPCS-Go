@@ -1351,9 +1351,10 @@ func main() {
 					return nil
 				}
 				opt := &baidupcs.TransferOption{
-					Download: c.Bool("download"),
-					Collect:  c.Bool("collect"),
-					Rname:    c.Bool("rname"),
+					Download:  c.Bool("download"),
+					Collect:   c.Bool("collect"),
+					Rname:     c.Bool("rname"),
+					SkipRange: c.String("skiprange"),
 				}
 				pcscommand.RunShareTransfer(c.Args(), opt)
 				return nil
@@ -1370,6 +1371,57 @@ func main() {
 				cli.BoolFlag{
 					Name:  "rname",
 					Usage: "秒传随机替换4位文件名提高成功率",
+				},
+				cli.StringFlag{
+					Name:  "skiprange",
+					Usage: "跳过转存的目录名，如 0001-1000",
+				},
+			},
+		},
+		{
+			Name:      "transferbatch",
+			Aliases:   []string{"tb"},
+			Usage:     "批量转存大量文件",
+			UsageText: app.Name + " transferbatch <分享链接> <提取码>(如果有)",
+			Category:  "百度网盘",
+			Before:    reloadFn,
+			Description: `
+			批量转存大量文件, 支持超过服务器单次限制的大量文件转存
+			自动分批转存, 支持并发控制
+
+		实例：
+		BaiduPCS-Go transferbatch pan.baidu.com/s/1VYzSl7465sdrQXe8GT5RdQ 704e
+		BaiduPCS-Go transferbatch https://pan.baidu.com/s/1VYzSl7465sdrQXe8GT5RdQ 704e -parallel=3 -batchsize=50
+		BaiduPCS-Go tb https://pan.baidu.com/s/1VYzSl7465sdrQXe8GT5RdQ -pwd=704e
+
+	`,
+			Action: func(c *cli.Context) error {
+				if c.NArg() < 1 || c.NArg() > 2 {
+					cli.ShowCommandHelp(c, c.Command.Name)
+					return nil
+				}
+				opt := &baidupcs.TransferOption{
+					BatchSize: c.Int("batchsize"),
+					Parallel:  c.Int("parallel"),
+					NoCollect: c.Bool("nocollect"),
+				}
+				pcscommand.RunShareTransferBatch(c.Args(), opt)
+				return nil
+			},
+			Flags: []cli.Flag{
+				cli.IntFlag{
+					Name:  "batchsize",
+					Usage: "每批转存的文件数量, 默认100",
+					Value: 100,
+				},
+				cli.IntFlag{
+					Name:  "parallel",
+					Usage: "并发转存的批次数, 默认1, 最大10",
+					Value: 1,
+				},
+				cli.BoolFlag{
+					Name:  "nocollect",
+					Usage: "不整合到同一目录, 直接转存到当前目录",
 				},
 			},
 		},

@@ -2,9 +2,6 @@ package baidupcs
 
 import (
 	"fmt"
-	"github.com/qjfoidnh/BaiduPCS-Go/pcsutil"
-	"github.com/qjfoidnh/BaiduPCS-Go/requester"
-	"github.com/tidwall/gjson"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -13,14 +10,31 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
+
+	"github.com/qjfoidnh/BaiduPCS-Go/pcsutil"
+	"github.com/qjfoidnh/BaiduPCS-Go/requester"
+	"github.com/tidwall/gjson"
 )
 
 type (
 	// ShareOption 分享可选项
 	TransferOption struct {
-		Download bool // 是否直接开始下载
-		Collect  bool // 多文件整合
-		Rname    bool // 随机改文件名
+		Download  bool   // 是否直接开始下载
+		Collect   bool   // 多文件整合
+		Rname     bool   // 随机改文件名
+		NoCollect bool   // 不创建汇总目录
+		BatchSize int    // 每批转存文件数
+		Parallel  int    // 并发数
+		SkipRange string // 跳过转存的目录范围，如 "0001-1000"
+	}
+
+	// ShareFileInfo 分享文件信息
+	ShareFileInfo struct {
+		FsID      int64  // 文件ID
+		Filename  string // 文件名
+		Path      string // 路径
+		FileCount int    // 叶子目录中文件数
 	}
 )
 
@@ -37,6 +51,184 @@ func (pcs *BaiduPCS) GenerateShareQueryURL(subPath string, params map[string]str
 
 	shareURL.RawQuery = uv.Encode()
 	return shareURL
+}
+
+func (pcs *BaiduPCS) GetShareFileList(shareID int64, shareUK, shortURL, bdstoken string, opt *TransferOption, recursive bool) (chan *ShareFileInfo, string) {
+	return pcs.GetShareFileListEx(shareID, shareUK, shortURL, bdstoken, opt, recursive, false)
+}
+
+func (pcs *BaiduPCS) GetShareFileListEx(shareID int64, shareUK, shortURL, bdstoken string, opt *TransferOption, recursive, collectLeafDirs bool) (chan *ShareFileInfo, string) {
+	visitedDirs := make(map[int64]bool)
+	fileChan := make(chan *ShareFileInfo, 1000) // buffer to avoid blocking
+	errChan := make(chan string, 1)
+	go func() {
+		defer close(fileChan)
+		err, _ := pcs.getShareFileListRecursiveEx(shareID, shareUK, shortURL, bdstoken, recursive,
+			collectLeafDirs, "/", 0, visitedDirs, 0,
+			fileChan, opt)
+		if err != "" {
+			errChan <- err
+		}
+		close(errChan)
+	}()
+
+	select {
+	case err := <-errChan:
+		return nil, err
+	default:
+		return fileChan, ""
+	}
+}
+
+func (pcs *BaiduPCS) getShareFileListRecursive(shareID int64, shareUK, shortURL, bdstoken string, recursive bool, parentPath string, visitedDirs map[int64]bool, depth int, fileChan chan *ShareFileInfo, opt *TransferOption) string {
+	if strings.Contains(parentPath, opt.SkipRange) {
+		baiduPCSVerbose.Infof("跳过目录1: %s\n", parentPath)
+
+		return "skipped"
+	}
+	err, _ := pcs.getShareFileListRecursiveEx(shareID, shareUK, shortURL, bdstoken, recursive,
+		false, parentPath, 0, visitedDirs, depth,
+		fileChan, opt)
+	return err
+}
+
+func (pcs *BaiduPCS) getShareFileListRecursiveEx(shareID int64, shareUK, shortURL, bdstoken string, recursive,
+	collectLeafDirs bool, parentPath string, currentFsID int64, visitedDirs map[int64]bool, depth int,
+	fileChan chan *ShareFileInfo, opt *TransferOption) (string, int) {
+	page := 1
+	pageSize := 100
+
+	if depth > 100 {
+		return "", 0
+	}
+
+	totalCount := 0
+	hasChildDir := false
+	dirFileCount := 0
+
+	for {
+		rootVal := "1"
+		if parentPath != "/" {
+			rootVal = "0"
+		}
+		featureMap := map[string]string{
+			"bdstoken": bdstoken,
+			"root":     rootVal,
+			"web":      "5",
+			"app_id":   PanAppID,
+			"shorturl": shortURL,
+			"channel":  "chunlei",
+			"page":     strconv.Itoa(page),
+			"num":      strconv.Itoa(pageSize),
+		}
+		queryShareInfoUrl := pcs.GenerateShareQueryURL("list", featureMap).String()
+
+		postData := map[string]string{
+			"dir": parentPath,
+		}
+
+		if strings.Contains(parentPath, opt.SkipRange) {
+			baiduPCSVerbose.Infof("跳过目录3: %s\n", parentPath)
+			continue
+		}
+
+		dataReadCloser, panError := pcs.sendReqReturnReadCloser(reqTypePan, OperationShareFileSavetoLocal, http.MethodPost, queryShareInfoUrl, postData, map[string]string{
+			"User-Agent":   requester.UserAgent,
+			"Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+		})
+		if panError != nil {
+			return "获取文件列表失败: " + panError.GetError().Error(), totalCount
+		}
+
+		body, err := ioutil.ReadAll(dataReadCloser)
+		dataReadCloser.Close()
+		if err != nil {
+			return "读取文件列表失败", totalCount
+		}
+
+		errno := gjson.Get(string(body), `errno`).Int()
+		if errno != 0 {
+			if errno == 4 {
+				time.Sleep(time.Second)
+				continue
+			}
+			return fmt.Sprintf("获取文件列表失败, 错误码%d", errno), totalCount
+		}
+
+		list := gjson.Get(string(body), `list`).Array()
+		if len(list) == 0 {
+			break
+		}
+
+		for _, item := range list {
+			fsID := item.Get(`fs_id`).Int()
+			filename := item.Get(`server_filename`).String()
+			filePath := item.Get(`path`).String()
+			isDir := item.Get(`isdir`).Int() == 1
+
+			if filename == "." || filename == ".." {
+				continue
+			}
+
+			if strings.Contains(filePath, opt.SkipRange) {
+				baiduPCSVerbose.Infof("跳过目录4: %s\n", filePath)
+
+				continue
+			}
+
+			if isDir && recursive {
+				if visitedDirs[fsID] {
+					continue
+				}
+
+				visitedDirs[fsID] = true
+				hasChildDir = true
+
+				subPath := filePath + "/"
+				if !strings.HasSuffix(subPath, "/") {
+					subPath = subPath + "/"
+				}
+
+				errMsg, subCount := pcs.getShareFileListRecursiveEx(shareID, shareUK, shortURL, bdstoken, true,
+					collectLeafDirs, subPath, fsID, visitedDirs, depth+1,
+					fileChan, opt)
+				if errMsg != "" {
+					return errMsg, totalCount
+				}
+
+				totalCount += subCount
+			} else if !isDir {
+				if collectLeafDirs && recursive {
+					dirFileCount++
+				} else if !collectLeafDirs {
+					fileChan <- &ShareFileInfo{
+						FsID:     fsID,
+						Filename: filename,
+						Path:     filePath,
+					}
+					totalCount++
+				}
+			}
+		}
+
+		if len(list) < pageSize {
+			break
+		}
+		page++
+	}
+
+	if collectLeafDirs && recursive && currentFsID != 0 && !hasChildDir {
+		dirPath := strings.TrimSuffix(parentPath, "/")
+		fileChan <- &ShareFileInfo{
+			FsID:      currentFsID,
+			Filename:  path.Base(dirPath),
+			Path:      dirPath,
+			FileCount: dirFileCount,
+		}
+		totalCount++
+	}
+
+	return "", totalCount
 }
 
 func (pcs *BaiduPCS) ExtractShareInfo(shareURL, shardID, shareUK, bdstoken string) (res map[string]string) {
@@ -194,7 +386,7 @@ func (pcs *BaiduPCS) GenerateRequestQuery(mode string, params map[string]string)
 	errno := gjson.Get(string(body), `errno`).Int()
 	if errno != 0 {
 		res["ErrNo"] = "3"
-		res["ErrMsg"] = "获取分享项元数据错误"
+		res["ErrMsg"] = "获取分享项元数据错误:" + string(body)
 		if mode == "POST" && errno == 12 {
 			path := gjson.Get(string(body), `info.0.path`).String()
 			_, file := filepath.Split(path) // Should be path.Split here, but never mind~
@@ -271,4 +463,71 @@ func (pcs *BaiduPCS) SuperTransfer(params map[string]string, limit string) {
 	//}
 	return
 
+}
+
+func (pcs *BaiduPCS) BatchTransferShortURL(shortURL, referer, shareID, shareUK, bdstoken string, fsIDs []int64, targetPath string, filename string) (successCount int, errMsg string) {
+	var fidsStr string = "["
+	for _, sid := range fsIDs {
+		fidsStr += strconv.FormatInt(sid, 10) + ","
+	}
+	if len(fsIDs) > 0 {
+		fidsStr = fidsStr[:len(fidsStr)-1]
+	}
+	fidsStr += "]"
+
+	shareUrl := pcs.GenerateShareQueryURL("transfer", map[string]string{
+		"app_id":     PanAppID,
+		"channel":    "chunlei",
+		"clienttype": "0",
+		"web":        "1",
+		"bdstoken":   bdstoken,
+		"shareid":    shareID,
+		"from":       shareUK,
+		"filename":   filename,
+	})
+
+	postdata := map[string]string{
+		"fsidlist": fidsStr,
+		"path":     targetPath,
+	}
+
+	headers := map[string]string{
+		"User-Agent":   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.100 Safari/537.36",
+		"Content-Type": "application/x-www-form-urlencoded",
+		"Referer":      referer,
+	}
+
+	dataReadCloser, panError := pcs.sendReqReturnReadCloser(reqTypePan, OperationShareFileSavetoLocal, http.MethodPost, shareUrl.String(), postdata, headers)
+	if panError != nil {
+		return 0, "网络错误: " + panError.GetError().Error()
+	}
+	defer dataReadCloser.Close()
+
+	body, err := ioutil.ReadAll(dataReadCloser)
+	if err != nil {
+		return 0, "读取响应失败"
+	}
+
+	if !gjson.Valid(string(body)) {
+		return 0, "响应JSON解析错误"
+	}
+
+	errno := gjson.Get(string(body), `errno`).Int()
+	if errno != 0 {
+		errMsgStr := gjson.Get(string(body), `errmsg`).String()
+		if errMsgStr == "" {
+			errMsgStr = fmt.Sprintf("未知错误, 错误码%d", errno)
+		}
+		if errno == 12 {
+			targetFileNums := gjson.Get(string(body), `target_file_nums`).Int()
+			targetFileNumsLimit := gjson.Get(string(body), `target_file_nums_limit`).Int()
+			if targetFileNums > 0 && targetFileNumsLimit > 0 {
+				return 0, fmt.Sprintf("转存文件数%d超过当前用户上限, 当前用户单次最大转存数%d", targetFileNums, targetFileNumsLimit)
+			}
+		}
+		return 0, errMsgStr
+	}
+
+	infoList := gjson.Get(string(body), `info`).Array()
+	return len(infoList), ""
 }
