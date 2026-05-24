@@ -5,18 +5,18 @@ import (
 	"sort"
 )
 
+// ManagerConfig 管理器配置
+type ManagerConfig struct {
+	AutoDetect bool
+	Preferred  []string
+	Fallback   string
+}
+
 // Manager 播放器管理器
 type Manager struct {
 	factories map[string]PlayerFactory
 	player    Player
 	config    ManagerConfig
-}
-
-// ManagerConfig 管理器配置
-type ManagerConfig struct {
-	AutoDetect bool     // 自动检测可用播放器
-	Preferred  []string // 首选播放器列表（按优先级排列）
-	Fallback   string   // 备选播放器
 }
 
 // NewManager 创建播放器管理器
@@ -25,12 +25,11 @@ func NewManager(config ManagerConfig) *Manager {
 		factories: make(map[string]PlayerFactory),
 		config:    config,
 	}
-	
+
 	// 注册内置播放器
 	m.Register(&VLCFactory{})
 	m.Register(&MPVFactory{})
-	m.Register(&FFplayFactory{})
-	
+
 	return m
 }
 
@@ -47,62 +46,58 @@ func (m *Manager) DetectPlayers() []string {
 			available = append(available, name)
 		}
 	}
-	
-	// 按优先级排序
+
 	sort.Slice(available, func(i, j int) bool {
 		pi := m.getPriority(available[i])
 		pj := m.getPriority(available[j])
 		return pi < pj
 	})
-	
+
 	return available
 }
 
-// getPriority 获取播放器优先级
 func (m *Manager) getPriority(name string) int {
 	for i, p := range m.config.Preferred {
 		if p == name {
 			return i
 		}
 	}
-	return 999 // 不在首选列表中
+	return 999
 }
 
 // SetPlayer 设置播放器
 func (m *Manager) SetPlayer(name string) error {
-	// 停止当前播放器
 	if m.player != nil {
 		m.player.Stop()
 	}
-	
+
 	factory, ok := m.factories[name]
 	if !ok {
 		return fmt.Errorf("未知播放器: %s", name)
 	}
-	
+
 	if !factory.IsAvailable() {
 		return fmt.Errorf("播放器不可用: %s", name)
 	}
-	
+
 	player, err := factory.Create()
 	if err != nil {
 		return fmt.Errorf("创建播放器失败: %v", err)
 	}
-	
+	player.Start()
 	m.player = player
 	fmt.Printf("已选择播放器: %s\n", name)
 	return nil
 }
 
-// AutoSelect 自动选择最佳播放器
+// AutoSelect 自动选择播放器
 func (m *Manager) AutoSelect() error {
 	available := m.DetectPlayers()
-	
+
 	if len(available) == 0 {
 		return fmt.Errorf("没有可用的播放器")
 	}
-	
-	// 优先选择首选列表中的播放器
+
 	for _, preferred := range m.config.Preferred {
 		for _, avail := range available {
 			if avail == preferred {
@@ -110,8 +105,7 @@ func (m *Manager) AutoSelect() error {
 			}
 		}
 	}
-	
-	// 没有首选播放器，使用第一个可用的
+
 	return m.SetPlayer(available[0])
 }
 
@@ -131,7 +125,7 @@ func (m *Manager) Start() error {
 			return fmt.Errorf("未选择播放器")
 		}
 	}
-	
+
 	return m.player.Start()
 }
 
@@ -151,12 +145,130 @@ func (m *Manager) Play(url string) error {
 	return m.player.Play(url)
 }
 
+// Pause 暂停
+func (m *Manager) Pause() error {
+	if err := m.ensurePlayer(); err != nil {
+		return err
+	}
+	return m.player.Pause()
+}
+
+// Resume 继续
+func (m *Manager) Resume() error {
+	if err := m.ensurePlayer(); err != nil {
+		return err
+	}
+	return m.player.Resume()
+}
+
+// Next 下一首
+func (m *Manager) Next() error {
+	if err := m.ensurePlayer(); err != nil {
+		return err
+	}
+	return m.player.Next()
+}
+
+// Previous 上一首
+func (m *Manager) Previous() error {
+	if err := m.ensurePlayer(); err != nil {
+		return err
+	}
+	return m.player.Previous()
+}
+
+// Seek 跳转
+func (m *Manager) Seek(position int) error {
+	if err := m.ensurePlayer(); err != nil {
+		return err
+	}
+	return m.player.Seek(position)
+}
+
+// AddToPlaylist 添加到播放列表
+func (m *Manager) AddToPlaylist(url string) error {
+	if err := m.ensurePlayer(); err != nil {
+		return err
+	}
+	return m.player.AddToPlaylist(url)
+}
+
+// ClearPlaylist 清空播放列表
+func (m *Manager) ClearPlaylist() error {
+	if err := m.ensurePlayer(); err != nil {
+		return err
+	}
+	return m.player.ClearPlaylist()
+}
+
+// SetVolume 设置音量
+func (m *Manager) SetVolume(level int) error {
+	if err := m.ensurePlayer(); err != nil {
+		return err
+	}
+	return m.player.SetVolume(level)
+}
+
+// SetSpeed 设置速度
+func (m *Manager) SetSpeed(speed float64) error {
+	if err := m.ensurePlayer(); err != nil {
+		return err
+	}
+	return m.player.SetSpeed(speed)
+}
+
+// SetLoop 设置循环
+func (m *Manager) SetLoop(start, end float64) error {
+	if err := m.ensurePlayer(); err != nil {
+		return err
+	}
+	return m.player.SetLoop(start, end)
+}
+
+// SetShuffle 设置随机播放
+func (m *Manager) SetShuffle(enabled bool) error {
+	if err := m.ensurePlayer(); err != nil {
+		return err
+	}
+	return m.player.SetShuffle(enabled)
+}
+
+// SetRepeat 设置重复模式
+func (m *Manager) SetRepeat(mode RepeatMode) error {
+	if err := m.ensurePlayer(); err != nil {
+		return err
+	}
+	return m.player.SetRepeat(mode)
+}
+
 // SendCommand 发送命令
 func (m *Manager) SendCommand(cmd string) error {
 	if err := m.ensurePlayer(); err != nil {
 		return err
 	}
 	return m.player.SendCommand(cmd)
+}
+
+// ListPlayers 列出所有播放器
+func (m *Manager) ListPlayers() string {
+	var result string
+	result += "可用播放器:\n"
+
+	for name, factory := range m.factories {
+		status := "✗"
+		if factory.IsAvailable() {
+			status = "✓"
+		}
+
+		current := ""
+		if m.player != nil && m.player.Name() == name {
+			current = " (当前)"
+		}
+
+		result += fmt.Sprintf("  [%s] %s%s\n", status, name, current)
+	}
+
+	return result
 }
 
 // ensurePlayer 确保播放器可用
@@ -166,33 +278,11 @@ func (m *Manager) ensurePlayer() error {
 			return err
 		}
 	}
-	
+
 	if !m.player.IsRunning() {
 		return m.player.Start()
 	}
-	
-	return nil
-}
 
-// ListPlayers 列出所有播放器
-func (m *Manager) ListPlayers() string {
-	var result string
-	result += "可用播放器:\n"
-	
-	for name, factory := range m.factories {
-		status := "✗"
-		if factory.IsAvailable() {
-			status = "✓"
-		}
-		
-		current := ""
-		if m.player != nil && m.player.Name() == name {
-			current = " (当前)"
-		}
-		
-		result += fmt.Sprintf("  [%s] %s%s\n", status, name, current)
-	}
-	
-	return result
+	return nil
 }
 

@@ -147,3 +147,60 @@ func (p *FFplayPlayer) GetState() State {
 	return p.state
 }
 
+
+// 补全 Player 接口
+func (p *FFplayPlayer) GetDuration() (float64, error) {
+return 0, fmt.Errorf("FFplay 不支持获取时长")
+}
+
+func (p *FFplayPlayer) RemoveFromPlaylist(index int) error {
+return fmt.Errorf("FFplay 不支持播放列表")
+}
+
+func (p *FFplayPlayer) PlayAtIndex(index int) error {
+return fmt.Errorf("FFplay 不支持播放列表")
+}
+
+func (p *FFplayPlayer) SetShuffle(enabled bool) error {
+return fmt.Errorf("FFplay 不支持随机播放")
+}
+
+func (p *FFplayPlayer) SetRepeat(mode RepeatMode) error {
+return fmt.Errorf("FFplay 不支持循环模式")
+}
+
+func (p *FFplayPlayer) GetVolume() (int, error) {
+return 0, fmt.Errorf("FFplay 不支持音量查询")
+}
+
+func (p *FFplayPlayer) Mute() error {
+return fmt.Errorf("FFplay 不支持静音")
+}
+
+func (p *FFplayPlayer) Unmute() error {
+return fmt.Errorf("FFplay 不支持取消静音")
+}
+
+func (p *FFplayPlayer) SetAudioTrack(trackID int) error {
+return fmt.Errorf("FFplay 不支持音轨切换")
+}
+
+func (p *FFplayPlayer) SetSubtitleDelay(delay float64) error {
+return fmt.Errorf("FFplay 不支持字幕延迟")
+}
+
+func (p *FFplayPlayer) GetPosition() (float64, error) {
+return 0, fmt.Errorf("FFplay 不支持获取位置")
+}
+
+func (p *FFplayPlayer) SetLoop(start, end float64) error {
+return fmt.Errorf("FFplay 不支持 AB 循环")
+}
+
+func (p *FFplayPlayer) TakeSnapshot() (string, error) {
+return "", fmt.Errorf("FFplay 不支持截图")
+}
+
+func (p *FFplayPlayer) GetPlaylist() ([]PlaylistItem, error) {
+return nil, fmt.Errorf("FFplay 不支持播放列表")
+}

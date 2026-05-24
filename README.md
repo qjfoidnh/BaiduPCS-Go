@@ -1078,7 +1078,6 @@ cli交互模式下, 运行命令 `config reset`
 * 用户名登录时图片验证码至少要输入两次, 第一次的输入无效
 * 登录出现手机/邮箱验证时要输入至少4次图片验证码
 
-
 # TODO
 
 * 转存文件数量绕过单次限制
@@ -1086,3 +1085,57 @@ cli交互模式下, 运行命令 `config reset`
 # 交流反馈
 
 提交Issue: [Issues](https://github.com/qjfoidnh/BaiduPCS-Go/issues)
+
+
+## 播放器功能
+
+BaiduPCS-Go 播放器是一个基于 BaiduPCS-Go 的在线媒体播放工具，支持播放百度网盘中的音频文件。
+
+### 快速开始
+
+1. **启动播放控制器**
+   ```bash
+   ./BaiduPCS-Go play
+   ```
+
+2. **添加文件到播放列表**
+   ```bash
+   add <文件路径>
+   ```
+
+3. **播放文件或目录**
+   ```bash
+   play <文件路径>      # 播放单个文件
+   play <目录路径>      # 播放整个目录（自动播放所有音频文件）
+   ```
+
+4. **播放控制**
+   ```bash
+   pause, play          # 暂停/播放
+   next, prev           # 下一首/上一首
+   seek <秒数>          # 跳转
+   volume <0-100>       # 音量
+   speed <倍速>         # 播放速度
+   ```
+
+5. **播放列表管理**
+   ```bash
+   list, clear          # 查看播放列表/清空
+   ```
+
+6. **播放器管理**
+   ```bash
+   player list          # 列出可用播放器
+   player switch <名称> # 切换播放器
+   ```
+
+### 支持的格式
+
+- 音频：MP3, WAV, FLAC, M4A, OGG, AAC, WMA, APE, OPUS, AMR, MIDI, AIFF, AU, RA, RAM, WV, TAK, DTS, AC3, EAC3, DTS-HD
+- 播放器：VLC, MPV, FFplay
+
+### 详细文档
+
+- [完整使用说明](PLAY_USAGE.md)
+- [更新日志](CHANGELOG.md)
+

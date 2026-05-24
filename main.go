@@ -1276,7 +1276,7 @@ func main() {
 				fmt.Printf("检测到环境: %s\n", env)
 				
 				// 初始化播放器
-				pcscommand.InitPlayer()
+				//pcscommand.InitPlayer()
 				
 				if c.NArg() == 0 {
 					return pcscommand.Play(c)
