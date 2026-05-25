@@ -1093,6 +1093,11 @@ BaiduPCS-Go 播放器是一个基于 BaiduPCS-Go 的在线媒体播放工具，�
 
 ### 快速开始
 
+**requment**
+  ```bash
+  apt install vlc
+  ```
+
 1. **启动播放控制器**
    ```bash
    ./BaiduPCS-Go play
