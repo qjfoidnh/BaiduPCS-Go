@@ -4,14 +4,17 @@ import (
 	"context"
 	"crypto/tls"
 	"errors"
+	"fmt"
 	"github.com/qjfoidnh/BaiduPCS-Go/baidupcs/expires"
 	"github.com/qjfoidnh/BaiduPCS-Go/baidupcs/expires/cachemap"
+	"github.com/rs/dnscache"
 	mathrand "math/rand"
 	"net"
 	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -33,6 +36,13 @@ var (
 	ErrProxyAddrEmpty = errors.New("proxy addr is empty")
 
 	tcpCache = cachemap.GlobalCacheOpMap.LazyInitCachePoolOp("requester/tcp")
+
+	// dnsResolver 通过 singleflight 合并同 host 查询；dnsLookupMu 串行化对标准库解析器的调用，
+	// 避免并发 Lookup 时在 tryOneName 路径触发 panic。
+	dnsResolver = &dnscache.Resolver{
+		Timeout: 30 * time.Second,
+	}
+	dnsLookupMu sync.Mutex
 )
 
 // SetLocalTCPAddrList 设置网卡地址
@@ -132,12 +142,33 @@ func getServerName(address string) string {
 // resolveTCPHost
 // 解析的tcpaddr没有port!!!
 func resolveTCPHost(ctx context.Context, host string) (ip net.IP, err error) {
-	addrs, err := net.DefaultResolver.LookupIPAddr(ctx, host)
-	if err != nil {
-		return
+	// host 已是字面量 IP 时直接返回，无需 DNS 查询
+	if parsed := net.ParseIP(host); parsed != nil {
+		return parsed, nil
 	}
 
-	return addrs[0].IP, nil
+	// 标准库 DNS 偶发 panic 时转为 error，避免进程崩溃
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("dns lookup panic for %q: %v", host, r)
+		}
+	}()
+
+	dnsLookupMu.Lock()
+	addrs, lookupErr := dnsResolver.LookupHost(ctx, host)
+	dnsLookupMu.Unlock()
+	if lookupErr != nil {
+		return nil, lookupErr
+	}
+	if len(addrs) == 0 {
+		return nil, fmt.Errorf("no IP addresses found for host %q", host)
+	}
+
+	ip = net.ParseIP(addrs[0])
+	if ip == nil {
+		return nil, fmt.Errorf("invalid IP address %q for host %q", addrs[0], host)
+	}
+	return ip, nil
 }
 
 func dialContext(ctx context.Context, network, address string) (conn net.Conn, err error) {

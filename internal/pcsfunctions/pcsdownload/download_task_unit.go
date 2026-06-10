@@ -93,6 +93,14 @@ func (dtu *DownloadTaskUnit) verboseInfof(format string, a ...interface{}) {
 	}
 }
 
+// removeEmptyDownloadFile 删除 0 字节的残缺下载文件
+func removeEmptyDownloadFile(path string) {
+	info, statErr := os.Stat(path)
+	if statErr == nil && info.Size() == 0 {
+		_ = os.Remove(path)
+	}
+}
+
 // download 执行下载
 func (dtu *DownloadTaskUnit) download(downloadURL string, client *requester.HTTPClient) (err error) {
 	var (
@@ -101,6 +109,13 @@ func (dtu *DownloadTaskUnit) download(downloadURL string, client *requester.HTTP
 	)
 
 	if !dtu.Cfg.IsTest {
+		// panic 时清理空文件并转为可重试错误，避免整进程退出
+		defer func() {
+			if r := recover(); r != nil {
+				removeEmptyDownloadFile(dtu.SavePath)
+				err = fmt.Errorf("%s: panic: %v", StrDownloadFailed, r)
+			}
+		}()
 		// 非测试下载
 		dtu.Cfg.InstanceStatePath = dtu.SavePath + DownloadSuffix
 
@@ -200,14 +215,10 @@ func (dtu *DownloadTaskUnit) download(downloadURL string, client *requester.HTTP
 		// 下载发生错误
 		if !dtu.Cfg.IsTest {
 			// 下载失败, 删去空文件
-			if info, infoErr := file.Stat(); infoErr == nil {
-				if info.Size() == 0 {
-					// 空文件, 应该删除
-					dtu.verboseInfof("[%s] remove empty file: %s\n", dtu.taskInfo.Id(), dtu.SavePath)
-					removeErr := os.Remove(dtu.SavePath)
-					if removeErr != nil {
-						dtu.verboseInfof("[%s] remove file error: %s\n", dtu.taskInfo.Id(), removeErr)
-					}
+			if info, infoErr := file.Stat(); infoErr == nil && info.Size() == 0 {
+				dtu.verboseInfof("[%s] remove empty file: %s\n", dtu.taskInfo.Id(), dtu.SavePath)
+				if removeErr := os.Remove(dtu.SavePath); removeErr != nil {
+					dtu.verboseInfof("[%s] remove file error: %s\n", dtu.taskInfo.Id(), removeErr)
 				}
 			}
 		}
