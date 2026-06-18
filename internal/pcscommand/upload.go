@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/qjfoidnh/BaiduPCS-Go/baidupcs"
 	"github.com/qjfoidnh/BaiduPCS-Go/internal/pcsconfig"
+	"github.com/qjfoidnh/BaiduPCS-Go/internal/pcsfunctions/pcsdownload"
 	"github.com/qjfoidnh/BaiduPCS-Go/internal/pcsfunctions/pcsupload"
 	"github.com/qjfoidnh/BaiduPCS-Go/pcstable"
 	"github.com/qjfoidnh/BaiduPCS-Go/pcsutil"
@@ -31,6 +32,7 @@ type (
 		NoSplitFile     bool   // 禁用分片上传
 		Policy          string // 同名文件处理策略
 		NoFilenameCheck bool   // 禁用文件名合法性检查
+		IsLineByLine    bool   // 是否逐行输出
 	}
 )
 
@@ -143,6 +145,7 @@ func RunUpload(localPaths []string, savePath string, opt *UploadOptions) {
 				NoSplitFile:       opt.NoSplitFile,
 				UploadStatistic:   statistic,
 				Policy:            opt.Policy,
+				IsLineByLine:      opt.IsLineByLine,
 			}, opt.MaxRetry)
 			if LoadCount >= opt.Load {
 				LoadCount = opt.Load
@@ -159,6 +162,10 @@ func RunUpload(localPaths []string, savePath string, opt *UploadOptions) {
 
 	// 设置上传文件并发数
 	executor.SetParallel(LoadCount)
+
+	// Set dynamic dashboard status
+	pcsdownload.GetProgressManager().SetEnabled(!opt.IsLineByLine)
+
 	// 执行上传任务
 	executor.Execute()
 

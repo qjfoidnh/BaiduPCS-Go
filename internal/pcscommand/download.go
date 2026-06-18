@@ -33,6 +33,7 @@ type (
 		ModifyMTime          bool
 		FullPath             bool
 		LinkPrefer           int
+		IsLineByLine         bool
 	}
 
 	// LocateDownloadOption 获取下载链接可选参数
@@ -140,7 +141,10 @@ func RunDownload(paths []string, options *DownloadOptions) {
 	sort.Slice(file_dir_list, func(i, j int) bool {
 		return file_dir_list[i].Size < file_dir_list[j].Size
 	})
-	for _,v := range file_dir_list {
+	// 列表展示所有待下载文件及对应的保存位置
+	tb := pcstable.NewTable(os.Stdout)
+	tb.SetHeader([]string{"#", "文件路径", "保存位置"})
+	for _, v := range file_dir_list {
 		newCfg := *cfg
 		unit := pcsdownload.DownloadTaskUnit{
 			Cfg:                  &newCfg, // 复制一份新的cfg
@@ -153,14 +157,13 @@ func RunDownload(paths []string, options *DownloadOptions) {
 			IsExecutedPermission: options.IsExecutedPermission,
 			IsOverwrite:          options.IsOverwrite,
 			NoCheck:              options.NoCheck,
+			IsLineByLine:         options.IsLineByLine,
 			DlinkPrefer:          options.LinkPrefer,
 			DownloadMode:         options.DownloadMode,
 			ModifyMTime:          options.ModifyMTime,
 			PcsPath:              v.Path,
 			FileInfo:             v,
 		}
-		// 设置下载并发数
-		executor.SetParallel(loadCount)
 		// 设置储存的路径
 		vPath := v.Path
 		if !options.FullPath {
@@ -172,12 +175,18 @@ func RunDownload(paths []string, options *DownloadOptions) {
 			// 使用默认的保存路径
 			unit.SavePath = GetActiveUser().GetSavePath(vPath)
 		}
+
 		info := executor.Append(&unit, options.MaxRetry)
-		fmt.Printf("[%s] 加入下载队列: %s\n", info.Id(), v.Path)
+		tb.Append([]string{info.Id(), v.Path, unit.SavePath})
 	}
+	executor.SetParallel(loadCount)
+	tb.Render()
 
 	// 开始计时
 	statistic.StartTimer()
+
+	// 设置是否启用动态面板
+	pcsdownload.GetProgressManager().SetEnabled(!options.IsLineByLine)
 
 	// 开始执行
 	executor.Execute()

@@ -3,6 +3,14 @@ package pcsdownload
 import (
 	"errors"
 	"fmt"
+	"io"
+	"net/http"
+	"os"
+	"path/filepath"
+	"strconv"
+	"strings"
+	"time"
+
 	"github.com/qjfoidnh/BaiduPCS-Go/baidupcs"
 	"github.com/qjfoidnh/BaiduPCS-Go/baidupcs/pcserror"
 	"github.com/qjfoidnh/BaiduPCS-Go/internal/pcsconfig"
@@ -14,13 +22,6 @@ import (
 	"github.com/qjfoidnh/BaiduPCS-Go/requester"
 	"github.com/qjfoidnh/BaiduPCS-Go/requester/downloader"
 	"github.com/qjfoidnh/BaiduPCS-Go/requester/transfer"
-	"io"
-	"net/http"
-	"os"
-	"path/filepath"
-	"strconv"
-	"strings"
-	"time"
 )
 
 type (
@@ -44,6 +45,7 @@ type (
 		IsExecutedPermission bool // 下载成功后是否加上执行权限
 		IsOverwrite          bool // 是否覆盖已存在的文件
 		NoCheck              bool // 不校验文件
+		IsLineByLine         bool // 是否逐行输出
 		DlinkPrefer          int  // 使用所有备选下载链接中的第几个链接
 		ModifyMTime          bool // 下载的文件mtime修改为与网盘一致
 
@@ -197,19 +199,19 @@ func (dtu *DownloadTaskUnit) download(downloadURL string, client *requester.HTTP
 
 		if !isComplete {
 			// 如果未完成下载, 就输出
-			fmt.Print(builder.String())
+			GetProgressManager().Update(dtu.taskInfo.Id(), builder.String())
 		}
 	})
 
 	der.OnExecute(func() {
 		if dtu.Cfg.IsTest {
-			fmt.Printf("[%s] 测试下载开始\n\n", dtu.taskInfo.Id())
+			GetProgressManager().Printf("[%s] 测试下载开始\n", dtu.taskInfo.Id())
 		}
 	})
 
 	err = der.Execute()
 	isComplete = true
-	fmt.Print("\n")
+	GetProgressManager().Remove(dtu.taskInfo.Id())
 
 	if err != nil {
 		// 下载发生错误
@@ -230,13 +232,13 @@ func (dtu *DownloadTaskUnit) download(downloadURL string, client *requester.HTTP
 		if dtu.IsExecutedPermission {
 			err = file.Chmod(0766)
 			if err != nil {
-				fmt.Printf("[%s] 警告, 加执行权限错误: %s\n", dtu.taskInfo.Id(), err)
+				GetProgressManager().Printf("[%s] 警告, 加执行权限错误: %s\n", dtu.taskInfo.Id(), err)
 			}
 		}
 
-		fmt.Printf("[%s] 下载完成, 保存位置: %s\n", dtu.taskInfo.Id(), dtu.SavePath)
+		GetProgressManager().Printf("[%s] 下载完成, 保存位置: %s\n", dtu.taskInfo.Id(), dtu.SavePath)
 	} else {
-		fmt.Printf("[%s] 测试下载结束\n", dtu.taskInfo.Id())
+		GetProgressManager().Printf("[%s] 测试下载结束\n", dtu.taskInfo.Id())
 	}
 
 	return nil
@@ -375,13 +377,13 @@ func (dtu *DownloadTaskUnit) checkFileValid(result *taskframework.TaskUnitRunRes
 	}
 	if dtu.Cfg.IsTest || dtu.NoCheck {
 		// 不检测文件有效性
-		fmt.Printf("[%s] 跳过文件有效性检验\n", dtu.taskInfo.Id())
+		GetProgressManager().Printf("[%s] 跳过文件有效性检验\n", dtu.taskInfo.Id())
 		return true
 	}
 
 	if dtu.FileInfo.Size >= 128*converter.MB {
 		// 大文件, 输出一句提示消息
-		fmt.Printf("[%s] 开始检验文件有效性, 请稍候...\n", dtu.taskInfo.Id())
+		GetProgressManager().Printf("[%s] 开始检验文件有效性, 请稍候...\n", dtu.taskInfo.Id())
 	}
 
 	// 就在这里处理校验出错
@@ -394,7 +396,7 @@ func (dtu *DownloadTaskUnit) checkFileValid(result *taskframework.TaskUnitRunRes
 			// 文件不支持校验
 			result.ResultMessage = "检验文件有效性"
 			result.Err = err
-			fmt.Printf("[%s] 检验文件有效性: %s\n", dtu.taskInfo.Id(), err)
+			GetProgressManager().Printf("[%s] 检验文件有效性: %s\n", dtu.taskInfo.Id(), err)
 			return true
 		case ErrDownloadFileBanned:
 			// 违规文件
@@ -412,7 +414,7 @@ func (dtu *DownloadTaskUnit) checkFileValid(result *taskframework.TaskUnitRunRes
 		}
 	}
 
-	fmt.Printf("[%s] 检验文件有效性成功: %s\n", dtu.taskInfo.Id(), dtu.SavePath)
+	GetProgressManager().Printf("[%s] 检验文件有效性成功: %s\n", dtu.taskInfo.Id(), dtu.SavePath)
 	return true
 }
 
@@ -420,10 +422,10 @@ func (dtu *DownloadTaskUnit) OnRetry(lastRunResult *taskframework.TaskUnitRunRes
 	// 输出错误信息
 	if lastRunResult.Err == nil {
 		// result中不包含Err, 忽略输出
-		fmt.Printf("[%s] %s, 重试 %d/%d\n", dtu.taskInfo.Id(), lastRunResult.ResultMessage, dtu.taskInfo.Retry(), dtu.taskInfo.MaxRetry())
+		GetProgressManager().Printf("[%s] %s, 重试 %d/%d\n", dtu.taskInfo.Id(), lastRunResult.ResultMessage, dtu.taskInfo.Retry(), dtu.taskInfo.MaxRetry())
 		return
 	}
-	fmt.Printf("[%s] %s, %s, 重试 %d/%d\n", dtu.taskInfo.Id(), lastRunResult.ResultMessage, lastRunResult.Err, dtu.taskInfo.Retry(), dtu.taskInfo.MaxRetry())
+	GetProgressManager().Printf("[%s] %s, %s, 重试 %d/%d\n", dtu.taskInfo.Id(), lastRunResult.ResultMessage, lastRunResult.Err, dtu.taskInfo.Retry(), dtu.taskInfo.MaxRetry())
 }
 
 func (dtu *DownloadTaskUnit) OnSuccess(lastRunResult *taskframework.TaskUnitRunResult) {
@@ -433,10 +435,10 @@ func (dtu *DownloadTaskUnit) OnFailed(lastRunResult *taskframework.TaskUnitRunRe
 	// 失败
 	if lastRunResult.Err == nil {
 		// result中不包含Err, 忽略输出
-		fmt.Printf("[%s] %s\n", dtu.taskInfo.Id(), lastRunResult.ResultMessage)
+		GetProgressManager().Printf("[%s] %s\n", dtu.taskInfo.Id(), lastRunResult.ResultMessage)
 		return
 	}
-	fmt.Printf("[%s] %s, %s\n", dtu.taskInfo.Id(), lastRunResult.ResultMessage, lastRunResult.Err)
+	GetProgressManager().Printf("[%s] %s, %s\n", dtu.taskInfo.Id(), lastRunResult.ResultMessage, lastRunResult.Err)
 }
 
 func (dtu *DownloadTaskUnit) OnComplete(lastRunResult *taskframework.TaskUnitRunResult) {
@@ -465,8 +467,7 @@ func (dtu *DownloadTaskUnit) Run() (result *taskframework.TaskUnitRunResult) {
 	}
 
 	// 输出文件信息
-	fmt.Print("\n")
-	fmt.Printf("[%s] ----\n%s\n", dtu.taskInfo.Id(), dtu.FileInfo.String())
+	GetProgressManager().Printf("\n[%s] ----\n%s\n", dtu.taskInfo.Id(), dtu.FileInfo.String())
 
 	// 如果是一个目录, 将子文件和子目录加入队列
 	if dtu.FileInfo.Isdir {
@@ -509,17 +510,17 @@ func (dtu *DownloadTaskUnit) Run() (result *taskframework.TaskUnitRunResult) {
 		return
 	}
 
-	fmt.Printf("[%s] 准备下载: %s\n", dtu.taskInfo.Id(), dtu.PcsPath)
+	// GetProgressManager().Printf("[%s] 准备下载: %s\n", dtu.taskInfo.Id(), dtu.PcsPath)
 
 	if !dtu.Cfg.IsTest && !dtu.IsOverwrite && FileExist(dtu.SavePath) {
-		fmt.Printf("[%s] 文件已经存在: %s, 跳过...\n", dtu.taskInfo.Id(), dtu.SavePath)
+		GetProgressManager().Printf("[%s] 文件已经存在: %s, 跳过...\n", dtu.taskInfo.Id(), dtu.SavePath)
 		result.Succeed = true // 执行成功
 		return
 	}
 
 	if !dtu.Cfg.IsTest {
 		// 不是测试下载, 输出下载路径
-		fmt.Printf("[%s] 将会下载到路径: %s\n\n", dtu.taskInfo.Id(), dtu.SavePath)
+		// GetProgressManager().Printf("[%s] 将会下载到路径: %s\n\n", dtu.taskInfo.Id(), dtu.SavePath)
 	}
 
 	var ok bool
