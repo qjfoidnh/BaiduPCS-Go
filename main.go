@@ -1170,6 +1170,161 @@ func main() {
 			},
 		},
 		{
+			Name:      "play",
+			Aliases:   []string{"p"},
+			Usage:     "播放音频/视频文件或进入控制器",
+			UsageText: app.Name + " play [文件路径]",
+			Description: `
+		从百度网盘播放多媒体文件或进入交互式控制器
+
+		不带参数: 进入交互式控制器
+		带参数: 直接播放指定文件
+
+		支持格式:
+		音频: mp3, flac, wav, aac, ogg, m4a, wma, ape
+		视频: mp4, mkv, avi, mov, flv, wmv, webm
+
+		控制器命令:
+		play/p  [路径]    播放文件/继续播放
+		pause/pa          暂停/继续
+		stop/s            停止播放
+		next/n            下一首
+		prev/pr           上一首
+		add/a  <路径>     添加到播放列表
+		list/l            查看播放列表
+		clear/c           清空播放列表
+		volume/v <0-255>  设置音量
+		seek/sk <秒>      跳转到指定位置
+		speed/sp <0.5-2>  设置播放速度
+		loop <开始> <结束> AB循环播放
+		subtitle/sub <文件> 加载字幕
+		snapshot/snap     截图
+		status/st         查看播放状态
+		cache [clear|clean] URL缓存管理
+		shutdown          关闭 VLC
+		help/h/?          显示帮助
+		quit/q/exit       退出控制器
+
+		示例:
+		BaiduPCS-Go play                    # 进入交互式控制器
+		BaiduPCS-Go play /音乐/歌曲.mp3      # 播放音频
+		BaiduPCS-Go play /视频/电影.mp4      # 播放视频
+		BaiduPCS-Go play https://example.com/video.mp4  # 播放URL
+			`,
+			Category: "百度网盘",
+			Before:   reloadFn,
+			Action: func(c *cli.Context) error {
+				if c.NArg() == 0 {
+					return pcscommand.Play(c)
+				}
+				return pcscommand.PlayFile(c.Args()[0])
+			},
+		},
+		{
+			Name:      "play0",
+			Aliases:   []string{"p"},
+			Usage:     "播放音频/视频文件或进入控制器",
+			UsageText: app.Name + " play [文件路径]",
+			Description: `
+		从百度网盘播放多媒体文件或进入交互式控制器
+
+		环境支持:
+		Termux CLI:  命令行交互模式
+		Termux X11:  图形界面模式 (需要安装 X11)
+		桌面环境:    自动选择最佳模式
+
+		不带参数: 进入交互式控制器
+		带参数: 直接播放指定文件
+
+		支持格式:
+		音频: mp3, flac, wav, aac, ogg, m4a, wma, ape
+		视频: mp4, mkv, avi, mov, flv, wmv, webm
+
+		控制器命令:
+		基本: play, pause, stop, next, prev
+		列表: add, list, clear
+		控制: volume, seek, speed, loop
+		其他: status, subtitle, snapshot, help
+
+		示例:
+		BaiduPCS-Go play                    # 进入控制器
+		BaiduPCS-Go play /音乐/歌曲.mp3      # 直接播放
+		BaiduPCS-Go play /视频/电影.mp4      # 播放视频
+			`,
+			Category: "百度网盘",
+			Before:   reloadFn,
+			Action: func(c *cli.Context) error {
+				// 检测环境并选择合适的模式（inline）
+				env := func() string {
+					// 检查是否在 Termux
+					if _, err := os.Stat("/data/data/com.termux"); err == nil {
+						// 检查是否有 X11
+						if os.Getenv("DISPLAY") != "" {
+							return "x11"
+						}
+						return "termux"
+					}
+					
+					// 检查是否有图形环境
+					if os.Getenv("DISPLAY") != "" {
+						return "x11"
+					}
+					
+					return "cli"
+				}()
+				
+				fmt.Printf("检测到环境: %s\n", env)
+				
+				// 初始化播放器
+				//pcscommand.InitPlayer()
+				
+				if c.NArg() == 0 {
+					return pcscommand.Play(c)
+				}
+				return pcscommand.PlayFile(c.Args()[0])
+			},
+		},
+		{
+			Name:      "play1",
+			Aliases:   []string{"p"},
+			Usage:     "播放音频文件或进入控制器",
+			UsageText: app.Name + " play <文件路径>",
+			Description: `
+			从百度网盘播放音频文件或进入 VLC 控制器
+
+			不带参数: 进入 VLC 控制器
+			带参数: 播放指定文件（mp3、flac、wav、aac、ogg、m4a、wma、ape）
+
+			示例:
+			BaiduPCS-Go play /音乐/歌曲.mp3
+			BaiduPCS-Go play
+
+			VLC 控制器命令:
+			add <文件路径>      添加到播放列表
+			play/p <文件路径>     播放文件
+			pause              暂停
+			stop               停止
+			next               下一首
+			prev               上一首
+			list               列出播放列表
+			clear              清空播放列表
+			status             播放状态
+			volume <0-255>      音量控制
+			quit               退出控制器
+			`,
+			Category: "百度网盘",
+			Before:   reloadFn,
+			Action: func(c *cli.Context) error {
+				if c.NArg() == 0 {
+					ret := pcscommand.Play(c)
+                    fmt.Printf("******Play:ret= %v\n", ret)
+					return ret
+					//return pcscommand.Play(c)
+				}
+				return pcscommand.PlayFile(c.Args()[0])
+			},
+		},
+		{
 			Name:      "upload",
 			Aliases:   []string{"u"},
 			Usage:     "上传文件/目录",
@@ -1351,9 +1506,10 @@ func main() {
 					return nil
 				}
 				opt := &baidupcs.TransferOption{
-					Download: c.Bool("download"),
-					Collect:  c.Bool("collect"),
-					Rname:    c.Bool("rname"),
+					Download:  c.Bool("download"),
+					Collect:   c.Bool("collect"),
+					Rname:     c.Bool("rname"),
+					SkipRange: c.String("skiprange"),
 				}
 				pcscommand.RunShareTransfer(c.Args(), opt)
 				return nil
@@ -1370,6 +1526,57 @@ func main() {
 				cli.BoolFlag{
 					Name:  "rname",
 					Usage: "秒传随机替换4位文件名提高成功率",
+				},
+				cli.StringFlag{
+					Name:  "skiprange",
+					Usage: "跳过转存的目录名，如 0001-1000",
+				},
+			},
+		},
+		{
+			Name:      "transferbatch",
+			Aliases:   []string{"tb"},
+			Usage:     "批量转存大量文件",
+			UsageText: app.Name + " transferbatch <分享链接> <提取码>(如果有)",
+			Category:  "百度网盘",
+			Before:    reloadFn,
+			Description: `
+			批量转存大量文件, 支持超过服务器单次限制的大量文件转存
+			自动分批转存, 支持并发控制
+
+		实例：
+		BaiduPCS-Go transferbatch pan.baidu.com/s/1VYzSl7465sdrQXe8GT5RdQ 704e
+		BaiduPCS-Go transferbatch https://pan.baidu.com/s/1VYzSl7465sdrQXe8GT5RdQ 704e -parallel=3 -batchsize=50
+		BaiduPCS-Go tb https://pan.baidu.com/s/1VYzSl7465sdrQXe8GT5RdQ -pwd=704e
+
+	`,
+			Action: func(c *cli.Context) error {
+				if c.NArg() < 1 || c.NArg() > 2 {
+					cli.ShowCommandHelp(c, c.Command.Name)
+					return nil
+				}
+				opt := &baidupcs.TransferOption{
+					BatchSize: c.Int("batchsize"),
+					Parallel:  c.Int("parallel"),
+					NoCollect: c.Bool("nocollect"),
+				}
+				pcscommand.RunShareTransferBatch(c.Args(), opt)
+				return nil
+			},
+			Flags: []cli.Flag{
+				cli.IntFlag{
+					Name:  "batchsize",
+					Usage: "每批转存的文件数量, 默认100",
+					Value: 100,
+				},
+				cli.IntFlag{
+					Name:  "parallel",
+					Usage: "并发转存的批次数, 默认1, 最大10",
+					Value: 1,
+				},
+				cli.BoolFlag{
+					Name:  "nocollect",
+					Usage: "不整合到同一目录, 直接转存到当前目录",
 				},
 			},
 		},

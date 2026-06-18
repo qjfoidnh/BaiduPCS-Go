@@ -86,6 +86,9 @@ func (pcs *BaiduPCS) sendReqReturnResp(rt reqType, op, method, urlStr string, po
 		}
 		panic("unreachable")
 	}
+
+	baiduPCSVerbose.Infof("Response Status: %s, %s\n", post, resp.Status)
+
 	return resp, nil
 }
 
@@ -203,7 +206,7 @@ func (pcs *BaiduPCS) PrepareBDStoken() (dataReadCloser io.ReadCloser, pcsError p
 	pcs.lazyInit()
 	pcsURL := pcs.generatePanURL("gettemplatevariable", map[string]string{
 		"clienttype": "0",
-		"app_id":     string(pcs.appID),
+		"app_id":     strconv.Itoa(int(pcs.appID)),
 		"fields":     `["bdstoken"]`,
 	})
 	dataReadCloser, pcsError = pcs.sendReqReturnReadCloser(reqTypePCS, OperationGetBDSToken, http.MethodGet, pcsURL.String(), nil, nil)
