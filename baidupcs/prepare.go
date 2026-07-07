@@ -8,7 +8,6 @@ import (
 	"path"
 	"strconv"
 	"strings"
-	"unsafe"
 
 	jsoniter "github.com/json-iterator/go"
 	"github.com/qjfoidnh/BaiduPCS-Go/baidupcs/netdisksign"
@@ -159,7 +158,12 @@ func (pcs *BaiduPCS) PrepareFilesDirectoriesBatchMeta(paths ...string) (dataRead
 }
 
 // PrepareFilesDirectoriesList 获取目录下的文件和目录列表, 只返回服务器响应数据和错误信息
-func (pcs *BaiduPCS) PrepareFilesDirectoriesList(path string, options *OrderOptions) (dataReadCloser io.ReadCloser, pcsError pcserror.Error) {
+//
+// 走 pan.baidu.com/api/list 接口: PCS 的 file/list 单次最多返回 1000 条且 num/page 参数被忽略
+// (limit/start 则直接报 param error), 无法获取超过 1000 条的目录; 网盘 web 列表接口支持
+// num/page 翻页, 修复 https://github.com/qjfoidnh/BaiduPCS-Go/issues/511。
+// num: 每页条目数 (<=0 或 >1000 时取 1000); page: 页码 (从 1 开始)
+func (pcs *BaiduPCS) PrepareFilesDirectoriesList(path string, options *OrderOptions, num, page int) (dataReadCloser io.ReadCloser, pcsError pcserror.Error) {
 	pcs.lazyInit()
 	if options == nil {
 		options = DefaultOrderOptions
@@ -167,15 +171,29 @@ func (pcs *BaiduPCS) PrepareFilesDirectoriesList(path string, options *OrderOpti
 	if path == "" {
 		path = PathSeparator
 	}
+	if num <= 0 || num > maxListNum {
+		num = maxListNum
+	}
+	if page <= 0 {
+		page = 1
+	}
 
-	pcsURL := pcs.generatePCSURL("file", "list", map[string]string{
-		"path":  path,
-		"by":    *(*string)(unsafe.Pointer(&options.By)),
-		"order": *(*string)(unsafe.Pointer(&options.Order)),
+	// pan 的排序参数: order 取 name/time/size (与 OrderBy 常量一致), desc 为 0/1
+	desc := "0"
+	if options.Order == OrderDesc {
+		desc = "1"
+	}
+	panURL := pcs.generatePanURL("list", map[string]string{
+		"dir":        path,
+		"order":      string(options.By),
+		"desc":       desc,
+		"clienttype": "0",
+		"num":        strconv.Itoa(num),
+		"page":       strconv.Itoa(page),
 	})
-	baiduPCSVerbose.Infof("%s URL: %s\n", OperationFilesDirectoriesList, pcsURL)
+	baiduPCSVerbose.Infof("%s URL: %s\n", OperationFilesDirectoriesList, panURL)
 
-	dataReadCloser, pcsError = pcs.sendReqReturnReadCloser(reqTypePCS, OperationFilesDirectoriesList, http.MethodGet, pcsURL.String(), nil, nil)
+	dataReadCloser, pcsError = pcs.sendReqReturnReadCloser(reqTypePan, OperationFilesDirectoriesList, http.MethodGet, panURL.String(), nil, nil)
 	return
 }
 

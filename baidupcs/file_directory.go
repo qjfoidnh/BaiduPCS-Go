@@ -155,28 +155,101 @@ func (pcs *BaiduPCS) FilesDirectoriesBatchMeta(paths ...string) (data FileDirect
 	return
 }
 
+// maxListNum 单次拉取目录列表的最大条目数, 网盘 web 列表接口每页上限为 1000
+const maxListNum = 1000
+
+// fdPanJSON 用于解析 pan.baidu.com/api/list 返回的目录条目
+// (字段命名与 PCS file/list 不同: 时间为 server_ctime/server_mtime, 无 app_id/ifhassubdir)
+type fdPanJSON struct {
+	FsID     int64  `json:"fs_id"`
+	AppID    int64  `json:"app_id"`
+	Path     string `json:"path"`
+	Filename string `json:"server_filename"`
+	Ctime    int64  `json:"server_ctime"`
+	Mtime    int64  `json:"server_mtime"`
+	MD5      string `json:"md5"`
+	BlockListJSON
+	Size           int64 `json:"size"`
+	IsdirInt       int8  `json:"isdir"`
+	IfhassubdirInt int8  `json:"ifhassubdir"`
+}
+
+// toFileDirectory 将 pan 接口条目转换为 FileDirectory
+func (j *fdPanJSON) toFileDirectory() *FileDirectory {
+	if j == nil {
+		return nil
+	}
+	return &FileDirectory{
+		FsID:          j.FsID,
+		AppID:         j.AppID,
+		Path:          j.Path,
+		Filename:      j.Filename,
+		Ctime:         j.Ctime,
+		Mtime:         j.Mtime,
+		MD5:           j.MD5,
+		BlockListJSON: j.BlockListJSON,
+		Size:          j.Size,
+		Isdir:         j.IsdirInt == 1,
+		Ifhassubdir:   j.IfhassubdirInt == 1,
+	}
+}
+
+// fdPanListJSON 用于解析 pan.baidu.com/api/list 的整体响应
+type fdPanListJSON struct {
+	*pcserror.PanErrorInfo
+	List []*fdPanJSON `json:"list"`
+}
+
 // FilesDirectoriesList 获取目录下的文件和目录列表
+//
+// 网盘 web 列表接口单页最多返回 1000 条, 这里按 page 循环分页拉取, 直至取完整个目录
+// (修复 https://github.com/qjfoidnh/BaiduPCS-Go/issues/511)。
+// 通过 fs_id 去重防御分页异常: 一旦出现重复条目立即终止, 避免死循环与重复数据。
 func (pcs *BaiduPCS) FilesDirectoriesList(path string, options *OrderOptions) (data FileDirectoryList, pcsError pcserror.Error) {
-	dataReadCloser, pcsError := pcs.PrepareFilesDirectoriesList(path, options)
-	if pcsError != nil {
-		return nil, pcsError
+	// 防御性上限, 避免接口异常导致死循环
+	const maxPage = 2000
+	seen := make(map[int64]struct{}, maxListNum)
+
+	for page := 1; page <= maxPage; page++ {
+		dataReadCloser, err := pcs.PrepareFilesDirectoriesList(path, options, maxListNum, page)
+		if err != nil {
+			pcsError = err
+			return
+		}
+
+		jsonData := fdPanListJSON{
+			PanErrorInfo: pcserror.NewPanErrorInfo(OperationFilesDirectoriesList),
+		}
+
+		err = pcserror.HandleJSONParse(OperationFilesDirectoriesList, dataReadCloser, &jsonData)
+		dataReadCloser.Close()
+		if err != nil {
+			pcsError = err
+			return
+		}
+
+		if len(jsonData.List) == 0 {
+			break
+		}
+
+		// 转换为 FileDirectory 并按 fs_id 去重
+		pageList := make(FileDirectoryList, 0, len(jsonData.List))
+		for _, j := range jsonData.List {
+			if _, ok := seen[j.FsID]; ok {
+				// 重复 fs_id 说明分页未继续推进 (或已绕回), 终止遍历
+				return
+			}
+			seen[j.FsID] = struct{}{}
+			pageList = append(pageList, j.toFileDirectory())
+		}
+		// 修复MD5
+		pageList.fixMD5()
+		data = append(data, pageList...)
+
+		if len(jsonData.List) < maxListNum {
+			break // 已取完最后一页
+		}
 	}
-
-	defer dataReadCloser.Close()
-
-	jsonData := fdData{
-		PCSErrInfo: pcserror.NewPCSErrorInfo(OperationFilesDirectoriesList),
-	}
-
-	pcsError = pcserror.HandleJSONParse(OperationFilesDirectoriesList, dataReadCloser, (*fdDataJSONExport)(unsafe.Pointer(&jsonData)))
-	if pcsError != nil {
-		return nil, pcsError
-	}
-
-	// 修复MD5
-	jsonData.List.fixMD5()
-
-	data = jsonData.List
 	return
 }
 
