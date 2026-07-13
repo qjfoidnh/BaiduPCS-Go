@@ -37,6 +37,7 @@ iikira/BaiduPCS-Go was largely inspired by [GangZhuo/BaiduPCS](https://github.co
   * [列出目录树形图](#列出目录树形图)
   * [获取文件/目录的元信息](#获取文件目录的元信息)
   * [搜索文件](#搜索文件)
+  * [挂载百度网盘](#挂载百度网盘)
   * [下载文件/目录](#下载文件目录)
   * [上传文件/目录](#上传文件目录)
   * [获取下载直链](#获取下载直链)
@@ -551,6 +552,33 @@ BaiduPCS-Go search 关键字
 
 # 递归搜索当前工作目录的文件
 BaiduPCS-Go search -r 关键字
+```
+
+## 挂载百度网盘
+
+第一阶段挂载功能为只读模式，支持浏览目录、查看文件属性，以及通过 HTTP Range 按需读取文件。
+
+运行前需要安装对应平台的 FUSE 实现：Windows 使用 WinFsp，macOS 使用 macFUSE，Linux 使用 FUSE。Linux 和 macOS 构建挂载功能时需要启用 CGO。
+
+```shell
+# Windows：将网盘根目录挂载为 X 盘
+BaiduPCS-Go mount X:
+
+# Linux/macOS：挂载到本地目录
+BaiduPCS-Go mount /mnt/baidupan
+
+# 仅挂载指定的网盘目录
+BaiduPCS-Go mount /mnt/baidupan --path /我的资源
+```
+
+可用参数：
+
+```text
+  --path value       作为挂载根目录的百度网盘目录 (default: "/")
+  --cache-ttl value  目录和元信息缓存时间 (default: 30s)
+  --debug            启用 FUSE 调试输出
+  --single-thread    让 FUSE 串行处理文件系统请求
+  -o value           传递给 FUSE 的额外挂载选项，可重复指定
 ```
 
 ## 下载文件/目录
