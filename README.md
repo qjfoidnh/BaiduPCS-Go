@@ -17,6 +17,7 @@ iikira/BaiduPCS-Go was largely inspired by [GangZhuo/BaiduPCS](https://github.co
 - [特色](#特色)
 - [版本更新](#版本更新)
 - [编译/交叉编译 说明](#编译交叉编译-说明)
+  * [挂载功能编译说明](#挂载功能编译说明)
 - [下载/运行 说明](#下载运行-说明)
   * [安装](#安装)
   * [Windows](#windows)
@@ -298,6 +299,32 @@ set CGO_ENABLED=0
 go build
 ```
 
+## 挂载功能编译说明
+
+挂载功能基于 [winfsp/cgofuse](https://github.com/winfsp/cgofuse), 不同平台需要安装对应的 FUSE 实现.
+
+* Windows: 安装 [WinFsp](https://winfsp.dev/), 支持 `CGO_ENABLED=0` 编译.
+* macOS: 安装 [macFUSE](https://macfuse.github.io/), 使用 `CGO_ENABLED=1` 编译.
+* Linux: 安装 FUSE 或 FUSE3 开发库和 C 编译器, 使用 `CGO_ENABLED=1` 编译.
+
+Windows 编译示例:
+```
+set CGO_ENABLED=0
+go build
+```
+
+Linux/macOS 使用 FUSE2 编译:
+```
+CGO_ENABLED=1 go build
+```
+
+Linux 使用 FUSE3 编译:
+```
+CGO_ENABLED=1 go build -tags=fuse3
+```
+
+> Linux 和 macOS 使用 `CGO_ENABLED=0` 编译时仍可使用其他 CLI 功能, 但运行 `mount` 命令会提示重新启用 CGO 编译.
+
 # 下载/运行 说明
 
 Go语言程序, 常用几种平台的已编译程序可直接在[蓝奏云](https://wws.lanzoui.com/b01berebe)下载使用. 密码:4pix
@@ -556,29 +583,55 @@ BaiduPCS-Go search -r 关键字
 
 ## 挂载百度网盘
 
-第一阶段挂载功能为只读模式，支持浏览目录、查看文件属性，以及通过 HTTP Range 按需读取文件。
-
-运行前需要安装对应平台的 FUSE 实现：Windows 使用 WinFsp，macOS 使用 macFUSE，Linux 使用 FUSE。Linux 和 macOS 构建挂载功能时需要启用 CGO。
-
-```shell
-# Windows：将网盘根目录挂载为 X 盘
-BaiduPCS-Go mount X:
-
-# Linux/macOS：挂载到本地目录
-BaiduPCS-Go mount /mnt/baidupan
-
-# 仅挂载指定的网盘目录
-BaiduPCS-Go mount /mnt/baidupan --path /我的资源
+```
+BaiduPCS-Go mount <本地挂载点>
+BaiduPCS-Go mnt <本地挂载点>
 ```
 
-可用参数：
+将当前帐号的百度网盘挂载到本地文件系统, 支持浏览目录、查看文件属性和读取文件.
 
-```text
-  --path value       作为挂载根目录的百度网盘目录 (default: "/")
-  --cache-ttl value  目录和元信息缓存时间 (default: 30s)
-  --debug            启用 FUSE 调试输出
-  --single-thread    让 FUSE 串行处理文件系统请求
-  -o value           传递给 FUSE 的额外挂载选项，可重复指定
+文件读取采用 HTTP Range 按需请求, 打开大文件时不会预先将整个文件下载到本地. 目录列表、文件元信息和下载链接会在内存中缓存一段时间, 以减少百度网盘 API 请求.
+
+当前挂载功能为只读模式, 不支持新建、写入、上传、删除和重命名文件或目录. 应用程序尝试修改挂载盘内容时会收到只读文件系统错误.
+
+运行前需完成以下准备:
+
+* 登录百度帐号, 并确认 `BaiduPCS-Go ls /` 可以正常列出文件.
+* Windows 安装 WinFsp, macOS 安装 macFUSE, Linux 安装 FUSE/FUSE3.
+* Linux 和 macOS 版本需在启用 CGO 的环境下编译.
+
+### 可选参数
+```
+--path value:      作为挂载根目录的百度网盘目录, 默认为 /
+--cache-ttl value: 目录和元信息缓存时间, 默认为 30s
+--debug:           启用 FUSE 调试输出
+--single-thread:   让 FUSE 串行处理文件系统请求
+-o value:          传递给 FUSE 的额外挂载选项, 可重复指定
+```
+
+#### 例子
+```
+# Windows: 将网盘根目录挂载为 X 盘
+BaiduPCS-Go mount X:
+
+# Windows: 将 /我的资源 挂载为 X 盘
+BaiduPCS-Go mount --path /我的资源 X:
+
+# Linux/macOS: 将网盘根目录挂载到本地目录
+BaiduPCS-Go mount /mnt/baidupan
+
+# Linux/macOS: 挂载指定的网盘目录, 并缩短目录缓存时间
+BaiduPCS-Go mount --path /我的资源 --cache-ttl 10s /mnt/baidupan
+
+# 启用程序和 FUSE 调试输出
+BaiduPCS-Go --verbose mount --debug X:
+```
+
+挂载命令会持续占用当前终端. 正常卸载时, 请在运行挂载命令的终端按 `Ctrl+C`.
+
+Linux 使用 FUSE3 时, 如果程序异常退出后挂载点仍然存在, 可手动卸载:
+```
+fusermount3 -u /mnt/baidupan
 ```
 
 ## 下载文件/目录
