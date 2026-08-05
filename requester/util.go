@@ -20,6 +20,7 @@ func ParseCookieStr(cookieStr string) []*http.Cookie {
 
 		s2[0] = strings.TrimSpace(s2[0])
 		s2[1] = strings.TrimSpace(s2[1])
+		s2[1] = strings.Trim(s2[1], "\"") // 去掉百度部分 cookie 值两侧的双引号 (如 RT), 避免 net/http 发送时报 invalid byte '"'
 
 		cookies = append(cookies, &http.Cookie{
 			Name:  s2[0],
