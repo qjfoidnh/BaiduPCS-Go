@@ -44,6 +44,8 @@ type (
 		panDir   string
 		panFile  string
 		state    *uploader.InstanceState
+		// prepareResult 区分策略正常跳过与准备阶段真实失败。
+		prepareResult *taskframework.TaskUnitRunResult
 	}
 )
 
@@ -95,6 +97,10 @@ func (utu *UploadTaskUnit) prepareFile() {
 		freeSpace, err := utu.PCS.SpaceLeftInfo()
 		if err == nil && freeSpace < utu.LocalFileChecksum.Length {
 			fmt.Printf("[%s] 目标文件大小超过剩余空间, 跳过...\n", utu.taskInfo.Id())
+			utu.prepareResult = &taskframework.TaskUnitRunResult{
+				ResultMessage: "目标文件大小超过剩余空间",
+				Err:           errors.New("目标文件大小超过百度网盘剩余空间"),
+			}
 			utu.Step = JustGoon
 			return
 		}
@@ -111,6 +117,11 @@ func (utu *UploadTaskUnit) prepareFile() {
 				return
 			} else {
 				fmt.Printf("[%s] 目标文件已存在, 跳过...\n", utu.taskInfo.Id())
+				utu.prepareResult = &taskframework.TaskUnitRunResult{
+					Succeed:       true,
+					ResultMessage: "目标文件已存在, 跳过",
+					Extra:         baidupcs.SkipPolicy,
+				}
 				utu.Step = JustGoon
 				return
 			}
@@ -251,7 +262,7 @@ func (utu *UploadTaskUnit) rapidUpload() (isContinue bool, result *taskframework
 				return
 			case 1919810:
 				// 自定义错误码, 仅在rsync策略下出现
-				result.Extra = baidupcs.RsyncPolicy
+				result.Extra = baidupcs.SkipPolicy
 				result.Err = nil
 				result.ResultMessage = fmt.Sprintf("%s 目标大小未发生改变, 跳过", utu.SavePath)
 				result.NeedRetry = false
@@ -352,7 +363,7 @@ func (utu *UploadTaskUnit) upload() (result *taskframework.TaskUnitRunResult) {
 				return
 			case 1919810:
 				// 自定义错误码, 仅在rsync策略下出现
-				result.Extra = baidupcs.RsyncPolicy
+				result.Extra = baidupcs.SkipPolicy
 				result.Err = nil
 				result.ResultMessage = fmt.Sprintf("%s 目标大小未发生改变, 跳过", utu.SavePath)
 				result.NeedRetry = false
@@ -432,18 +443,37 @@ func (utu *UploadTaskUnit) RetryWait() time.Duration {
 	return pcsfunctions.RetryWait(utu.taskInfo.Retry())
 }
 
+func (utu *UploadTaskUnit) runPreparedStep() *taskframework.TaskUnitRunResult {
+	if utu.prepareResult != nil {
+		return utu.prepareResult
+	}
+	return &taskframework.TaskUnitRunResult{
+		ResultMessage: StrUploadFailed,
+		Err:           errors.New("上传准备阶段未生成结果"),
+	}
+}
+
 func (utu *UploadTaskUnit) Run() (result *taskframework.TaskUnitRunResult) {
 	fmt.Printf("[%s] 准备上传: %s\n", utu.taskInfo.Id(), utu.LocalFileChecksum.Path)
 
 	if utu.LocalFileChecksum.Length > baidupcs.MaxUploadSize {
 		fmt.Printf("[%s] 文件大小超过128G, 无法上传, 跳过...\n", utu.taskInfo.Id())
-		return
+		return &taskframework.TaskUnitRunResult{
+			ResultMessage: "文件大小超过128G, 无法上传",
+			Err: fmt.Errorf(
+				"文件 %s 大小超过128G",
+				utu.LocalFileChecksum.Path,
+			),
+		}
 	}
 
 	err := utu.LocalFileChecksum.OpenPath()
 	if err != nil {
 		fmt.Printf("[%s] 文件不可读, 错误信息: %s, 跳过...\n", utu.taskInfo.Id(), err)
-		return
+		return &taskframework.TaskUnitRunResult{
+			ResultMessage: "文件不可读",
+			Err:           err,
+		}
 	}
 	defer utu.LocalFileChecksum.Close() // 关闭文件
 
@@ -456,7 +486,7 @@ func (utu *UploadTaskUnit) Run() (result *taskframework.TaskUnitRunResult) {
 	case StepUploadUpload:
 		goto stepUploadUpload
 	case JustGoon:
-		return
+		return utu.runPreparedStep()
 	}
 
 stepUploadRapidUpload:
