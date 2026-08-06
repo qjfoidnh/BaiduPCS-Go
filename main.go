@@ -1211,13 +1211,16 @@ func main() {
 				}
 
 				subArgs := c.Args()
-				pcscommand.RunUpload(subArgs[:c.NArg()-1], subArgs[c.NArg()-1], &pcscommand.UploadOptions{
+				err := pcscommand.RunUpload(subArgs[:c.NArg()-1], subArgs[c.NArg()-1], &pcscommand.UploadOptions{
 					Parallel:      c.Int("p"),
 					MaxRetry:      c.Int("retry"),
 					Load:          c.Int("l"),
 					NoRapidUpload: c.Bool("norapid"),
 					Policy:        c.String("policy"),
 				})
+				if err != nil {
+					return cli.NewExitError(err.Error(), 1)
+				}
 				return nil
 			},
 			Flags: []cli.Flag{
