@@ -34,7 +34,8 @@ func RunShareTransfer(params []string, opt *baidupcs.TransferOption) {
 	if featureStr == "init" {
 		featureStr = "1" + queryParams.Get("surl")
 	}
-	if len(featureStr) > 23 || featureStr[0:1] != "1" || len(extraCode) != 4 {
+	// 允许无密码公开分享（open share）：提取码为空或恰好 4 位
+	if len(featureStr) > 23 || featureStr[0:1] != "1" || (len(extraCode) != 4 && len(extraCode) != 0) {
 		fmt.Printf("%s失败: %s\n", baidupcs.OperationShareFileSavetoLocal, "链接地址或提取码非法")
 		return
 	}
@@ -45,21 +46,24 @@ func RunShareTransfer(params []string, opt *baidupcs.TransferOption) {
 		return
 	}
 
-	verifyUrl := pcs.GenerateShareQueryURL("verify", map[string]string{
-		"shareid":    tokens["shareid"],
-		"time":       strconv.Itoa(int(time.Now().UnixMilli())),
-		"clienttype": "1",
-		"uk":         tokens["share_uk"],
-	}).String()
-	res := pcs.PostShareQuery(verifyUrl, link, map[string]string{
-		"pwd":       extraCode,
-		"vcode":     "null",
-		"vcode_str": "null",
-		"bdstoken":  tokens["bdstoken"],
-	})
-	if res["ErrMsg"] != "0" {
-		fmt.Printf("%s失败: %s\n", baidupcs.OperationShareFileSavetoLocal, res["ErrMsg"])
-		return
+	// 无密码公开分享跳过 /share/verify 密码校验步骤（web 端对 open share 不调用 verify）
+	if extraCode != "" {
+		verifyUrl := pcs.GenerateShareQueryURL("verify", map[string]string{
+			"shareid":    tokens["shareid"],
+			"time":       strconv.Itoa(int(time.Now().UnixMilli())),
+			"clienttype": "1",
+			"uk":         tokens["share_uk"],
+		}).String()
+		res := pcs.PostShareQuery(verifyUrl, link, map[string]string{
+			"pwd":       extraCode,
+			"vcode":     "null",
+			"vcode_str": "null",
+			"bdstoken":  tokens["bdstoken"],
+		})
+		if res["ErrMsg"] != "0" {
+			fmt.Printf("%s失败: %s\n", baidupcs.OperationShareFileSavetoLocal, res["ErrMsg"])
+			return
+		}
 	}
 
 	pcs.UpdatePCSCookies(true)
