@@ -20,6 +20,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -81,7 +82,10 @@ const (
 	DownloadModeStreaming
 )
 
-var client *requester.HTTPClient
+var (
+    panClient     *requester.HTTPClient
+    panClientOnce sync.Once
+)
 
 func (dtu *DownloadTaskUnit) SetTaskInfo(info *taskframework.TaskInfo) {
 	dtu.taskInfo = info
@@ -244,22 +248,22 @@ func (dtu *DownloadTaskUnit) download(downloadURL string, client *requester.HTTP
 
 // panHTTPClient 获取包含特定User-Agent的HTTPClient
 func (dtu *DownloadTaskUnit) panHTTPClient() *requester.HTTPClient {
-	if client == nil {
-		client = pcsconfig.Config.PanHTTPClient()
-	}
-	client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
-		// 去掉 Referer
-		if !pcsconfig.Config.EnableHTTPS {
-			req.Header.Del("Referer")
-		}
-		if len(via) >= 10 {
-			return errors.New("stopped after 10 redirects")
-		}
-		return nil
-	}
-	client.SetTimeout(2 * time.Minute)
-	client.SetKeepAlive(true)
-	return client
+    panClientOnce.Do(func() {
+        panClient = pcsconfig.Config.PanHTTPClient()
+        panClient.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+            // 去掉 Referer
+            if !pcsconfig.Config.EnableHTTPS {
+                req.Header.Del("Referer")
+            }
+            if len(via) >= 10 {
+                return errors.New("stopped after 10 redirects")
+            }
+            return nil
+        }
+        panClient.SetTimeout(6 * time.Minute)
+        panClient.SetKeepAlive(true)
+    })
+    return panClient
 }
 
 func (dtu *DownloadTaskUnit) handleError(result *taskframework.TaskUnitRunResult) {
