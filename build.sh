@@ -29,9 +29,9 @@ Build() {
   echo "Building $1..."
   export GOOS=$2 GOARCH=$3 GO386=sse2 CGO_ENABLED=0 GOARM=$4
   if [ $2 = "windows" ]; then
-    goversioninfo -o=resource_windows_386.syso
-    goversioninfo -64 -o=resource_windows_amd64.syso
-    goversioninfo -arm64 -o=resource_windows_arm64.syso
+    if command -v goversioninfo >/dev/null 2>&1; then
+      goversioninfo -platform-specific
+    fi
     $go build -ldflags "-X main.Version=$version -s -w" -o "$output/$1/$name.exe"
     RicePack $1 $name.exe
   else
