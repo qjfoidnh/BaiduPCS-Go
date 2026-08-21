@@ -23,7 +23,19 @@ type (
 	}
 )
 
-var client = pcsconfig.Config.PCSHTTPClient()
+var (
+    uploadClient     *requester.HTTPClient
+    uploadClientOnce sync.Once
+)
+
+func getUploadClient(jar http.CookieJar) *requester.HTTPClient {
+    uploadClientOnce.Do(func() {
+        uploadClient = pcsconfig.Config.PCSHTTPClient()
+        uploadClient.SetCookiejar(jar)
+        uploadClient.SetTimeout(200 * time.Second)
+    })
+    return uploadClient
+}
 
 var pcsPeriod = 256 // 上传多少个分片更换一次pcsHost
 
@@ -70,8 +82,6 @@ func (pu *PCSUpload) TmpFile(ctx context.Context, uploadId, targetPath string, p
 	}
 
 	checksum, pcsError := pu.pcs.UploadTmpFile(uploadId, targetPath, partSeq, partOffset, func(uploadURL string, jar http.CookieJar) (resp *http.Response, err error) {
-		client.SetCookiejar(jar)
-		client.SetTimeout(200 * time.Second)
 
 		mr := multipartreader.NewMultipartReader()
 		mr.AddFormFile("uploadedfile", "", r)
@@ -79,7 +89,8 @@ func (pu *PCSUpload) TmpFile(ctx context.Context, uploadId, targetPath string, p
 
 		doneChan := make(chan struct{}, 1)
 		go func() {
-			resp, err = client.Req(http.MethodPost, uploadURL, mr, nil)
+			cli := getUploadClient(jar)
+			resp, err = cli.Req(http.MethodPost, uploadURL, mr, nil)
 			doneChan <- struct{}{}
 
 			if resp != nil {
