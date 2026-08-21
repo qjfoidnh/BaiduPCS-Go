@@ -367,6 +367,23 @@ func (pcs *BaiduPCS) SetPCSAddr(addr string) {
 	}
 }
 
+func (pcs *BaiduPCS) Copy() *BaiduPCS {
+	return &BaiduPCS{
+		appID:       pcs.appID,
+		isHTTPS:     pcs.isHTTPS,
+		uid:         pcs.uid,
+		client:      pcs.client,
+		accessToken: pcs.accessToken,
+		pcsUA:       pcs.pcsUA,
+		pcsAddr:     pcs.pcsAddr,
+		panUA:       pcs.panUA,
+		isSetPanUA:  pcs.isSetPanUA,
+		fixPCSAddr:  pcs.fixPCSAddr,
+		ph:          pcs.ph,
+		cacheOpMap:  pcs.cacheOpMap,
+	}
+}
+
 // SetPanUserAgent 设置 Pan User-Agent
 func (pcs *BaiduPCS) SetPanUserAgent(ua string) {
 	pcs.panUA = ua
