@@ -95,6 +95,16 @@ iikira/BaiduPCS-Go was largely inspired by [GangZhuo/BaiduPCS](https://github.co
 [离线下载](#离线下载), 支持http/https/ftp/电驴/磁力链协议.
 # 版本更新
 
+**2026.08.21** v4.0.2
+- 修复转存误报STOKEN缺失
+- feat: add --fs_id flag to transfer command to support granular file selection
+- fix: paginate directory listing to return all files beyond 1000
+- fix: remove quotes from cookie values to prevent invalid byte error
+- 修复上传失败错误码仍为0
+- 转存支持分享口令
+- 上传链接复用优化
+
+
 **2026.03.26** v4.0.1
 - 紧急修复ls等命令的param error
 

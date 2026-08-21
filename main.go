@@ -55,7 +55,7 @@ const (
 
 var (
 	// Version 版本号
-	Version = "v4.0.1-dev"
+	Version = "v4.0.2-dev"
 
 	historyFilePath = filepath.Join(pcsconfig.GetConfigDir(), "pcs_command_history.txt")
 	reloadFn        = func(c *cli.Context) error {

@@ -138,7 +138,7 @@ func RunUpload(localPaths []string, savePath string, opt *UploadOptions) error {
 			info := executor.Append(&pcsupload.UploadTaskUnit{
 				LocalFileChecksum: checksum.NewLocalFileChecksum(walkedFiles[k3], int(baidupcs.SliceMD5Size)),
 				SavePath:          path.Clean(savePath + baidupcs.PathSeparator + subSavePath),
-				PCS:               pcs.Copy(),
+				PCS:               pcs.CopyPCS(),
 				UploadingDatabase: uploadDatabase,
 				Parallel:          opt.Parallel,
 				PrintFormat:       uploadPrintFormat(opt.Load),

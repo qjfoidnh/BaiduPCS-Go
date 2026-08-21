@@ -367,7 +367,7 @@ func (pcs *BaiduPCS) SetPCSAddr(addr string) {
 	}
 }
 
-func (pcs *BaiduPCS) Copy() *BaiduPCS {
+func (pcs *BaiduPCS) CopyPCS() *BaiduPCS {
 	return &BaiduPCS{
 		appID:       pcs.appID,
 		isHTTPS:     pcs.isHTTPS,
