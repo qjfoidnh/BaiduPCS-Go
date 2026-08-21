@@ -41,6 +41,8 @@ func (h *HTTPClient) lazyInit() {
 			DisableKeepAlives:     false,
 			DisableCompression:    false, // gzip
 			MaxIdleConns:          100,
+			MaxIdleConnsPerHost:   60,
+			ForceAttemptHTTP2:     true,
 			IdleConnTimeout:       90 * time.Second,
 			ResponseHeaderTimeout: 25 * time.Second,
 			ExpectContinueTimeout: 10 * time.Second,
