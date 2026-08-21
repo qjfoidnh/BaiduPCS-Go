@@ -88,8 +88,6 @@ RicePack() {
   rice -i github.com/qjfoidnh/BaiduPCS-Go/internal/pcsweb append --exec "$output/$1/$2"
 }
 
-touch ./vendor/golang.org/x/sys/windows/windows.s
-
 # Android
 #export NDK_INSTALL=$ANDROID_NDK_ROOT/bin
 # CC=$NDK_INSTALL/arm-linux-androideabi-4.9/bin/arm-linux-androideabi-gcc AndroidBuild $name-$version"-android-16-armv5" android arm 5
