@@ -31,6 +31,7 @@ Build() {
   if [ $2 = "windows" ]; then
     goversioninfo -o=resource_windows_386.syso
     goversioninfo -64 -o=resource_windows_amd64.syso
+    goversioninfo -arm64 -o=resource_windows_arm64.syso
     $go build -ldflags "-X main.Version=$version -s -w" -o "$output/$1/$name.exe"
     RicePack $1 $name.exe
   else
@@ -108,7 +109,7 @@ Build $name-$version"-darwin-osx-arm64" darwin arm64
 # Windows
 Build $name-$version"-windows-x86" windows 386
 Build $name-$version"-windows-x64" windows amd64
-Build $name-$version"-windows-arm" windows arm
+Build $name-$version"-windows-arm64" windows arm64
 
 # Linux
 Build $name-$version"-linux-386" linux 386
