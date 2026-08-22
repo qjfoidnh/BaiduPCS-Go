@@ -11,6 +11,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 	"unicode"
 
 	"github.com/olekukonko/tablewriter"
@@ -20,6 +21,7 @@ import (
 	"github.com/qjfoidnh/BaiduPCS-Go/internal/pcsconfig"
 	"github.com/qjfoidnh/BaiduPCS-Go/internal/pcsfunctions/pcsdownload"
 	_ "github.com/qjfoidnh/BaiduPCS-Go/internal/pcsinit"
+	"github.com/qjfoidnh/BaiduPCS-Go/internal/pcsmount"
 	"github.com/qjfoidnh/BaiduPCS-Go/internal/pcsupdate"
 	"github.com/qjfoidnh/BaiduPCS-Go/pcsliner"
 	"github.com/qjfoidnh/BaiduPCS-Go/pcsliner/args"
@@ -1016,6 +1018,70 @@ func main() {
 
 				pcscommand.RunMove(c.Args()...)
 				return nil
+			},
+		},
+		{
+			Name:      "mount",
+			Aliases:   []string{"mnt"},
+			Usage:     "将百度网盘目录只读挂载到本地文件系统",
+			UsageText: app.Name + " mount <本地挂载点> [--path <网盘目录>]",
+			Description: `
+	第一阶段挂载功能为只读模式, 支持浏览目录、查看文件属性和按需读取文件.
+	Windows 需要安装 WinFsp; macOS 需要安装 macFUSE; Linux 需要安装 FUSE.
+
+	示例:
+		BaiduPCS-Go mount X:
+		BaiduPCS-Go mount /mnt/baidupan --path /我的资源
+`,
+			Category: "百度网盘",
+			Before:   reloadFn,
+			Action: func(c *cli.Context) error {
+				if c.NArg() != 1 {
+					cli.ShowCommandHelp(c, c.Command.Name)
+					return nil
+				}
+				fuseOptions := []string{}
+				for _, value := range c.StringSlice("o") {
+					fuseOptions = append(fuseOptions, value)
+				}
+				fmt.Printf("正在将网盘目录 %s 挂载到 %s，按 Ctrl+C 可卸载...\n", c.String("path"), c.Args().Get(0))
+				err := pcsmount.Mount(pcsconfig.Config.ActiveUserBaiduPCS(), c.Args().Get(0), &pcsmount.Options{
+					RemoteRoot:   c.String("path"),
+					CacheTTL:     c.Duration("cache-ttl"),
+					Debug:        c.Bool("debug"),
+					SingleThread: c.Bool("single-thread"),
+					FuseOptions:  fuseOptions,
+				})
+				if err != nil {
+					fmt.Printf("挂载失败: %s\n", err)
+					return nil
+				}
+				fmt.Println("网盘已卸载")
+				return nil
+			},
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "path",
+					Usage: "作为挂载根目录的百度网盘目录",
+					Value: "/",
+				},
+				cli.DurationFlag{
+					Name:  "cache-ttl",
+					Usage: "目录和元信息缓存时间",
+					Value: 30 * time.Second,
+				},
+				cli.BoolFlag{
+					Name:  "debug",
+					Usage: "启用 FUSE 调试输出",
+				},
+				cli.BoolFlag{
+					Name:  "single-thread",
+					Usage: "让 FUSE 串行处理文件系统请求",
+				},
+				cli.StringSliceFlag{
+					Name:  "o",
+					Usage: "传递给 FUSE 的额外挂载选项，可重复指定",
+				},
 			},
 		},
 		{
