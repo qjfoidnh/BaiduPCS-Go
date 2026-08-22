@@ -10,6 +10,8 @@ import (
 	"hash/crc32"
 	"io"
 	"os"
+	"runtime"
+	"sync"
 )
 
 const (
@@ -235,7 +237,7 @@ func (lfc *LocalFileChecksum) Sum(checkSumFlag int) (err error) {
 	return
 }
 
-// CalculateChunkedMD5 按指定大小分块计算MD5
+// CalculateChunkedSum 按指定大小分块并行计算MD5
 func (lfc *LocalFileChecksum) CalculateChunkedSum(chunkSize int64) (err error) {
 
 	// 确保分块大小有效
@@ -243,54 +245,79 @@ func (lfc *LocalFileChecksum) CalculateChunkedSum(chunkSize int64) (err error) {
 		return fmt.Errorf("invalid block size: %d", chunkSize)
 	}
 
-	// 获取文件信息（需要知道总大小来计算分块数）
-	fileInfo, err := lfc.file.Stat()
-	if err != nil {
-		return err
-	}
-	fileSize := fileInfo.Size()
+	fileSize := lfc.Length
 	if fileSize == 0 {
 		return nil // 空文件
 	}
 
 	// 计算分块数量
-	chunkCount := (fileSize + chunkSize - 1) / chunkSize
+	chunkCount := int((fileSize + chunkSize - 1) / chunkSize)
 
-	// 初始化结果存储
-	lfc.BlocksList = make([]string, 0, chunkCount)
+	// 初始化结果存储, 各 worker 按自己的块索引写入, 无需加锁
+	lfc.BlocksList = make([]string, chunkCount)
 
-	// 分块处理
-	buffer := make([]byte, 4*converter.MB) // 4MB读取缓冲区
-	chunkMD5 := md5.New()
-	for offset := int64(0); offset < fileSize; offset += chunkSize {
-		// 计算当前分块的实际大小（最后一块可能较小）
-		currentChunkSize := chunkSize
-		if offset+chunkSize > fileSize {
-			currentChunkSize = fileSize - offset
-		}
-		// Reset MD5 计算器
-		chunkMD5.Reset()
-		bytesRead := int64(0)
-
-		// 读取当前分块的所有数据
-		for bytesRead < currentChunkSize {
-			readSize := int64(len(buffer))
-			if readSize > currentChunkSize-bytesRead {
-				readSize = currentChunkSize - bytesRead
-			}
-
-			n, err := lfc.file.ReadAt(buffer[:readSize], offset+bytesRead)
-			if err != nil && err != io.EOF {
-				return err
-			}
-
-			chunkMD5.Write(buffer[:n])
-			bytesRead += int64(n)
-		}
-
-		lfc.BlocksList = append(lfc.BlocksList, hex.EncodeToString(chunkMD5.Sum(nil)))
+	// worker 数: 不超过逻辑核数, 不超过分块数, 上限 16 (控制 4MB×N 的缓冲区内存)
+	workers := runtime.GOMAXPROCS(0)
+	if workers > 16 {
+		workers = 16
+	}
+	if workers > chunkCount {
+		workers = chunkCount
 	}
 
+	var wg sync.WaitGroup
+	errCh := make(chan error, workers)
+	for w := 0; w < workers; w++ {
+		wg.Add(1)
+		go func(workerId int) {
+			defer wg.Done()
+
+			buffer := make([]byte, 4*converter.MB) // 每个 worker 独享缓冲区, 不可共享
+			chunkMD5 := md5.New()
+
+			for i := workerId; i < chunkCount; i += workers {
+				offset := int64(i) * chunkSize
+				// 计算当前分块的实际大小（最后一块可能较小）
+				currentChunkSize := chunkSize
+				if offset+chunkSize > fileSize {
+					currentChunkSize = fileSize - offset
+				}
+
+				chunkMD5.Reset()
+				bytesRead := int64(0)
+
+				// 读取当前分块的所有数据
+				for bytesRead < currentChunkSize {
+					readSize := int64(len(buffer))
+					if readSize > currentChunkSize-bytesRead {
+						readSize = currentChunkSize - bytesRead
+					}
+
+					n, rerr := lfc.file.ReadAt(buffer[:readSize], offset+bytesRead)
+					if n > 0 {
+						chunkMD5.Write(buffer[:n])
+						bytesRead += int64(n)
+					}
+					if rerr != nil && rerr != io.EOF {
+						select {
+						case errCh <- rerr:
+						default:
+						}
+						return
+					}
+				}
+
+				lfc.BlocksList[i] = hex.EncodeToString(chunkMD5.Sum(nil))
+			}
+		}(w)
+	}
+	wg.Wait()
+
+	select {
+	case err = <-errCh:
+		return err
+	default:
+	}
 	return nil
 }
 
