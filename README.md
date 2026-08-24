@@ -98,7 +98,7 @@ iikira/BaiduPCS-Go was largely inspired by [GangZhuo/BaiduPCS](https://github.co
 **2026.08.21** v4.0.2
 - 修复转存误报STOKEN缺失
 - feat: add --fs_id flag to transfer command to support granular file selection
-- fix: paginate directory listing to return all files beyond 1000
+- fix: 支持下载/查看对象数量超过1000的目录
 - fix: remove quotes from cookie values to prevent invalid byte error
 - 修复上传失败错误码仍为0
 - 转存支持分享口令
