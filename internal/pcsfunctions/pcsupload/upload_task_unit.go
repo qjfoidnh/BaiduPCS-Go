@@ -150,7 +150,7 @@ func (utu *UploadTaskUnit) rapidUpload() (isContinue bool, result *taskframework
 		switch pcsError.GetErrType() {
 		case pcserror.ErrTypeRemoteError:
 			switch pcsError.GetRemoteErrCode() {
-			case 31066:
+			case 31066, -9:
 			// file does not exist
 			// 不缓存文件夹
 			default:
