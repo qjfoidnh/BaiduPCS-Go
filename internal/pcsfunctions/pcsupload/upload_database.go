@@ -67,6 +67,9 @@ func (ud *UploadingDatabase) Save() error {
 		return errors.New("dataFile is nil")
 	}
 
+	ud.lock.Lock()
+	defer ud.lock.Unlock()
+
 	ud.Timestamp = time.Now().Unix()
 
 	var (
@@ -93,8 +96,8 @@ func (ud *UploadingDatabase) Save() error {
 
 // UpdateUploading 更新正在上传
 func (ud *UploadingDatabase) UpdateUploading(meta *checksum.LocalFileMeta, state *uploader.InstanceState) {
-	ud.lock.RLock()
-	defer ud.lock.RUnlock()
+	ud.lock.Lock()
+	defer ud.lock.Unlock()
 	if meta == nil {
 		return
 	}
@@ -117,8 +120,8 @@ func (ud *UploadingDatabase) UpdateUploading(meta *checksum.LocalFileMeta, state
 
 // UpdateFullBlock 一次性更新全部block的md5值
 func (ud *UploadingDatabase) UpdateFullBlock(meta *checksum.LocalFileMeta, state *uploader.InstanceState) {
-	ud.lock.RLock()
-	defer ud.lock.RUnlock()
+	ud.lock.Lock()
+	defer ud.lock.Unlock()
 	if meta == nil {
 		return
 	}
@@ -175,10 +178,10 @@ func (ud *UploadingDatabase) Search(meta *checksum.LocalFileMeta) *uploader.Inst
 		if uploading.LocalFileMeta == nil {
 			continue
 		}
-		if uploading.BlocksList == nil {
+		if uploading.BlocksList == nil && (uploading.State == nil || uploading.State.Uploadid == "") {
 			continue
 		}
-		if uploading.LocalFileMeta.EqualLengthMD5(meta) {
+		if uploading.LocalFileMeta.MD5 != nil && uploading.LocalFileMeta.EqualLengthMD5(meta) {
 			return uploading.State
 		}
 		if uploading.LocalFileMeta.Path == meta.Path {

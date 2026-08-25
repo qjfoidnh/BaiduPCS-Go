@@ -56,12 +56,18 @@ func (muer *MultiUploader) upload() (uperr error) {
 	for _, wer := range muer.workers {
 		if wer.checksum == "" {
 			uploadDeque.Append(wer)
+		} else {
+			checksumMap[wer.id] = wer.checksum
 		}
 	}
 
 	for {
 		wg := waitgroup.NewWaitGroup(muer.config.Parallel)
 		for {
+			if muer.isStopped() { // 优雅停止: 不再派发新分片
+				break
+			}
+
 			e := uploadDeque.Shift()
 			if e == nil { // 任务为空
 				break
@@ -103,6 +109,9 @@ func (muer *MultiUploader) upload() (uperr error) {
 					}
 
 					uploaderVerbose.Warnf("upload err: %s, id: %d\n", terr, wer.id)
+					if muer.isStopped() { // 优雅停止: 失败的分片不再重试
+						return
+					}
 					wer.splitUnit.Seek(0, os.SEEK_SET)
 					uploadDeque.Append(wer)
 					return
@@ -120,6 +129,10 @@ func (muer *MultiUploader) upload() (uperr error) {
 		}
 		wg.Wait()
 
+		if muer.isStopped() { // 优雅停止: 跳出外层循环
+			break
+		}
+
 		// 没有任务了
 		if uploadDeque.Size() == 0 {
 			break
@@ -133,6 +146,10 @@ func (muer *MultiUploader) upload() (uperr error) {
 		}
 		return context.Canceled
 	default:
+	}
+
+	if muer.isStopped() { // 优雅停止: 文件未完整上传, 不合并 superfile, 交由断点续传处理
+		return context.Canceled
 	}
 
 	cerr := muer.multiUpload.CreateSuperFile(originPCSHost, muer.config.Policy, muer.instanceState.Uploadid, muer.file.Len(), checksumMap)

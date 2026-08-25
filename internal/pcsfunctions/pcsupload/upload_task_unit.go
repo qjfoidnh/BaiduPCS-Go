@@ -80,13 +80,16 @@ func (utu *UploadTaskUnit) prepareFile() {
 	utu.panFile = panFile
 
 	// 检测断点续传
-	// 2025.10.26 不再支持续传, 关闭检测
-	//utu.state = utu.UploadingDatabase.Search(&utu.LocalFileChecksum.LocalFileMeta)
-	//if utu.state != nil || utu.LocalFileChecksum.LocalFileMeta.BlocksList != nil { // 读取到了md5分片信息
-	//	utu.Step = StepUploadRapidUpload
-	//	fmt.Printf("[%s] 检测到断点信息, 准备续传...\n", utu.taskInfo.Id())
-	//	return
-	//}
+	utu.state = utu.UploadingDatabase.Search(&utu.LocalFileChecksum.LocalFileMeta)
+	if utu.state != nil || utu.LocalFileChecksum.LocalFileMeta.BlocksList != nil { // 读取到了断点信息
+		fmt.Printf("[%s] 检测到断点信息, 准备续传...\n", utu.taskInfo.Id())
+		if utu.LocalFileChecksum.LocalFileMeta.BlocksList != nil {
+			utu.Step = StepUploadRapidUpload // 带校验和的断点: 走原握手流程, 顺带秒传检测
+		} else {
+			utu.Step = StepUploadUpload // --norapid 断点: 免校验和, 直接继续分片上传
+		}
+		return
+	}
 	utu.state = &uploader.InstanceState{}
 
 	if utu.LocalFileChecksum.Length >= baidupcs.RecommendedUploadSize {
@@ -277,9 +280,10 @@ func (utu *UploadTaskUnit) rapidUpload() (isContinue bool, result *taskframework
 	// 保存秒传信息
 	if utu.state.Uploadid == "" {
 		utu.state.Uploadid = jsonData.UploadID
-	} else {
-		utu.UploadingDatabase.UpdateFullBlock(&utu.LocalFileChecksum.LocalFileMeta, utu.state)
 	}
+	//else {
+	//	utu.UploadingDatabase.UpdateFullBlock(&utu.LocalFileChecksum.LocalFileMeta, utu.state)
+	//}
 
 	utu.UploadingDatabase.UpdateUploading(&utu.LocalFileChecksum.LocalFileMeta, utu.state)
 	utu.UploadingDatabase.Save()
@@ -304,6 +308,11 @@ func (utu *UploadTaskUnit) upload() (result *taskframework.TaskUnitRunResult) {
 	if utu.state != nil {
 		muer.SetInstanceState(utu.state)
 	}
+
+	// 注册上传器, 供优雅退出时停止; 函数结束时注销
+	RegisterActiveUploader(muer)
+	defer UnregisterActiveUploader(muer)
+
 	muer.OnUploadStatusEvent(func(status uploader.Status, updateChan <-chan struct{}) {
 		select {
 		case <-updateChan:
@@ -324,6 +333,15 @@ func (utu *UploadTaskUnit) upload() (result *taskframework.TaskUnitRunResult) {
 
 	// result
 	result = &taskframework.TaskUnitRunResult{}
+	muer.OnCancel(func() {
+		fmt.Printf("\n")
+		fmt.Printf("[%s] 上传已取消, 保存上传进度...\n", utu.taskInfo.Id())
+		if utu.state.Uploadid != "" {
+			utu.UploadingDatabase.UpdateUploading(&utu.LocalFileChecksum.LocalFileMeta, muer.InstanceState())
+			utu.UploadingDatabase.Save()
+		}
+		result.ResultMessage = "用户取消上传"
+	})
 	muer.OnSuccess(func() {
 		fmt.Printf("\n")
 		fmt.Printf("[%s] 上传文件成功, 保存到网盘路径: %s\n", utu.taskInfo.Id(), utu.SavePath)

@@ -43,6 +43,8 @@ type (
 		finished                chan struct{}
 		canceled                chan struct{}
 		closeCanceledOnce       sync.Once
+		stopped                 chan struct{} // 优雅停止信号: 不再派发新分片, 进行中的分片继续完成
+		stopOnce                sync.Once
 		updateInstanceStateChan chan struct{}
 	}
 
@@ -62,6 +64,11 @@ func NewMultiUploader(multiUpload MultiUpload, file rio.ReaderAtLen64, config *M
 		file:        file,
 		config:      config,
 		targetPath:  targetPath,
+
+		finished:                make(chan struct{}, 1),
+		canceled:                make(chan struct{}),
+		stopped:                 make(chan struct{}),
+		updateInstanceStateChan: make(chan struct{}, 1),
 	}
 }
 
@@ -76,6 +83,9 @@ func (muer *MultiUploader) lazyInit() {
 	}
 	if muer.canceled == nil {
 		muer.canceled = make(chan struct{})
+	}
+	if muer.stopped == nil {
+		muer.stopped = make(chan struct{})
 	}
 	if muer.updateInstanceStateChan == nil {
 		muer.updateInstanceStateChan = make(chan struct{}, 1)
@@ -114,16 +124,16 @@ func (muer *MultiUploader) Execute() {
 	}
 
 	// 分配任务
-	//if muer.instanceState != nil {
-	//	muer.workers = muer.getWorkerListByInstanceState(muer.instanceState)
-	//	uploaderVerbose.Infof("upload task CREATED from instance state\n")
-	//} else {
-	muer.workers = muer.getWorkerListByInstanceState(&InstanceState{
-		BlockList: SplitBlock(muer.file.Len(), muer.config.BlockSize),
-	})
+	if muer.instanceState != nil && len(muer.instanceState.BlockList) > 0 {
+		muer.workers = muer.getWorkerListByInstanceState(muer.instanceState)
+		uploaderVerbose.Infof("upload task CREATED from instance state\n")
+	} else {
+		muer.workers = muer.getWorkerListByInstanceState(&InstanceState{
+			BlockList: SplitBlock(muer.file.Len(), muer.config.BlockSize),
+		})
 
-	uploaderVerbose.Infof("upload task CREATED: block size: %d, num: %d\n", muer.config.BlockSize, len(muer.workers))
-	//}
+		uploaderVerbose.Infof("upload task CREATED: block size: %d, num: %d\n", muer.config.BlockSize, len(muer.workers))
+	}
 
 	// 开始上传
 	muer.executeTime = time.Now()
@@ -167,7 +177,26 @@ func (muer *MultiUploader) InstanceState() *InstanceState {
 
 // Cancel 取消上传
 func (muer *MultiUploader) Cancel() {
-	close(muer.canceled)
+	muer.closeCanceledOnce.Do(func() {
+		close(muer.canceled)
+	})
+}
+
+// GracefulStop 优雅停止: 不再派发新分片, 进行中的分片继续执行直至完成
+func (muer *MultiUploader) GracefulStop() {
+	muer.stopOnce.Do(func() {
+		close(muer.stopped)
+	})
+}
+
+// isStopped 返回是否已请求优雅停止
+func (muer *MultiUploader) isStopped() bool {
+	select {
+	case <-muer.stopped:
+		return true
+	default:
+		return false
+	}
 }
 
 // OnExecute 设置开始上传事件

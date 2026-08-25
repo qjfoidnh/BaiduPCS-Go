@@ -11,9 +11,11 @@ import (
 	"github.com/qjfoidnh/BaiduPCS-Go/pcsutil/converter"
 	"github.com/qjfoidnh/BaiduPCS-Go/pcsutil/taskframework"
 	"os"
+	"os/signal"
 	"path"
 	"path/filepath"
 	"strings"
+	"syscall"
 )
 
 const (
@@ -100,6 +102,20 @@ func RunUpload(localPaths []string, savePath string, opt *UploadOptions) error {
 		// 统计
 		statistic = &pcsupload.UploadStatistic{}
 	)
+
+	// 优雅退出: 第一次 Ctrl+C 停止派发新任务并等待进行中的分片完成后保存进度, 第二次 Ctrl+C 强制退出
+	sigChan := make(chan os.Signal, 2)
+	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		<-sigChan
+		fmt.Println("\n收到退出信号, 等待进行中的分片完成 (再次 Ctrl+C 强制退出)...")
+		executor.Stop()
+		pcsupload.GracefulStopActiveUploaders()
+		<-sigChan
+		fmt.Println("强制退出")
+		os.Exit(130)
+	}()
+
 	fmt.Print("\n")
 	fmt.Printf("[0] 提示: 当前上传单个文件最大并发量为: %d, 最大同时上传文件数为: %d\n", opt.Parallel, opt.Load)
 
