@@ -97,7 +97,10 @@ func WalkDir(dirPth, suffix string) (files []string, err error) {
 			return nil
 		}
 		if fileInfo.Mode()&os.ModeSymlink != 0 { // 读取 symbol link
-			targetFileInfo, _ := os.Stat(filename)
+			targetFileInfo, statErr := os.Stat(filename)
+			if statErr != nil { // 断开的软链接, 跳过
+				return nil
+			}
 			if targetFileInfo.IsDir() {
 				err = filepath.WalkDir(filename+string(os.PathSeparator), walkFunc)
 				return err
