@@ -88,6 +88,11 @@ func RunShareTransfer(params []string, opt *baidupcs.TransferOption) {
 		"shorturl": featureStr[1:],
 		"channel":  "chunlei",
 	}
+	// --list：只列分享文件清单（JSON），不转存（见 share_file_list.go）
+	if opt.List {
+		runShareFileList(pcs, featureStr, tokens, featureMap)
+		return
+	}
 	queryShareInfoUrl := pcs.GenerateShareQueryURL("list", featureMap).String()
 	transMetas := pcs.ExtractShareInfo(queryShareInfoUrl, tokens["shareid"], tokens["share_uk"], tokens["bdstoken"])
 

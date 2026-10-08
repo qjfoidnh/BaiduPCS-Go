@@ -1358,6 +1358,7 @@ func main() {
 					Collect:  c.Bool("collect"),
 					Rname:    c.Bool("rname"),
 					FsID:     c.String("fs_id"),
+					List:     c.Bool("list"),
 				}
 				pcscommand.RunShareTransfer(c.Args(), opt)
 				return nil
@@ -1366,6 +1367,10 @@ func main() {
 				cli.BoolFlag{
 					Name:  "download",
 					Usage: "转存后直接下载到本地默认目录",
+				},
+				cli.BoolFlag{
+					Name:  "list",
+					Usage: "只列出分享文件清单（单行 SHARE-LIST-JSON，含子目录），不转存",
 				},
 				cli.BoolFlag{
 					Name:  "collect",
