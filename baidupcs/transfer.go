@@ -18,10 +18,11 @@ import (
 type (
 	// ShareOption 分享可选项
 	TransferOption struct {
-		Download bool // 是否直接开始下载
-		Collect  bool // 多文件整合
-		Rname    bool // 随机改文件名
+		Download bool   // 是否直接开始下载
+		Collect  bool   // 多文件整合
+		Rname    bool   // 随机改文件名
 		FsID     string // 指定fs_id转存
+		List     bool   // 只列分享文件清单（JSON），不转存
 	}
 )
 
