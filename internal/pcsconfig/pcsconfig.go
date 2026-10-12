@@ -57,6 +57,7 @@ type PCSConfig struct {
 	Proxy          string `json:"proxy"`                // 代理
 	ProxyHostnames string `json:"proxy_hostnames"`      // 走代理的域名范围
 	LocalAddrs     string `json:"local_addrs"`          // 本地网卡地址
+	PreferIPv6     bool   `json:"prefer_ipv6"`          // 优先使用IPv6地址
 	NoCheck        bool   `json:"no_check"`             // 禁用下载md5校验
 	IgnoreIllegal  bool   `json:"ignore_illegal"`       // 禁用上传文件名非法字符检查
 	UPolicy        string `json:"u_policy"`             // 上传重名文件处理策略
@@ -168,6 +169,8 @@ func (c *PCSConfig) init() error {
 	requester.SetProxyHostnameRules(c.ProxyHostnames)
 	// 设置本地网卡地址
 	requester.SetLocalTCPAddrList(strings.Split(c.LocalAddrs, ",")...)
+	// 设置是否优先使用IPv6地址
+	requester.SetPreferIPv6(c.PreferIPv6)
 
 	return nil
 }

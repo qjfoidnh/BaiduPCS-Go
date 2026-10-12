@@ -259,6 +259,12 @@ func (c *PCSConfig) SetLocalAddrs(localAddrs string) {
 	requester.SetLocalTCPAddrList(strings.Split(localAddrs, ",")...)
 }
 
+// SetPreferIPv6 设置是否优先使用IPv6地址
+func (c *PCSConfig) SetPreferIPv6(preferIPv6 bool) {
+	c.PreferIPv6 = preferIPv6
+	requester.SetPreferIPv6(preferIPv6)
+}
+
 // SetIgnoreIllegal 设置忽略上传文件名非法字符
 func (c *PCSConfig) SetIgnoreIllegal(ignore bool) {
 	c.IgnoreIllegal = ignore

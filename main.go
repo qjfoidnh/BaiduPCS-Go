@@ -1875,6 +1875,9 @@ func main() {
 						if c.IsSet("local_addrs") {
 							pcsconfig.Config.SetLocalAddrs(c.String("local_addrs"))
 						}
+						if c.IsSet("prefer_ipv6") {
+							pcsconfig.Config.SetPreferIPv6(c.Bool("prefer_ipv6"))
+						}
 
 						err := pcsconfig.Config.Save()
 						if err != nil {
@@ -1975,6 +1978,10 @@ func main() {
 						cli.StringFlag{
 							Name:  "local_addrs",
 							Usage: "设置本地网卡地址, 多个地址用逗号隔开",
+						},
+						cli.BoolFlag{
+							Name:  "prefer_ipv6",
+							Usage: "域名同时有AAAA/A记录时优先使用IPv6地址 (多数Linux默认IPv4优先)",
 						},
 					},
 				},
