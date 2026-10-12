@@ -88,6 +88,7 @@ func (c *PCSConfig) PrintTable() {
 		[]string{"proxy", c.Proxy, "", "设置代理, 支持 http/socks5 代理"},
 		[]string{"proxy_hostnames", c.ProxyHostnames, "", "设置走代理的域名范围, 多个域名以逗号分隔, 留空表示全部代理. 国外VPS遇上传问题可尝试代理pan.baidu.com回国"},
 		[]string{"local_addrs", c.LocalAddrs, "", "设置本地网卡地址, 多个地址用逗号隔开"},
+		[]string{"prefer_ipv6", fmt.Sprint(c.PreferIPv6), "false", "域名同时有AAAA/A记录时优先使用IPv6地址(多数Linux默认IPv4优先)"},
 	})
 	tb.Render()
 }

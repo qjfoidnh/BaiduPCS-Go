@@ -26,6 +26,12 @@ const (
 var (
 	localTCPAddrList = []*net.TCPAddr{}
 
+	// preferIPv6 为真时，在域名同时具备 AAAA/A 记录时优先选择 IPv6 地址。
+	preferIPv6 bool
+
+	// ErrNoIPAddr 解析结果为空
+	ErrNoIPAddr = errors.New("no IP addresses found")
+
 	// ProxyAddr 代理地址
 	ProxyAddr string
 
@@ -59,6 +65,32 @@ func SetLocalTCPAddrList(ips ...string) {
 		})
 	}
 	localTCPAddrList = list
+}
+
+// SetPreferIPv6 设置是否优先使用 IPv6 地址。
+//
+// 本程序的 dnsResolver 依赖系统解析顺序(LookupHost 返回值)，而多数 Linux 的
+// RFC3484 / gai.conf 规则会把 IPv4 排在前面，所以即使本机已有可用的 IPv6 出口，
+// 实际仍会拨号到 IPv4。开启本项后，只要域名同时存在 AAAA 与 A 记录，就会在候选中
+// 优先选择 IPv6 地址；若域名无 AAAA 记录，则自动回退到原有行为。
+func SetPreferIPv6(b bool) {
+	preferIPv6 = b
+}
+
+// pickAddr 按偏好从解析结果中选择地址；preferIPv6 为真时优先 IPv6。
+func pickAddr(addrs []string) (string, error) {
+	if len(addrs) == 0 {
+		return "", ErrNoIPAddr
+	}
+	if !preferIPv6 {
+		return addrs[0], nil
+	}
+	for _, a := range addrs {
+		if ip := net.ParseIP(a); ip != nil && ip.To4() == nil {
+			return a, nil
+		}
+	}
+	return addrs[0], nil
 }
 
 func proxyFunc(req *http.Request) (*url.URL, error) {
@@ -164,9 +196,13 @@ func resolveTCPHost(ctx context.Context, host string) (ip net.IP, err error) {
 		return nil, fmt.Errorf("no IP addresses found for host %q", host)
 	}
 
-	ip = net.ParseIP(addrs[0])
+	chosen, err := pickAddr(addrs)
+	if err != nil {
+		return nil, err
+	}
+	ip = net.ParseIP(chosen)
 	if ip == nil {
-		return nil, fmt.Errorf("invalid IP address %q for host %q", addrs[0], host)
+		return nil, fmt.Errorf("invalid IP address %q for host %q", chosen, host)
 	}
 	return ip, nil
 }
